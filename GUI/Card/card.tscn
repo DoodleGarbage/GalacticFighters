@@ -1,0 +1,195 @@
+[gd_scene format=3 uid="uid://bqyxnrjohbjb6"]
+
+[ext_resource type="Theme" uid="uid://cblg4kypkjepe" path="res://Themes/card_theme.tres" id="1_h87bd"]
+[ext_resource type="Script" uid="uid://bckvxg0glp7ca" path="res://GUI/Card/card_gui.gd" id="2_bi2p1"]
+[ext_resource type="Resource" uid="uid://cnjm4gevrnut6" path="res://Resources/BasicResources/demo_card.tres" id="3_3e1rp"]
+[ext_resource type="Texture2D" uid="uid://b2y2e8ql0nlfi" path="res://Art/card_bg_ex.png" id="3_u2spw"]
+[ext_resource type="PackedScene" uid="uid://h4krniap83us" path="res://GUI/Card/stat_indicator.tscn" id="4_egv06"]
+[ext_resource type="Texture2D" uid="uid://dd80kuja1788c" path="res://Art/attack.png" id="5_8fm76"]
+[ext_resource type="Texture2D" uid="uid://j86vuaqxro1n" path="res://Art/defense.png" id="6_jyh4v"]
+[ext_resource type="Texture2D" uid="uid://xubn84vnwod6" path="res://Art/heart.png" id="7_xb8yw"]
+
+[node name="Panel" type="Panel" unique_id=1414793991]
+custom_minimum_size = Vector2(300, 500)
+offset_left = 328.0
+offset_top = 60.0
+offset_right = 628.0
+offset_bottom = 560.0
+theme = ExtResource("1_h87bd")
+script = ExtResource("2_bi2p1")
+stored_card = ExtResource("3_3e1rp")
+
+[node name="Card" type="Control" parent="." unique_id=978322942]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_h87bd")
+
+[node name="Background" type="TextureRect" parent="Card" unique_id=767264632]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_u2spw")
+expand_mode = 4
+
+[node name="BStats" type="HBoxContainer" parent="Card" unique_id=373620752]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.667
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Left" type="VBoxContainer" parent="Card/BStats" unique_id=2062318642]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Attack" parent="Card/BStats/Left" unique_id=589134654 instance=ExtResource("4_egv06")]
+layout_mode = 2
+image = ExtResource("5_8fm76")
+
+[node name="Defense" parent="Card/BStats/Left" unique_id=612677313 instance=ExtResource("4_egv06")]
+layout_mode = 2
+image = ExtResource("6_jyh4v")
+
+[node name="Defense2" parent="Card/BStats/Left" unique_id=1970796054 instance=ExtResource("4_egv06")]
+layout_mode = 2
+image = ExtResource("7_xb8yw")
+
+[node name="Mid" type="VBoxContainer" parent="Card/BStats" unique_id=1316687617]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Empty" type="Control" parent="Card/BStats/Mid" unique_id=1491550925]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
+mouse_filter = 2
+
+[node name="Special1" parent="Card/BStats/Mid" unique_id=452036417 instance=ExtResource("4_egv06")]
+layout_mode = 2
+image = ExtResource("6_jyh4v")
+stat = 2
+
+[node name="Center" type="VBoxContainer" parent="Card/BStats" unique_id=25748095]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Empty" type="Control" parent="Card/BStats/Center" unique_id=71396263]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
+mouse_filter = 2
+
+[node name="Special2" parent="Card/BStats/Center" unique_id=1136173955 instance=ExtResource("4_egv06")]
+layout_mode = 2
+image = ExtResource("7_xb8yw")
+stat = 3
+
+[node name="BaseStats" type="VBoxContainer" parent="Card" unique_id=1318487044]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.667
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+alignment = 2
+
+[node name="Name" type="Label" parent="Card" unique_id=16235099]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.5
+anchor_bottom = 0.111
+offset_bottom = 0.5
+text = "Name Goes Here"
+
+[node name="CardIdent" type="VBoxContainer" parent="Card" unique_id=500181624]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.111
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="Special" type="Label" parent="Card/CardIdent" unique_id=1333054210]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Special"
+horizontal_alignment = 1
+
+[node name="Type" type="Label" parent="Card/CardIdent" unique_id=1402873903]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Character"
+horizontal_alignment = 1
+
+[node name="StatusImmunities" type="VBoxContainer" parent="Card" unique_id=748738667]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.667
+anchor_top = 0.111
+anchor_right = 1.0
+anchor_bottom = 0.5
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="AttachPoint1" type="Control" parent="." unique_id=1578825993]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = 50.0
+offset_right = 50.0
+
+[node name="Abilities" type="VBoxContainer" parent="AttachPoint1" unique_id=1685534050]
+layout_mode = 0
+
+[node name="AttachPoint2" type="Control" parent="." unique_id=656092401]
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -50.0
+offset_top = 50.0
+offset_right = -50.0
+offset_bottom = 50.0
+grow_vertical = 0
+
+[node name="Statuses" type="VBoxContainer" parent="AttachPoint2" unique_id=1411719260]
+layout_mode = 0
+
+[node name="AttachPoint3" type="Control" parent="." unique_id=267903398]
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -450.0
+offset_right = -450.0
+grow_vertical = 0
+
+[node name="Interactions" type="VBoxContainer" parent="AttachPoint3" unique_id=644834250]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_bottom = 1.0
+grow_vertical = 0
+alignment = 2

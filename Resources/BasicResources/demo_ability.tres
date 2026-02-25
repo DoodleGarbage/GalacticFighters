@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="Ability" format=3 uid="uid://8sd62k6h24jo"]
+
+[ext_resource type="Script" uid="uid://dkiyvp2q0h78l" path="res://Resources/ability.gd" id="1_vyyn4"]
+
+[resource]
+script = ExtResource("1_vyyn4")
+name = "Demo Ability"
+type = 1
+desc = "THIS ABILITY DOES NOTHING NYEHEHEHEHEH"
+metadata/_custom_type_script = "uid://dkiyvp2q0h78l"
