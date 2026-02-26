@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="Ability" format=3 uid="uid://k5olpiarc04t"]
-
-[ext_resource type="Script" uid="uid://dkiyvp2q0h78l" path="res://Resources/ability.gd" id="1_3ng4k"]
-
-[resource]
-script = ExtResource("1_3ng4k")
-name = "DEMO PASSIVEEEEEEEEEEEEEEEEE"
-desc = "THIS PASSIVE IS HERE TO GO NYEHEHEH AND TEST THE CARDS LIMITS"
-metadata/_custom_type_script = "uid://dkiyvp2q0h78l"

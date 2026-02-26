@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RootAttribute" format=3 uid="uid://cibe0icksywo6"]
+
+[ext_resource type="Script" uid="uid://ctwnnecb20vou" path="res://Resources/attribute.gd" id="1_3hx0p"]
+
+[resource]
+script = ExtResource("1_3hx0p")
+name = "DEMOO STATUSS"
+type = 3
+desc = "DESCRIPITOIN OF HWO TEH STATUS IS GOING TO F YOU UP"
+metadata/_custom_type_script = "uid://ctwnnecb20vou"

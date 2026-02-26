@@ -8,4 +8,9 @@ var name : String = ""
 var type : int = 0
 
 @export
+var attributes : Array[Attribute] = []
+
+@export
 var abilities : Array[Ability] = []
+
+var statuses : Array[Status] = []

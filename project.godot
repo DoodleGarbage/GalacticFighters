@@ -10,11 +10,15 @@ config_version=5
 
 [application]
 
-config/name="CardGamePrototype"
+config/name="Galactic Fighters Prototype"
+config/description="This is the digital version of the card game Galactic Fighters."
 run/main_scene="uid://dhrx3hltyg7fb"
 config/features=PackedStringArray("4.7", "Mobile")
 run/max_fps=60
-config/icon="res://icon.svg"
+boot_splash/stretch_mode=3
+boot_splash/image="uid://xcwhomf3qbof"
+config/icon="uid://ccmumpj1wk5d5"
+boot_splash/minimum_display_time=3000
 
 [input]
 
