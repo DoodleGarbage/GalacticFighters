@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="RootAttribute" format=3 uid="uid://p6bj7f21mwhs"]
+[gd_resource type="Resource" script_class="Attribute" format=3 uid="uid://p6bj7f21mwhs"]
 
+[ext_resource type="Texture2D" uid="uid://xubn84vnwod6" path="res://Art/heart.png" id="1_8jygl"]
 [ext_resource type="Script" uid="uid://ctwnnecb20vou" path="res://Resources/attribute.gd" id="1_qgj25"]
 
 [resource]
 script = ExtResource("1_qgj25")
 name = "PASSIVE DEMO"
+icon = ExtResource("1_8jygl")
 desc = "DEMOS OF THE WHAT THE PASSIVE DOES IS DESCRIBED IN THIS LOCATION"
 metadata/_custom_type_script = "uid://ctwnnecb20vou"

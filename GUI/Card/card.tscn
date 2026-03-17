@@ -2,7 +2,6 @@
 
 [ext_resource type="Theme" uid="uid://cblg4kypkjepe" path="res://Themes/card_theme.tres" id="1_h87bd"]
 [ext_resource type="Script" uid="uid://bckvxg0glp7ca" path="res://GUI/Card/card_gui.gd" id="2_bi2p1"]
-[ext_resource type="Resource" uid="uid://cnjm4gevrnut6" path="res://Resources/BasicResources/demo_card.tres" id="3_3e1rp"]
 [ext_resource type="Texture2D" uid="uid://b2y2e8ql0nlfi" path="res://Art/card_bg_ex.png" id="3_u2spw"]
 [ext_resource type="PackedScene" uid="uid://h4krniap83us" path="res://GUI/Card/stat_indicator.tscn" id="4_egv06"]
 [ext_resource type="Texture2D" uid="uid://dd80kuja1788c" path="res://Art/attack.png" id="5_8fm76"]
@@ -17,7 +16,6 @@ offset_right = 628.0
 offset_bottom = 560.0
 theme = ExtResource("1_h87bd")
 script = ExtResource("2_bi2p1")
-stored_card = ExtResource("3_3e1rp")
 
 [node name="Card" type="Control" parent="." unique_id=978322942]
 layout_mode = 1
@@ -26,6 +24,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme = ExtResource("1_h87bd")
 
 [node name="Background" type="TextureRect" parent="Card" unique_id=767264632]

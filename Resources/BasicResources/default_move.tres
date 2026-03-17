@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="RootAttribute" format=3 uid="uid://cep1ox2cev33c"]
+[gd_resource type="Resource" script_class="Attribute" format=3 uid="uid://cep1ox2cev33c"]
 
 [ext_resource type="Script" uid="uid://ctwnnecb20vou" path="res://Resources/attribute.gd" id="1_eic8k"]
+[ext_resource type="Texture2D" uid="uid://emt6pvakjn1r" path="res://icon.svg" id="1_eimfn"]
 
 [resource]
 script = ExtResource("1_eic8k")
 name = "MOVE"
+icon = ExtResource("1_eimfn")
 type = 2
 metadata/_custom_type_script = "uid://ctwnnecb20vou"

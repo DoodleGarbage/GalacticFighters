@@ -1,6 +1,6 @@
 extends PanelContainer
 
-func load_ability(ability:Ability) -> void:
+func load_ability(ability:Attribute) -> void:
 	
 	$Sizer/NT/Name.text = tr(ability.name)
 	

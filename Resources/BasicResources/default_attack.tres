@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="RootAttribute" format=3 uid="uid://c5ms4ivg5cwqx"]
+[gd_resource type="Resource" script_class="Attribute" format=3 uid="uid://c5ms4ivg5cwqx"]
 
+[ext_resource type="Texture2D" uid="uid://dd80kuja1788c" path="res://Art/attack.png" id="1_buye0"]
 [ext_resource type="Script" uid="uid://ctwnnecb20vou" path="res://Resources/attribute.gd" id="1_ojc14"]
 
 [resource]
 script = ExtResource("1_ojc14")
 name = "ATTACK"
+icon = ExtResource("1_buye0")
 type = 2
 metadata/_custom_type_script = "uid://ctwnnecb20vou"

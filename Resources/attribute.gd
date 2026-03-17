@@ -1,8 +1,11 @@
 extends Resource
-class_name RootAttribute
+class_name Attribute
 
 @export
 var name : String = ""
+
+@export
+var icon : Texture
 
 @export
 var pscript : PowerScript
@@ -13,6 +16,7 @@ var type : int = 0
 ## Do not put full descriptions here, prefer using a translated string.
 @export
 var desc : String = "DESCRIPTION_LANG"
+
 
 ## Targeting
 #export targeting details
