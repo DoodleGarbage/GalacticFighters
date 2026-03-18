@@ -3,7 +3,11 @@ extends Control
 @export
 var stored_card : Card = preload("res://Resources/BasicResources/demo_card.tres")
 
+## Whether or not this card belongs to the current player's screen
+var player_owned : bool = false
+
 func _ready() -> void:
+	target_position = position
 	initilize_interactions()
 	load_card(stored_card)
 	## We set the 'Screen constant' - used for dragging - to be 80% of the screen per second
@@ -44,6 +48,23 @@ func load_card(card:Card) -> void:
 	$Card/CardIdent/Type.show()
 	$Card/CardIdent/Type.text = tr(txttype)
 	
+	$Card/BStats/Left/Health.stat = card.max_health
+	$Card/BStats/Left/Defense.stat = card.defense
+	$Card/BStats/Left/Attack.stat = card.attack
+	
+	$Card/BStats/Mid/ArmorPierce.stat = card.armor_pierce
+	$Card/BStats/Mid/Burst.stat = card.burst
+	$Card/BStats/Center/Heal.stat = card.heal
+	
+	if card.armor_pierce <= 0:
+		$Card/BStats/Mid/ArmorPierce.hide()
+		$Card/BStats/Mid/Empty.size_flags_stretch_ratio += 1.0
+	if card.burst <= 0:
+		$Card/BStats/Mid/Burst.hide()
+		$Card/BStats/Mid/Empty.size_flags_stretch_ratio += 1.0
+	if card.heal <= 0:
+		$Card/BStats/Center/Heal.hide()
+	
 	## Load Passives (places them above abilities)
 	for ab in card.attributes:
 		if ab.type == 0:
@@ -76,9 +97,10 @@ func _input(event: InputEvent) -> void:
 				open_interaction_menu()
 		elif menu_open:
 			close_interaction_menu()
-	
+	if not player_owned: ## Disables dragging for non-player cards
+		return
 	if event is InputEventMouseButton:
-		if event.button_index == MouseButton.MOUSE_BUTTON_LEFT:
+		if event.button_index == MouseButton.MOUSE_BUTTON_LEFT && get_rect().has_point(get_global_mouse_position()):
 			primed_for_drag = true
 			drag_deadzone = get_local_mouse_position()
 	if event is InputEventMouseMotion && primed_for_drag:
@@ -94,7 +116,8 @@ func open_interaction_menu() -> void:
 	printerr("Send Signal to Global Screen-Dimmer here")
 	$AttachPoint1.show()
 	$AttachPoint2.show()
-	$AttachPoint3.show()
+	if player_owned: ## Only show the move/attack/etc for player cards
+		$AttachPoint3.show()
 func close_interaction_menu() -> void:
 	menu_open = false
 	$AttachPoint1.hide()
@@ -118,7 +141,8 @@ func start_drag() -> void:
 	## ADD CHECK TO MAKE SURE NO ONE ELSE IS BEING DRAGGED/WILL BE
 	primed_for_drag = false
 	docked = false
-	move_offset = get_local_mouse_position()
+	move_offset = get_local_mouse_position() * scale
+	z_index = 5
 	_drag()
 
 func _drag() -> void:
@@ -127,6 +151,7 @@ func _drag() -> void:
 	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		docked = true
 		move_offset = Vector2(0,0)
+		z_index = 0
 		return
 	
 	target_position = get_global_mouse_position() - move_offset

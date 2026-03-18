@@ -8,5 +8,8 @@
 [resource]
 script = ExtResource("2_r68ao")
 name = "Bloshy Blu"
+max_health = 40
+defense = 1
+attack = 5
 attributes = Array[ExtResource("1_nvlto")]([ExtResource("2_5kwn0"), ExtResource("3_yy068")])
 metadata/_custom_type_script = "uid://lcqwq2nuflj6"

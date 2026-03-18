@@ -20,6 +20,12 @@ boot_splash/image="uid://xcwhomf3qbof"
 config/icon="uid://ccmumpj1wk5d5"
 boot_splash/minimum_display_time=3000
 
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/vsync/vsync_mode=0
+
 [input]
 
 card_interact={

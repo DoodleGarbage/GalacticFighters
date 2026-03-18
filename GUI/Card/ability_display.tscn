@@ -6,6 +6,7 @@
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_0u8ft"]
 
 [node name="AbilityDisplay" type="PanelContainer" unique_id=1184284239]
+z_index = 10
 offset_right = 400.0
 offset_bottom = 54.0
 theme = ExtResource("1_r8jwp")

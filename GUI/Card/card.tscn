@@ -7,6 +7,9 @@
 [ext_resource type="Texture2D" uid="uid://dd80kuja1788c" path="res://Art/attack.png" id="5_8fm76"]
 [ext_resource type="Texture2D" uid="uid://j86vuaqxro1n" path="res://Art/defense.png" id="6_jyh4v"]
 [ext_resource type="Texture2D" uid="uid://xubn84vnwod6" path="res://Art/heart.png" id="7_xb8yw"]
+[ext_resource type="Texture2D" uid="uid://c007lo8ldjcgv" path="res://Art/armorpierce.png" id="8_at4c8"]
+[ext_resource type="Texture2D" uid="uid://fn76f4xtne4x" path="res://Art/burst.png" id="9_vxewq"]
+[ext_resource type="Texture2D" uid="uid://bginc7lpi7vn" path="res://Art/healing.png" id="10_t7cws"]
 
 [node name="Panel" type="Panel" unique_id=1414793991]
 custom_minimum_size = Vector2(300, 500)
@@ -60,7 +63,7 @@ image = ExtResource("5_8fm76")
 layout_mode = 2
 image = ExtResource("6_jyh4v")
 
-[node name="Defense2" parent="Card/BStats/Left" unique_id=1970796054 instance=ExtResource("4_egv06")]
+[node name="Health" parent="Card/BStats/Left" unique_id=1970796054 instance=ExtResource("4_egv06")]
 layout_mode = 2
 image = ExtResource("7_xb8yw")
 
@@ -74,12 +77,16 @@ mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-size_flags_stretch_ratio = 2.0
 mouse_filter = 2
 
-[node name="Special1" parent="Card/BStats/Mid" unique_id=452036417 instance=ExtResource("4_egv06")]
+[node name="ArmorPierce" parent="Card/BStats/Mid" unique_id=452036417 instance=ExtResource("4_egv06")]
 layout_mode = 2
-image = ExtResource("6_jyh4v")
+image = ExtResource("8_at4c8")
+stat = 2
+
+[node name="Burst" parent="Card/BStats/Mid" unique_id=1136173955 instance=ExtResource("4_egv06")]
+layout_mode = 2
+image = ExtResource("9_vxewq")
 stat = 2
 
 [node name="Center" type="VBoxContainer" parent="Card/BStats" unique_id=25748095]
@@ -95,9 +102,9 @@ size_flags_vertical = 3
 size_flags_stretch_ratio = 2.0
 mouse_filter = 2
 
-[node name="Special2" parent="Card/BStats/Center" unique_id=1136173955 instance=ExtResource("4_egv06")]
+[node name="Heal" parent="Card/BStats/Center" unique_id=1461149952 instance=ExtResource("4_egv06")]
 layout_mode = 2
-image = ExtResource("7_xb8yw")
+image = ExtResource("10_t7cws")
 stat = 3
 
 [node name="BaseStats" type="VBoxContainer" parent="Card" unique_id=1318487044]

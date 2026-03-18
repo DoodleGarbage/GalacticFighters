@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://4seey34xccc7"]
+
+[node name="EmptyCard" type="Panel" unique_id=2057930762]
+custom_minimum_size = Vector2(300, 500)
+offset_right = 300.0
+offset_bottom = 500.0
