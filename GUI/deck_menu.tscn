@@ -1,0 +1,83 @@
+[gd_scene format=3 uid="uid://b7u8fehe1jgc"]
+
+[ext_resource type="Script" uid="uid://dth5oh0lqysfb" path="res://GUI/deck_menu.gd" id="1_66vqr"]
+[ext_resource type="PackedScene" uid="uid://dnuvifl6s4b1j" path="res://GUI/mini_card.tscn" id="1_f8pkv"]
+[ext_resource type="PackedScene" uid="uid://4seey34xccc7" path="res://GUI/Card/empty_card.tscn" id="1_j3g7e"]
+
+[node name="Deck" type="Control" unique_id=1021093203]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_66vqr")
+
+[node name="Div" type="HBoxContainer" parent="." unique_id=1321460222]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CurrentDeck" type="VBoxContainer" parent="Div" unique_id=1111782964]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Exit" type="PanelContainer" parent="Div/CurrentDeck" unique_id=667054693]
+layout_mode = 2
+
+[node name="Exit" type="Button" parent="Div/CurrentDeck/Exit" unique_id=922956708]
+layout_mode = 2
+text = "BACK"
+
+[node name="MiniCard" parent="Div/CurrentDeck" unique_id=1316056749 instance=ExtResource("1_f8pkv")]
+layout_mode = 2
+
+[node name="MiniCard2" parent="Div/CurrentDeck" unique_id=784732903 instance=ExtResource("1_f8pkv")]
+layout_mode = 2
+
+[node name="MiniCard3" parent="Div/CurrentDeck" unique_id=1626626748 instance=ExtResource("1_f8pkv")]
+layout_mode = 2
+
+[node name="Sep" type="VBoxContainer" parent="Div" unique_id=621303928]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Div/Sep" unique_id=803379416]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Search" type="Button" parent="Div/Sep/HBoxContainer" unique_id=1957997348]
+layout_mode = 2
+text = "SEARCH"
+
+[node name="TextEdit" type="TextEdit" parent="Div/Sep/HBoxContainer" unique_id=434491069]
+custom_minimum_size = Vector2(300, 40)
+layout_mode = 2
+placeholder_text = "SEARCH"
+context_menu_enabled = false
+emoji_menu_enabled = false
+tab_input_mode = false
+
+[node name="DeckDisplay" type="GridContainer" parent="Div/Sep" unique_id=1669697938]
+layout_mode = 2
+columns = 4
+
+[node name="EmptyCard" parent="Div/Sep/DeckDisplay" unique_id=1147434604 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard2" parent="Div/Sep/DeckDisplay" unique_id=51090868 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard3" parent="Div/Sep/DeckDisplay" unique_id=69557395 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard4" parent="Div/Sep/DeckDisplay" unique_id=737868888 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[connection signal="pressed" from="Div/CurrentDeck/Exit/Exit" to="." method="_exit_pressed"]

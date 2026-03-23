@@ -1,0 +1,168 @@
+[gd_scene format=3 uid="uid://dpt64c3xv2lsh"]
+
+[ext_resource type="Theme" uid="uid://xog8n7ab0fc8" path="res://Themes/menu_theme.tres" id="1_12752"]
+[ext_resource type="Texture2D" uid="uid://xcwhomf3qbof" path="res://Art/GalacticFightersCoverNoTitle.png" id="2_ldfg3"]
+[ext_resource type="Script" uid="uid://7jiaxk1i40dv" path="res://GUI/main_menu.gd" id="2_o1bug"]
+[ext_resource type="Texture2D" uid="uid://cyaw3jgvge3hm" path="res://Art/demoTitle.png" id="3_o1bug"]
+[ext_resource type="Script" uid="uid://bo85pa83hor1" path="res://GUI/battle_select.gd" id="5_ar3vo"]
+[ext_resource type="PackedScene" uid="uid://b7u8fehe1jgc" path="res://GUI/deck_menu.tscn" id="5_o1bug"]
+[ext_resource type="PackedScene" uid="uid://dhrx3hltyg7fb" path="res://Gameplay/playfield.tscn" id="6_bi43m"]
+[ext_resource type="Script" uid="uid://dfigbub4rfoyp" path="res://Resources/deck.gd" id="6_go3ra"]
+[ext_resource type="Resource" uid="uid://dsmvahj2ipkya" path="res://Resources/BasicResources/demo_deck.tres" id="7_urio0"]
+[ext_resource type="PackedScene" uid="uid://doaiy2ongcjk4" path="res://GUI/mini_deck.tscn" id="8_urio0"]
+
+[node name="Root" type="Node" unique_id=595754331]
+script = ExtResource("2_o1bug")
+
+[node name="Menu" type="Control" parent="." unique_id=2113682629]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_12752")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Menu" unique_id=1729675460]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Spacer" type="Control" parent="Menu/VBoxContainer" unique_id=916004460]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TextureRect2" type="TextureRect" parent="Menu/VBoxContainer" unique_id=575487780]
+custom_minimum_size = Vector2(500, 50)
+layout_mode = 2
+texture = ExtResource("3_o1bug")
+expand_mode = 5
+stretch_mode = 5
+
+[node name="Spacer2" type="Control" parent="Menu/VBoxContainer" unique_id=612824228]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="Menu/VBoxContainer" unique_id=1545114545]
+layout_mode = 2
+text = "EARLYACCESS"
+horizontal_alignment = 1
+
+[node name="VSeparator" type="HSeparator" parent="Menu/VBoxContainer" unique_id=1375375117]
+layout_mode = 2
+
+[node name="Start" type="Button" parent="Menu/VBoxContainer" unique_id=1087787860]
+editor_description = "Clicking opens the actual menu (accessedMenu)"
+layout_mode = 2
+text = "START"
+
+[node name="AccessedMenu" type="VBoxContainer" parent="Menu/VBoxContainer" unique_id=1889678041]
+editor_description = "May be replaced later. List with access to various menu areas"
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Battle" type="Button" parent="Menu/VBoxContainer/AccessedMenu" unique_id=526227873]
+layout_mode = 2
+text = "BATTLE"
+
+[node name="Deck" type="Button" parent="Menu/VBoxContainer/AccessedMenu" unique_id=33747546]
+layout_mode = 2
+text = "BUILDDECK"
+
+[node name="Options" type="Button" parent="Menu/VBoxContainer/AccessedMenu" unique_id=1222145256]
+layout_mode = 2
+text = "OPTIONS"
+
+[node name="MenuSpacer" type="Control" parent="Menu/VBoxContainer" unique_id=555766994]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Deck" parent="." unique_id=1021093203 instance=ExtResource("5_o1bug")]
+visible = false
+
+[node name="BattleSelect" type="Control" parent="." unique_id=918417344]
+visible = false
+layout_mode = 3
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_12752")
+script = ExtResource("5_ar3vo")
+deck_list = Array[ExtResource("6_go3ra")]([ExtResource("7_urio0"), ExtResource("7_urio0"), ExtResource("7_urio0"), ExtResource("7_urio0")])
+
+[node name="List" type="VBoxContainer" parent="BattleSelect" unique_id=1678013194]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="SD" type="Label" parent="BattleSelect/List" unique_id=54941857]
+layout_mode = 2
+text = "SELECTDECK"
+
+[node name="DeckLister" type="GridContainer" parent="BattleSelect/List" unique_id=1453401983]
+layout_mode = 2
+columns = 4
+
+[node name="Waiting" type="Control" parent="." unique_id=897254863]
+visible = false
+layout_mode = 3
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("1_12752")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Waiting" unique_id=709870732]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="Waiting/VBoxContainer" unique_id=491302504]
+layout_mode = 2
+text = "WAITINGFOROPPONENT"
+
+[node name="MiniDeck" parent="Waiting/VBoxContainer" unique_id=1191434496 instance=ExtResource("8_urio0")]
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=911444246]
+z_index = -10
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -420.0
+offset_bottom = 420.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_ldfg3")
+expand_mode = 5
+stretch_mode = 5
+
+[node name="Playfield" parent="." unique_id=178232400 instance=ExtResource("6_bi43m")]
+visible = false
+
+[connection signal="pressed" from="Menu/VBoxContainer/Start" to="." method="_start_pressed"]
+[connection signal="pressed" from="Menu/VBoxContainer/AccessedMenu/Battle" to="." method="prepare_battle"]
+[connection signal="pressed" from="Menu/VBoxContainer/AccessedMenu/Deck" to="." method="_on_deck_pressed"]
+[connection signal="exit" from="Deck" to="." method="return_to_menu"]
+[connection signal="battle_deck" from="BattleSelect" to="." method="ready_for_battle"]

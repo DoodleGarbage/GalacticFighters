@@ -4,10 +4,14 @@
 [ext_resource type="Resource" uid="uid://d0see4lchxj7d" path="res://Resources/BasicResources/default_ability.tres" id="2_5kwn0"]
 [ext_resource type="Script" uid="uid://lcqwq2nuflj6" path="res://Resources/card.gd" id="2_r68ao"]
 [ext_resource type="Resource" uid="uid://p6bj7f21mwhs" path="res://Resources/BasicResources/default_passive.tres" id="3_yy068"]
+[ext_resource type="Texture2D" uid="uid://b6a8ssk3l0ou7" path="res://Art/Characters/BloshFullProfile.png" id="4_yy068"]
+[ext_resource type="Texture2D" uid="uid://bhgv2awjxobce" path="res://Art/Characters/BloshMiniProfile.png" id="5_7tyc5"]
 
 [resource]
 script = ExtResource("2_r68ao")
 name = "Bloshy Blu"
+full_profile = ExtResource("4_yy068")
+mini_profile = ExtResource("5_7tyc5")
 max_health = 40
 defense = 1
 attack = 5

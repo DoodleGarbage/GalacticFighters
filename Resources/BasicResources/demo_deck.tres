@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Deck" format=3 uid="uid://dsmvahj2ipkya"]
+
+[ext_resource type="Script" uid="uid://dfigbub4rfoyp" path="res://Resources/deck.gd" id="1_itf32"]
+[ext_resource type="Script" uid="uid://lcqwq2nuflj6" path="res://Resources/card.gd" id="2_4p6qv"]
+[ext_resource type="Resource" uid="uid://cnjm4gevrnut6" path="res://Resources/BasicResources/demo_card.tres" id="3_4p6qv"]
+
+[resource]
+script = ExtResource("1_itf32")
+name = "DEMODECK"
+special_characters = Array[ExtResource("2_4p6qv")]([ExtResource("3_4p6qv"), ExtResource("3_4p6qv"), ExtResource("3_4p6qv")])
+metadata/_custom_type_script = "uid://dfigbub4rfoyp"

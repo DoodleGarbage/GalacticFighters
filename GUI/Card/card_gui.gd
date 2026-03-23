@@ -36,6 +36,7 @@ func initilize_interactions() -> void:
 func load_card(card:Card) -> void:
 	stored_card = card
 	$Card/Name.text = card.name
+	$Card/Background.texture = card.full_profile
 	var txttype : String = ""
 	match(card.type):
 		0:

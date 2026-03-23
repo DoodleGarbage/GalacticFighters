@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Galactic Fighters Prototype"
 config/description="This is the digital version of the card game Galactic Fighters."
-run/main_scene="uid://dhrx3hltyg7fb"
+run/main_scene="uid://dpt64c3xv2lsh"
 config/features=PackedStringArray("4.7", "Mobile")
 run/max_fps=60
 boot_splash/stretch_mode=3

@@ -11,6 +11,15 @@
 [ext_resource type="Texture2D" uid="uid://fn76f4xtne4x" path="res://Art/burst.png" id="9_vxewq"]
 [ext_resource type="Texture2D" uid="uid://bginc7lpi7vn" path="res://Art/healing.png" id="10_t7cws"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_at4c8"]
+bg_color = Color(0.5445032, 0.6037602, 0.7044696, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.219176, 0.9021054, 0.9305285, 1)
+corner_radius_top_right = 8
+
 [node name="Panel" type="Panel" unique_id=1414793991]
 custom_minimum_size = Vector2(300, 500)
 offset_left = 328.0
@@ -31,7 +40,6 @@ mouse_filter = 2
 theme = ExtResource("1_h87bd")
 
 [node name="Background" type="TextureRect" parent="Card" unique_id=767264632]
-visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -57,6 +65,7 @@ mouse_filter = 2
 
 [node name="Attack" parent="Card/BStats/Left" unique_id=589134654 instance=ExtResource("4_egv06")]
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_at4c8")
 image = ExtResource("5_8fm76")
 
 [node name="Defense" parent="Card/BStats/Left" unique_id=612677313 instance=ExtResource("4_egv06")]

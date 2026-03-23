@@ -4,6 +4,13 @@ class_name Card
 @export
 var name : String = ""
 
+# The full body art of the character
+@export
+var full_profile : Texture
+# A 1:1 aspect (approx 64x64) mugshot of the character
+@export
+var mini_profile : Texture
+
 @export_enum("Special Character", "Character", "Item", "Gadget")
 var type : int = 0
 

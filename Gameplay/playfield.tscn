@@ -8,10 +8,16 @@
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6k7cj"]
 
-[node name="Root" type="Node" unique_id=178232400]
+[node name="Playfield" type="Control" unique_id=1319051919]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Unscalables" type="Control" parent="." unique_id=1456994053]
-layout_mode = 3
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -38,7 +44,7 @@ anchor_bottom = 0.8
 grow_vertical = 0
 
 [node name="Playfield" type="Control" parent="." unique_id=2079936266]
-layout_mode = 3
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

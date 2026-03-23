@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://dnuvifl6s4b1j"]
+
+[ext_resource type="Texture2D" uid="uid://emt6pvakjn1r" path="res://icon.svg" id="1_2yy16"]
+[ext_resource type="Script" uid="uid://crehw4wt4yv5u" path="res://GUI/mini_card.gd" id="1_6t16c"]
+[ext_resource type="PackedScene" uid="uid://bqyxnrjohbjb6" path="res://GUI/Card/card.tscn" id="2_pskly"]
+
+[node name="MiniCard" type="PanelContainer" unique_id=1316056749]
+offset_right = 142.0
+offset_bottom = 23.0
+size_flags_horizontal = 3
+size_flags_vertical = 0
+script = ExtResource("1_6t16c")
+
+[node name="Div" type="HBoxContainer" parent="." unique_id=1439619869]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="Icon" type="TextureRect" parent="Div" unique_id=1626545704]
+layout_mode = 2
+texture = ExtResource("1_2yy16")
+expand_mode = 2
+
+[node name="Name" type="Label" parent="Div" unique_id=1007940898]
+layout_mode = 2
+text = "CARD NAME HERE"
+
+[node name="FullCard" parent="." unique_id=1414793991 instance=ExtResource("2_pskly")]
+visible = false
+layout_mode = 2
+
+[node name="ItemGadgetGUI" type="Control" parent="." unique_id=831139537]
+layout_mode = 2
+
+[node name="SwordGUI" type="Control" parent="." unique_id=458931969]
+layout_mode = 2
