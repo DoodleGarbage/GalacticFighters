@@ -11,6 +11,8 @@
 [ext_resource type="Resource" uid="uid://dsmvahj2ipkya" path="res://Resources/BasicResources/demo_deck.tres" id="7_urio0"]
 [ext_resource type="PackedScene" uid="uid://doaiy2ongcjk4" path="res://GUI/mini_deck.tscn" id="8_urio0"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_urio0"]
+
 [node name="Root" type="Node" unique_id=595754331]
 script = ExtResource("2_o1bug")
 
@@ -116,8 +118,11 @@ text = "SELECTDECK"
 layout_mode = 2
 columns = 4
 
+[node name="Back" type="Button" parent="BattleSelect/List" unique_id=1351990624]
+layout_mode = 2
+text = "BACK"
+
 [node name="Waiting" type="Control" parent="." unique_id=897254863]
-visible = false
 layout_mode = 3
 anchors_preset = 13
 anchor_left = 0.5
@@ -137,12 +142,54 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
+[node name="Name" type="HBoxContainer" parent="Waiting/VBoxContainer" unique_id=1003984857]
+layout_mode = 2
+
+[node name="PlayerName" type="TextEdit" parent="Waiting/VBoxContainer/Name" unique_id=1775862899]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "PLAYERNAME"
+scroll_fit_content_height = true
+
+[node name="Join" type="HBoxContainer" parent="Waiting/VBoxContainer" unique_id=377116248]
+layout_mode = 2
+
+[node name="JoinInput" type="TextEdit" parent="Waiting/VBoxContainer/Join" unique_id=1508883584]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="JoinButton" type="Button" parent="Waiting/VBoxContainer/Join" unique_id=2084692074]
+layout_mode = 2
+text = "JOIN"
+
+[node name="Host" type="HBoxContainer" parent="Waiting/VBoxContainer" unique_id=1903240587]
+layout_mode = 2
+
+[node name="HostIP" type="TextEdit" parent="Waiting/VBoxContainer/Host" unique_id=81494801]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_readonly_color = Color(0, 0, 0, 1)
+theme_override_styles/read_only = SubResource("StyleBoxFlat_urio0")
+text = "IP ADDRESS"
+editable = false
+emoji_menu_enabled = false
+virtual_keyboard_enabled = false
+
+[node name="HostButton" type="Button" parent="Waiting/VBoxContainer/Host" unique_id=207641960]
+layout_mode = 2
+text = "HOST"
+
 [node name="Label" type="Label" parent="Waiting/VBoxContainer" unique_id=491302504]
+visible = false
 layout_mode = 2
 text = "WAITINGFOROPPONENT"
 
 [node name="MiniDeck" parent="Waiting/VBoxContainer" unique_id=1191434496 instance=ExtResource("8_urio0")]
 layout_mode = 2
+
+[node name="Exit" type="Button" parent="Waiting/VBoxContainer" unique_id=2086301073]
+layout_mode = 2
+text = "CANCEL"
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=911444246]
 z_index = -10
@@ -166,3 +213,7 @@ visible = false
 [connection signal="pressed" from="Menu/VBoxContainer/AccessedMenu/Deck" to="." method="_on_deck_pressed"]
 [connection signal="exit" from="Deck" to="." method="return_to_menu"]
 [connection signal="battle_deck" from="BattleSelect" to="." method="ready_for_battle"]
+[connection signal="pressed" from="BattleSelect/List/Back" to="." method="return_to_menu"]
+[connection signal="pressed" from="Waiting/VBoxContainer/Join/JoinButton" to="." method="_attempt_join"]
+[connection signal="pressed" from="Waiting/VBoxContainer/Host/HostButton" to="." method="_attempt_host"]
+[connection signal="pressed" from="Waiting/VBoxContainer/Exit" to="." method="return_to_menu"]
