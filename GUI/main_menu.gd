@@ -4,6 +4,10 @@ extends Node
 ## MULTIPLAYER & NETWORKING
 
 var our_name : String = "PLAYERNAME"
+## [name, ID, is host? (bool)]
+var current_lobby_players : Array = []
+
+
 var opponent_names : Array[String] = [""]
 
 var our_ready : bool = false
@@ -15,32 +19,36 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_disconnect)
 	multiplayer.peer_disconnected.connect(_disconnect)
 
-
+var peer : ENetMultiplayerPeer
 ## Host a lobby
 func _attempt_host() -> void:
-	player_name = $GUI/Join/Lobby/SetName.text
-	var peer = ENetMultiplayerPeer.new()
-	var port : int = int($GUI/Join/Lobby/Port.text)
+	current_lobby_players = []
+	our_name = $Waiting/VBoxContainer/Name/PlayerName.text
+	peer = ENetMultiplayerPeer.new()
+	var port : int = int($Waiting/VBoxContainer/Host/HostIP.text)
 	if port < 1024 or port > 65535: # Checks the validity of the port. Below 1024 is privleged (not doable) stuff
 		port = 7777
 	peer.create_server(port,1)
 	multiplayer.multiplayer_peer = peer
-	$GUI/Join/Lobby.hide()
-	$GUI/Join/Game.show()
-	$GUI/Join/Game.made_lobby(player_name)
-	## TODO: Use upnp to auto-port forward
+	
+	current_lobby_players.append([our_name, peer.get_unique_id(), false])
+	
+	hide_all()
+	$Lobby.show()
+	load_lobby_gui()
 	var upnp = UPNP.new()
 	upnp.discover()
 	upnp.add_port_mapping(port)
-	$GUI/Data/IP.text = "IP: " + str(upnp.query_external_address()) + ":" + str(port)
+	$Lobby/IPS/IP.text = str(upnp.query_external_address()) + ":" + str(port)
 
 ## Join a lobby
 func _attempt_join() -> void:
+	joining_lobby = true
 	our_name = $Waiting/VBoxContainer/Name/PlayerName.text
 	var IP_address : String = $Waiting/VBoxContainer/Join/JoinInput.text
 	if IP_address == "":
-		IP_address = "127.0.0.1:4444"
-	var peer = ENetMultiplayerPeer.new()
+		IP_address = "127.0.0.1:7777"
+	peer = ENetMultiplayerPeer.new()
 	var seperate := IP_address.split(":")
 	if seperate.size() != 2:
 		push_error("Tried to join a game, but the IP address was formatted incorrectly!")
@@ -49,35 +57,45 @@ func _attempt_join() -> void:
 	var port : int = int(seperate[1])
 	peer.create_client(ip, port)
 	multiplayer.multiplayer_peer = peer
+	print("Should be joining...")
 
-## MODIFY 'WAITING' NODE TO DISPLAY A LOBBY W/OTHER PLAYERS DECK SHOWN (+Ready status) & READY-UP BUTTON
+func load_lobby_gui() -> void:
+	$Lobby.show()
+	var title : Label = Label.new()
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = "Players (" + str(current_lobby_players.size()) + "/2)"
+	$Lobby/PlayerList.add_child(title)
+	for player in current_lobby_players:
+		var new_label : Label = Label.new()
+		new_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var txt : String = player[0] if player[2] else player[0] + " (Host)"
+		new_label.text = txt
+		$Lobby/PlayerList.add_child(new_label)
+	pass
+
+
+## MODIFY TO DISPLAY A LOBBY W/OTHER PLAYERS DECK SHOWN (+Ready status) & READY-UP BUTTON
+# Called when we join a server
 func join_connected(_id:int=0) -> void:
-	$Waiting/VBoxContainer/Join.hide()
-	$Waiting/VBoxContainer/Host.hide()
+	$Waiting.hide()
+	$Lobby.show()
 	## Going to Server
-	lobby_joined.rpc(player_name)
+	lobby_joined.rpc(our_name, peer.get_unique_id(), true)
 
-## Called from Server to Client from gui_manager.gd to sync the lobbies
-func join_lob(joiner:String) -> void:
-	## Going to Server from Client
-	join_lobby.rpc(joiner, player_name)
-
-@rpc("any_peer", "call_remote", "reliable", 0)
-func join_lobby(player_name:String, host_player_name : String) -> void:
+# Sent from Server to update everyone when someone joins the lobby
+@rpc("authority", "call_remote", "reliable", 0)
+func join_lobby(lobby:Array) -> void:
+	print("Join was recieved!")
+	current_lobby_players = lobby
 	reset_lobby()
-	$Player1/PlayerData.text = host_player_name
-	$Player2/PlayerData.text = player_name
-	$Player2/Select.show()
-	$Player2/WeaponSelection.show()
-	$Player2/Confirm.show()
 
 ## Called from Client to Server
 @rpc("any_peer", "call_remote", "reliable", 0)
-func lobby_joined(player_joined:String) -> void:
+func lobby_joined(player_name:String, p_ID:int, isplayer:bool) -> void:
+	print("Player wants to join")
+	current_lobby_players.append([player_name, p_ID, isplayer])
 	## Going from Server to Client
-	join_lob(player_joined)
-	#join_lobby(player_joined, get_parent().player_name)
-	$Player2/PlayerData.text = player_joined
+	join_lobby.rpc(current_lobby_players)
 
 #func ready_up() -> void:
 	#is_ready.rpc()
@@ -110,15 +128,25 @@ func lobby_joined(player_joined:String) -> void:
 
 ## ADD SYNC CODE / COMMUNICATE GAMEPLAY
 
-## Un-ready ourselves when a client joins our lobby.
+## Called when anyone joins the lobby
 func peer_connected(_id:int=0) -> void:
-	our_ready = false
+	#our_ready = false
+	pass
 	#TODO: UPDATE VISUALS
 
-
+var joining_lobby : bool = false
 func _disconnect() -> void:
 	# Temp; should update lobby visuals (if host) other wise return to menu if peer/connecting
-	return_to_menu()
+	if joining_lobby:
+		return_to_menu()
+	else:
+		reset_lobby()
+
+## Clears and resets the lobby
+func reset_lobby() -> void:
+	for child in $Lobby/PlayerList.get_children():
+		child.queue_free()
+	load_lobby_gui()
 
 ## ^ MULTIPLAYER & NETWORKING
 
@@ -133,6 +161,7 @@ func hide_all() -> void:
 	$BattleSelect.hide()
 	$Playfield.hide()
 	$Waiting.hide()
+	$Lobby.hide()
 
 func _on_deck_pressed() -> void:
 	hide_all()

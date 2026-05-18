@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://dfigbub4rfoyp" path="res://Resources/deck.gd" id="6_go3ra"]
 [ext_resource type="Resource" uid="uid://dsmvahj2ipkya" path="res://Resources/BasicResources/demo_deck.tres" id="7_urio0"]
 [ext_resource type="PackedScene" uid="uid://doaiy2ongcjk4" path="res://GUI/mini_deck.tscn" id="8_urio0"]
+[ext_resource type="Script" uid="uid://cxfuxt7ei4sgj" path="res://GUI/copy_button_text.gd" id="9_ygayt"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_urio0"]
 
@@ -123,6 +124,7 @@ layout_mode = 2
 text = "BACK"
 
 [node name="Waiting" type="Control" parent="." unique_id=897254863]
+visible = false
 layout_mode = 3
 anchors_preset = 13
 anchor_left = 0.5
@@ -170,8 +172,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_readonly_color = Color(0, 0, 0, 1)
 theme_override_styles/read_only = SubResource("StyleBoxFlat_urio0")
-text = "IP ADDRESS"
-editable = false
+placeholder_text = "ENTER SERVER PORT (i.e. 4444)"
 emoji_menu_enabled = false
 virtual_keyboard_enabled = false
 
@@ -190,6 +191,49 @@ layout_mode = 2
 [node name="Exit" type="Button" parent="Waiting/VBoxContainer" unique_id=2086301073]
 layout_mode = 2
 text = "CANCEL"
+
+[node name="Lobby" type="Control" parent="." unique_id=1902916477]
+visible = false
+layout_mode = 3
+anchor_left = 0.1
+anchor_top = 0.1
+anchor_right = 0.9
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="Lobby" unique_id=1392465154]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlayerList" type="VBoxContainer" parent="Lobby" unique_id=1732763302]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+grow_vertical = 2
+
+[node name="IPS" type="HBoxContainer" parent="Lobby" unique_id=1150225146]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -231.0
+offset_bottom = 40.0
+grow_horizontal = 0
+
+[node name="txtIP" type="Label" parent="Lobby/IPS" unique_id=1431102629]
+layout_mode = 2
+text = "IP (click to copy):"
+
+[node name="IP" type="Button" parent="Lobby/IPS" unique_id=173823047]
+layout_mode = 2
+text = "IP ADDRESS"
+script = ExtResource("9_ygayt")
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=911444246]
 z_index = -10
@@ -217,3 +261,4 @@ visible = false
 [connection signal="pressed" from="Waiting/VBoxContainer/Join/JoinButton" to="." method="_attempt_join"]
 [connection signal="pressed" from="Waiting/VBoxContainer/Host/HostButton" to="." method="_attempt_host"]
 [connection signal="pressed" from="Waiting/VBoxContainer/Exit" to="." method="return_to_menu"]
+[connection signal="pressed" from="Lobby/IPS/IP" to="Lobby/IPS/IP" method="_pressed"]
