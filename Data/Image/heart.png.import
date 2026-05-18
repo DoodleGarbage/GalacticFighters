@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bhgv2awjxobce"
-path="res://.godot/imported/BloshMiniProfile.png-9743912e40b62f95491c08b373e079d6.ctex"
+uid="uid://b0bam6ktp6sji"
+path="res://.godot/imported/heart.png-c400d3c3e994a2f13bd7e312a0ac1038.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Art/Characters/BloshMiniProfile.png"
-dest_files=["res://.godot/imported/BloshMiniProfile.png-9743912e40b62f95491c08b373e079d6.ctex"]
+source_file="res://Data/Image/heart.png"
+dest_files=["res://.godot/imported/heart.png-c400d3c3e994a2f13bd7e312a0ac1038.ctex"]
 
 [params]
 
