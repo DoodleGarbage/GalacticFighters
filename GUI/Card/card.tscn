@@ -26,6 +26,7 @@ offset_left = 328.0
 offset_top = 60.0
 offset_right = 628.0
 offset_bottom = 560.0
+mouse_default_cursor_shape = 2
 theme = ExtResource("1_h87bd")
 script = ExtResource("2_bi2p1")
 

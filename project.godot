@@ -20,6 +20,10 @@ boot_splash/image="uid://xcwhomf3qbof"
 config/icon="uid://ccmumpj1wk5d5"
 boot_splash/minimum_display_time=3000
 
+[autoload]
+
+Resources="*uid://dingxo658ftmu"
+
 [display]
 
 window/size/viewport_width=1920

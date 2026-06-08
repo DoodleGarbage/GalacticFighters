@@ -18,231 +18,9 @@
 script = ExtResource("2_o1bug")
 save_to_file_Decks = Array[ExtResource("6_go3ra")]([ExtResource("7_urio0"), ExtResource("7_urio0")])
 
-[node name="Menu" type="Control" parent="." unique_id=2113682629]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("1_12752")
+[node name="MainMenu" type="CanvasLayer" parent="." unique_id=997904690]
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Menu" unique_id=1729675460]
-layout_mode = 1
-anchors_preset = 13
-anchor_left = 0.5
-anchor_right = 0.5
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-alignment = 1
-
-[node name="Spacer" type="Control" parent="Menu/VBoxContainer" unique_id=916004460]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="TextureRect2" type="TextureRect" parent="Menu/VBoxContainer" unique_id=575487780]
-custom_minimum_size = Vector2(500, 50)
-layout_mode = 2
-texture = ExtResource("3_o1bug")
-expand_mode = 5
-stretch_mode = 5
-
-[node name="Spacer2" type="Control" parent="Menu/VBoxContainer" unique_id=612824228]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Label" type="Label" parent="Menu/VBoxContainer" unique_id=1545114545]
-layout_mode = 2
-text = "EARLYACCESS"
-horizontal_alignment = 1
-
-[node name="VSeparator" type="HSeparator" parent="Menu/VBoxContainer" unique_id=1375375117]
-layout_mode = 2
-
-[node name="Start" type="Button" parent="Menu/VBoxContainer" unique_id=1087787860]
-editor_description = "Clicking opens the actual menu (accessedMenu)"
-layout_mode = 2
-text = "START"
-
-[node name="AccessedMenu" type="VBoxContainer" parent="Menu/VBoxContainer" unique_id=1889678041]
-editor_description = "May be replaced later. List with access to various menu areas"
-visible = false
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Battle" type="Button" parent="Menu/VBoxContainer/AccessedMenu" unique_id=526227873]
-layout_mode = 2
-text = "BATTLE"
-
-[node name="Deck" type="Button" parent="Menu/VBoxContainer/AccessedMenu" unique_id=33747546]
-layout_mode = 2
-text = "BUILDDECK"
-
-[node name="Options" type="Button" parent="Menu/VBoxContainer/AccessedMenu" unique_id=1222145256]
-layout_mode = 2
-text = "OPTIONS"
-
-[node name="MenuSpacer" type="Control" parent="Menu/VBoxContainer" unique_id=555766994]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Deck" parent="." unique_id=1021093203 instance=ExtResource("5_o1bug")]
-visible = false
-
-[node name="BattleSelect" type="Control" parent="." unique_id=918417344]
-visible = false
-layout_mode = 3
-anchors_preset = 13
-anchor_left = 0.5
-anchor_right = 0.5
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("1_12752")
-script = ExtResource("5_ar3vo")
-
-[node name="List" type="VBoxContainer" parent="BattleSelect" unique_id=1678013194]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-alignment = 1
-
-[node name="SD" type="Label" parent="BattleSelect/List" unique_id=54941857]
-layout_mode = 2
-text = "SELECTDECK"
-
-[node name="DeckLister" type="GridContainer" parent="BattleSelect/List" unique_id=1453401983]
-layout_mode = 2
-columns = 4
-
-[node name="Back" type="Button" parent="BattleSelect/List" unique_id=1351990624]
-layout_mode = 2
-text = "BACK"
-
-[node name="Waiting" type="Control" parent="." unique_id=897254863]
-visible = false
-layout_mode = 3
-anchors_preset = 13
-anchor_left = 0.5
-anchor_right = 0.5
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme = ExtResource("1_12752")
-
-[node name="VBoxContainer" type="VBoxContainer" parent="Waiting" unique_id=709870732]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-alignment = 1
-
-[node name="Name" type="HBoxContainer" parent="Waiting/VBoxContainer" unique_id=1003984857]
-layout_mode = 2
-
-[node name="PlayerName" type="TextEdit" parent="Waiting/VBoxContainer/Name" unique_id=1775862899]
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "PLAYERNAME"
-scroll_fit_content_height = true
-
-[node name="Join" type="HBoxContainer" parent="Waiting/VBoxContainer" unique_id=377116248]
-layout_mode = 2
-
-[node name="JoinInput" type="TextEdit" parent="Waiting/VBoxContainer/Join" unique_id=1508883584]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="JoinButton" type="Button" parent="Waiting/VBoxContainer/Join" unique_id=2084692074]
-layout_mode = 2
-text = "JOIN"
-
-[node name="Host" type="HBoxContainer" parent="Waiting/VBoxContainer" unique_id=1903240587]
-layout_mode = 2
-
-[node name="HostIP" type="TextEdit" parent="Waiting/VBoxContainer/Host" unique_id=81494801]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_readonly_color = Color(0, 0, 0, 1)
-theme_override_styles/read_only = SubResource("StyleBoxFlat_urio0")
-placeholder_text = "ENTER SERVER PORT (i.e. 4444)"
-emoji_menu_enabled = false
-virtual_keyboard_enabled = false
-
-[node name="HostButton" type="Button" parent="Waiting/VBoxContainer/Host" unique_id=207641960]
-layout_mode = 2
-text = "HOST"
-
-[node name="Label" type="Label" parent="Waiting/VBoxContainer" unique_id=491302504]
-visible = false
-layout_mode = 2
-text = "WAITINGFOROPPONENT"
-
-[node name="MiniDeck" parent="Waiting/VBoxContainer" unique_id=1191434496 instance=ExtResource("8_urio0")]
-layout_mode = 2
-
-[node name="Exit" type="Button" parent="Waiting/VBoxContainer" unique_id=2086301073]
-layout_mode = 2
-text = "CANCEL"
-
-[node name="Lobby" type="Control" parent="." unique_id=1902916477]
-visible = false
-layout_mode = 3
-anchor_left = 0.1
-anchor_top = 0.1
-anchor_right = 0.9
-anchor_bottom = 0.9
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Panel" type="Panel" parent="Lobby" unique_id=1392465154]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="PlayerList" type="VBoxContainer" parent="Lobby" unique_id=1732763302]
-layout_mode = 1
-anchors_preset = 9
-anchor_bottom = 1.0
-grow_vertical = 2
-
-[node name="corner" type="VBoxContainer" parent="Lobby" unique_id=274381330]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -231.0
-offset_bottom = 40.0
-grow_horizontal = 0
-
-[node name="IPS" type="HBoxContainer" parent="Lobby/corner" unique_id=1150225146]
-layout_mode = 2
-
-[node name="txtIP" type="Label" parent="Lobby/corner/IPS" unique_id=1431102629]
-layout_mode = 2
-text = "IP (click to copy):"
-
-[node name="IP" type="Button" parent="Lobby/corner/IPS" unique_id=173823047]
-layout_mode = 2
-text = "IP ADDRESS"
-script = ExtResource("9_ygayt")
-
-[node name="ready" type="Button" parent="Lobby/corner" unique_id=1688138090]
-layout_mode = 2
-text = "Ready Up"
-
-[node name="TextureRect" type="TextureRect" parent="." unique_id=911444246]
+[node name="TextureRect" type="TextureRect" parent="MainMenu" unique_id=911444246]
 z_index = -10
 anchors_preset = 15
 anchor_right = 1.0
@@ -256,17 +34,243 @@ texture = ExtResource("2_ldfg3")
 expand_mode = 5
 stretch_mode = 5
 
-[node name="Playfield" parent="." unique_id=178232400 instance=ExtResource("6_bi43m")]
+[node name="Menu" type="Control" parent="MainMenu" unique_id=2113682629]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_12752")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainMenu/Menu" unique_id=1729675460]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Spacer" type="Control" parent="MainMenu/Menu/VBoxContainer" unique_id=916004460]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TextureRect2" type="TextureRect" parent="MainMenu/Menu/VBoxContainer" unique_id=575487780]
+custom_minimum_size = Vector2(500, 50)
+layout_mode = 2
+texture = ExtResource("3_o1bug")
+expand_mode = 5
+stretch_mode = 5
+
+[node name="Spacer2" type="Control" parent="MainMenu/Menu/VBoxContainer" unique_id=612824228]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Label" type="Label" parent="MainMenu/Menu/VBoxContainer" unique_id=1545114545]
+layout_mode = 2
+text = "EARLYACCESS"
+horizontal_alignment = 1
+
+[node name="VSeparator" type="HSeparator" parent="MainMenu/Menu/VBoxContainer" unique_id=1375375117]
+layout_mode = 2
+
+[node name="Start" type="Button" parent="MainMenu/Menu/VBoxContainer" unique_id=1087787860]
+editor_description = "Clicking opens the actual menu (accessedMenu)"
+layout_mode = 2
+text = "START"
+
+[node name="AccessedMenu" type="VBoxContainer" parent="MainMenu/Menu/VBoxContainer" unique_id=1889678041]
+editor_description = "May be replaced later. List with access to various menu areas"
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Battle" type="Button" parent="MainMenu/Menu/VBoxContainer/AccessedMenu" unique_id=526227873]
+layout_mode = 2
+text = "BATTLE"
+
+[node name="Deck" type="Button" parent="MainMenu/Menu/VBoxContainer/AccessedMenu" unique_id=33747546]
+layout_mode = 2
+text = "BUILDDECK"
+
+[node name="Options" type="Button" parent="MainMenu/Menu/VBoxContainer/AccessedMenu" unique_id=1222145256]
+layout_mode = 2
+text = "OPTIONS"
+
+[node name="MenuSpacer" type="Control" parent="MainMenu/Menu/VBoxContainer" unique_id=555766994]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Deck" parent="MainMenu" unique_id=1021093203 instance=ExtResource("5_o1bug")]
 visible = false
 
-[connection signal="pressed" from="Menu/VBoxContainer/Start" to="." method="_start_pressed"]
-[connection signal="pressed" from="Menu/VBoxContainer/AccessedMenu/Battle" to="." method="prepare_battle"]
-[connection signal="pressed" from="Menu/VBoxContainer/AccessedMenu/Deck" to="." method="_on_deck_pressed"]
-[connection signal="exit" from="Deck" to="." method="return_to_menu"]
-[connection signal="battle_deck" from="BattleSelect" to="." method="ready_for_battle"]
-[connection signal="pressed" from="BattleSelect/List/Back" to="." method="return_to_menu"]
-[connection signal="pressed" from="Waiting/VBoxContainer/Join/JoinButton" to="." method="_attempt_join"]
-[connection signal="pressed" from="Waiting/VBoxContainer/Host/HostButton" to="." method="_attempt_host"]
-[connection signal="pressed" from="Waiting/VBoxContainer/Exit" to="." method="return_to_menu"]
-[connection signal="pressed" from="Lobby/corner/IPS/IP" to="Lobby/corner/IPS/IP" method="_pressed"]
-[connection signal="pressed" from="Lobby/corner/ready" to="." method="ready_button_pressed"]
+[node name="BattleSelect" type="Control" parent="MainMenu" unique_id=918417344]
+visible = false
+layout_mode = 3
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_12752")
+script = ExtResource("5_ar3vo")
+
+[node name="List" type="VBoxContainer" parent="MainMenu/BattleSelect" unique_id=1678013194]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="SD" type="Label" parent="MainMenu/BattleSelect/List" unique_id=54941857]
+layout_mode = 2
+text = "SELECTDECK"
+
+[node name="DeckLister" type="GridContainer" parent="MainMenu/BattleSelect/List" unique_id=1453401983]
+layout_mode = 2
+columns = 4
+
+[node name="Back" type="Button" parent="MainMenu/BattleSelect/List" unique_id=1351990624]
+layout_mode = 2
+text = "BACK"
+
+[node name="Waiting" type="Control" parent="MainMenu" unique_id=897254863]
+visible = false
+layout_mode = 3
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("1_12752")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainMenu/Waiting" unique_id=709870732]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Name" type="HBoxContainer" parent="MainMenu/Waiting/VBoxContainer" unique_id=1003984857]
+layout_mode = 2
+
+[node name="PlayerName" type="TextEdit" parent="MainMenu/Waiting/VBoxContainer/Name" unique_id=1775862899]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "PLAYERNAME"
+scroll_fit_content_height = true
+
+[node name="Join" type="HBoxContainer" parent="MainMenu/Waiting/VBoxContainer" unique_id=377116248]
+layout_mode = 2
+
+[node name="JoinInput" type="TextEdit" parent="MainMenu/Waiting/VBoxContainer/Join" unique_id=1508883584]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="JoinButton" type="Button" parent="MainMenu/Waiting/VBoxContainer/Join" unique_id=2084692074]
+layout_mode = 2
+text = "JOIN"
+
+[node name="Host" type="HBoxContainer" parent="MainMenu/Waiting/VBoxContainer" unique_id=1903240587]
+layout_mode = 2
+
+[node name="HostIP" type="TextEdit" parent="MainMenu/Waiting/VBoxContainer/Host" unique_id=81494801]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_readonly_color = Color(0, 0, 0, 1)
+theme_override_styles/read_only = SubResource("StyleBoxFlat_urio0")
+placeholder_text = "ENTER SERVER PORT (i.e. 4444)"
+emoji_menu_enabled = false
+virtual_keyboard_enabled = false
+
+[node name="HostButton" type="Button" parent="MainMenu/Waiting/VBoxContainer/Host" unique_id=207641960]
+layout_mode = 2
+text = "HOST"
+
+[node name="Label" type="Label" parent="MainMenu/Waiting/VBoxContainer" unique_id=491302504]
+visible = false
+layout_mode = 2
+text = "WAITINGFOROPPONENT"
+
+[node name="MiniDeck" parent="MainMenu/Waiting/VBoxContainer" unique_id=1191434496 instance=ExtResource("8_urio0")]
+layout_mode = 2
+
+[node name="Exit" type="Button" parent="MainMenu/Waiting/VBoxContainer" unique_id=2086301073]
+layout_mode = 2
+text = "CANCEL"
+
+[node name="Lobby" type="Control" parent="MainMenu" unique_id=1902916477]
+visible = false
+layout_mode = 3
+anchor_left = 0.1
+anchor_top = 0.1
+anchor_right = 0.9
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="MainMenu/Lobby" unique_id=1392465154]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PlayerList" type="VBoxContainer" parent="MainMenu/Lobby" unique_id=1732763302]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+grow_vertical = 2
+
+[node name="corner" type="VBoxContainer" parent="MainMenu/Lobby" unique_id=274381330]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -231.0
+offset_bottom = 40.0
+grow_horizontal = 0
+
+[node name="IPS" type="HBoxContainer" parent="MainMenu/Lobby/corner" unique_id=1150225146]
+layout_mode = 2
+
+[node name="txtIP" type="Label" parent="MainMenu/Lobby/corner/IPS" unique_id=1431102629]
+layout_mode = 2
+text = "IP (click to copy):"
+
+[node name="IP" type="Button" parent="MainMenu/Lobby/corner/IPS" unique_id=173823047]
+layout_mode = 2
+text = "IP ADDRESS"
+script = ExtResource("9_ygayt")
+
+[node name="ready" type="Button" parent="MainMenu/Lobby/corner" unique_id=1688138090]
+layout_mode = 2
+text = "Ready Up"
+
+[node name="Gameplay" type="CanvasLayer" parent="." unique_id=1978859045]
+visible = false
+
+[node name="Playfield" parent="Gameplay" unique_id=178232400 instance=ExtResource("6_bi43m")]
+
+[connection signal="pressed" from="MainMenu/Menu/VBoxContainer/Start" to="." method="_start_pressed"]
+[connection signal="pressed" from="MainMenu/Menu/VBoxContainer/AccessedMenu/Battle" to="." method="prepare_battle"]
+[connection signal="pressed" from="MainMenu/Menu/VBoxContainer/AccessedMenu/Deck" to="." method="_on_deck_pressed"]
+[connection signal="exit" from="MainMenu/Deck" to="." method="return_to_menu"]
+[connection signal="battle_deck" from="MainMenu/BattleSelect" to="." method="ready_for_battle"]
+[connection signal="pressed" from="MainMenu/BattleSelect/List/Back" to="." method="return_to_menu"]
+[connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Join/JoinButton" to="." method="_attempt_join"]
+[connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Host/HostButton" to="." method="_attempt_host"]
+[connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Exit" to="." method="return_to_menu"]
+[connection signal="pressed" from="MainMenu/Lobby/corner/IPS/IP" to="MainMenu/Lobby/corner/IPS/IP" method="_pressed"]
+[connection signal="pressed" from="MainMenu/Lobby/corner/ready" to="." method="ready_button_pressed"]

@@ -1,5 +1,9 @@
 extends Control
 
+class_name Card_GUI
+
+var manager : Node
+
 @export
 var stored_card : Card = preload("res://Resources/BasicResources/demo_card.tres")
 
@@ -10,7 +14,7 @@ func _ready() -> void:
 	target_position = position
 	initilize_interactions()
 	load_card(stored_card)
-	## We set the 'Screen constant' - used for dragging - to be 80% of the screen per second
+	## We set the 'Screen constant' - used for dragging - to be 100% of the screen per second
 	SCREEN_CONST = DisplayServer.screen_get_size().length() * 1.0
 
 const default_move = preload("res://Resources/BasicResources/default_move.tres")
@@ -85,53 +89,40 @@ func load_card(card:Card) -> void:
 var menu_open : bool = false
 const abil_gui := preload("res://GUI/Card/ability_display.tscn")
 
+signal interaction(event)
 
-
-func _input(event: InputEvent) -> void:
-	# Menu Interaction Code - opens the GUI for interacting
+func _gui_input(event: InputEvent) -> void:
+	# Menu Interaction - opens the GUI for interacting
 	if event.is_action_released("card_interact"):
-		var area := Rect2(Vector2(0,0), self.size)
-		if area.has_point(get_local_mouse_position()):
-			if menu_open:
-				close_interaction_menu()
-			else:
-				open_interaction_menu()
-		elif menu_open:
-			close_interaction_menu()
+		interaction.emit(event)
+	
 	if not player_owned: ## Disables dragging for non-player cards
 		return
 	if event is InputEventMouseButton:
 		if event.button_index == MouseButton.MOUSE_BUTTON_LEFT && get_rect().has_point(get_global_mouse_position()):
 			primed_for_drag = true
-			drag_deadzone = get_local_mouse_position()
 	if event is InputEventMouseMotion && primed_for_drag:
-		if not event.button_mask & MOUSE_BUTTON_MASK_LEFT:
-			primed_for_drag = false
-			return # THERE IS A RETURN HERE WARNING
-		if drag_deadzone.distance_to(get_local_mouse_position()) > MOUSE_DEADZONE:
-			start_drag()
+		start_drag()
 
 # Opens/Closes the actions menu (move, attack, use ability)
 func open_interaction_menu() -> void:
-	menu_open = true
-	printerr("Send Signal to Global Screen-Dimmer here")
+	z_index = 5
 	$AttachPoint1.show()
 	$AttachPoint2.show()
 	if player_owned: ## Only show the move/attack/etc for player cards
 		$AttachPoint3.show()
 func close_interaction_menu() -> void:
-	menu_open = false
+	z_index = 0
 	$AttachPoint1.hide()
 	$AttachPoint2.hide()
 	$AttachPoint3.hide()
 
 ## Card Dragging
 
-# The current node who "owns" us, since we can't use the scene tree to check this. Our card GUI code shouldn't touch or care about this, and it should only be used by managing nodes.
-var docker : Node
-# For use by the current managing 'docker' to determine if we are being dragged or should resort to the docker's position management
-var docked : bool = false
+# if we were clicked and are about to try dragging on next mouse movement
 var primed_for_drag : bool = false
+# whether or not we are actively being dragged
+var dragging : bool = false
 # The location we will interpolate towards
 var target_position : Vector2 = Vector2(0,0)
 
@@ -139,30 +130,34 @@ var target_position : Vector2 = Vector2(0,0)
 var MOUSE_DEADZONE : float = 10.0
 
 func start_drag() -> void:
-	## ADD CHECK TO MAKE SURE NO ONE ELSE IS BEING DRAGGED/WILL BE
 	primed_for_drag = false
-	docked = false
+	if not manager.allow_drag:
+		return
+	dragging = true
 	move_offset = get_local_mouse_position() * scale
-	z_index = 5
+	z_index = 2
 	_drag()
 
+signal stopped_dragging()
 func _drag() -> void:
-	if docked:
+	if manager == null or not manager.allow_drag:
 		return
-	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		docked = true
+	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and dragging:
 		move_offset = Vector2(0,0)
 		z_index = 0
+		dragging = false
+		stopped_dragging.emit()
 		return
-	
+	if not dragging:
+		return
 	target_position = get_global_mouse_position() - move_offset
 
-# When we press left click, we create a point; if we move past the 'deadzone' we begin dragging the card.
-var drag_deadzone : Vector2
+
 # When we start dragging a card, we drag it around the point we 'pulled it'
 var move_offset : Vector2 = Vector2(0,0)
 # See Ready() for the details of screen constant; it's how much of the screen we travel per second
 var SCREEN_CONST : float = 0.0
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	_drag()
-	position = position.move_toward(target_position, SCREEN_CONST * delta)
+	position = target_position
+	#position.move_toward(target_position, SCREEN_CONST * delta)
