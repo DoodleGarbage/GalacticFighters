@@ -16,6 +16,7 @@
 
 [node name="Root" type="Node" unique_id=595754331]
 script = ExtResource("2_o1bug")
+save_to_file_Decks = Array[ExtResource("6_go3ra")]([ExtResource("7_urio0"), ExtResource("7_urio0")])
 
 [node name="Menu" type="Control" parent="." unique_id=2113682629]
 layout_mode = 3
@@ -100,7 +101,6 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_12752")
 script = ExtResource("5_ar3vo")
-deck_list = Array[ExtResource("6_go3ra")]([ExtResource("7_urio0"), ExtResource("7_urio0"), ExtResource("7_urio0"), ExtResource("7_urio0")])
 
 [node name="List" type="VBoxContainer" parent="BattleSelect" unique_id=1678013194]
 layout_mode = 1
@@ -217,7 +217,7 @@ anchors_preset = 9
 anchor_bottom = 1.0
 grow_vertical = 2
 
-[node name="IPS" type="HBoxContainer" parent="Lobby" unique_id=1150225146]
+[node name="corner" type="VBoxContainer" parent="Lobby" unique_id=274381330]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -226,14 +226,21 @@ offset_left = -231.0
 offset_bottom = 40.0
 grow_horizontal = 0
 
-[node name="txtIP" type="Label" parent="Lobby/IPS" unique_id=1431102629]
+[node name="IPS" type="HBoxContainer" parent="Lobby/corner" unique_id=1150225146]
+layout_mode = 2
+
+[node name="txtIP" type="Label" parent="Lobby/corner/IPS" unique_id=1431102629]
 layout_mode = 2
 text = "IP (click to copy):"
 
-[node name="IP" type="Button" parent="Lobby/IPS" unique_id=173823047]
+[node name="IP" type="Button" parent="Lobby/corner/IPS" unique_id=173823047]
 layout_mode = 2
 text = "IP ADDRESS"
 script = ExtResource("9_ygayt")
+
+[node name="ready" type="Button" parent="Lobby/corner" unique_id=1688138090]
+layout_mode = 2
+text = "Ready Up"
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=911444246]
 z_index = -10
@@ -261,4 +268,5 @@ visible = false
 [connection signal="pressed" from="Waiting/VBoxContainer/Join/JoinButton" to="." method="_attempt_join"]
 [connection signal="pressed" from="Waiting/VBoxContainer/Host/HostButton" to="." method="_attempt_host"]
 [connection signal="pressed" from="Waiting/VBoxContainer/Exit" to="." method="return_to_menu"]
-[connection signal="pressed" from="Lobby/IPS/IP" to="Lobby/IPS/IP" method="_pressed"]
+[connection signal="pressed" from="Lobby/corner/IPS/IP" to="Lobby/corner/IPS/IP" method="_pressed"]
+[connection signal="pressed" from="Lobby/corner/ready" to="." method="ready_button_pressed"]

@@ -1,3 +1,5 @@
 [
 	{"Name":"Bloshy Blu","FullProfile":"BloshFullProfile","MiniProfile":"BloshMiniProfile", "Health":40, "Defense": 1, "Attack": 5, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["ABILITY DEMO", "PASSIVE DEMO"]},
+	{"Name":"Dummy","FullProfile":"dummy","MiniProfile":"dummy_headshot", "Health":99, "Defense": 0, "Attack": 10, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["ABILITY DEMO", "PASSIVE DEMO"]},
+	{"Name":"Zunie","FullProfile":"ZunieFullProfile","MiniProfile":"ZunieMiniProfile", "Health":25, "Defense": 3, "Attack": 8, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["ABILITY DEMO", "PASSIVE DEMO"]},
 ]

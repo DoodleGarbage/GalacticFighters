@@ -1,7 +1,10 @@
 extends Control
 
-@export
-var deck_list : Array[Deck] = []
+## This is loaded by the main_menu script
+var deck_list : Array[Deck] = [] :
+	set(value):
+		deck_list = value
+		load_decks()
 
 func _ready() -> void:
 	load_decks()

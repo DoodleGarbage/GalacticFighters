@@ -4,9 +4,11 @@ extends Node
 ## MULTIPLAYER & NETWORKING
 
 var our_name : String = "PLAYERNAME"
-## [name, ID, is host? (bool), deck]
+## [name (string), ID (int), is host? (bool), deck (array[string]), ready_status (bool)]
 var current_lobby_players : Array = []
 
+@export
+var save_to_file_Decks : Array[Deck] = []
 
 var opponent_names : Array[String] = [""]
 
@@ -14,6 +16,11 @@ var our_ready : bool = false
 var opponent_readies : Array[bool] = [false]
 
 func _ready() -> void:
+	var deck_txt : Array[Array] = []
+	for deck in save_to_file_Decks:
+		deck_txt.append(deck_to_string(deck))
+	print(JSON.stringify(deck_txt), "\t")
+	
 	## Networking
 	multiplayer.connected_to_server.connect(join_connected)
 	multiplayer.peer_connected.connect(peer_connected)
@@ -27,6 +34,8 @@ func _ready() -> void:
 		load_resource("Pscript", internal)
 		load_resource("Attribute", internal)
 		load_resource("SpecialCharacter", internal)
+	
+	load_saved_decks()
 
 var peer : ENetMultiplayerPeer
 ## Host a lobby
@@ -37,10 +46,10 @@ func _attempt_host() -> void:
 	var port : int = int($Waiting/VBoxContainer/Host/HostIP.text)
 	if port < 1024 or port > 65535: # Checks the validity of the port. Below 1024 is privleged (not doable) stuff
 		port = 7777
-	peer.create_server(port,1)
+	peer.create_server(port,32)
 	multiplayer.multiplayer_peer = peer
 	
-	current_lobby_players.append([our_name, peer.get_unique_id(), false, prepared_deck.to_text()])
+	current_lobby_players.append([our_name, peer.get_unique_id(), true, deck_to_string(prepared_deck), false])
 	
 	hide_all()
 	$Lobby.show()
@@ -48,7 +57,7 @@ func _attempt_host() -> void:
 	var upnp = UPNP.new()
 	upnp.discover()
 	upnp.add_port_mapping(port)
-	$Lobby/IPS/IP.text = str(upnp.query_external_address()) + ":" + str(port)
+	$Lobby/corner/IPS/IP.text = str(upnp.query_external_address()) + ":" + str(port)
 
 ## TODO: Make this happen asynchronously so the whole game doesn't freeze
 
@@ -66,7 +75,10 @@ func _attempt_join() -> void:
 		return
 	var ip : String = seperate[0]
 	var port : int = int(seperate[1])
-	peer.create_client(ip, port)
+	var error := peer.create_client(ip, port)
+	if error != OK:
+		push_error("There was an issue connecting! Error code: ", error)
+	$Lobby/corner/IPS/IP.text = ip + ":" + str(port)
 	multiplayer.multiplayer_peer = peer
 	print("Should be joining...")
 
@@ -79,21 +91,26 @@ func load_lobby_gui() -> void:
 	$Lobby/PlayerList.add_child(title)
 	for player in current_lobby_players:
 		var new_play := plgui.instantiate()
-		var txt : String = player[0] if player[2] else player[0] + " (Host)"
-		new_play.player = txt
+		
+		new_play.player = get_lobby_label(player)
 		var their_deck = string_to_deck(player[3])
 		new_play.load_deck(their_deck)
 		$Lobby/PlayerList.add_child(new_play)
-	pass
 
+func get_lobby_label(player:Array) -> String:
+	var txt : String = player[0]
+	if player[2]:
+		txt += " (Host)"
+	if player[4]:
+		txt += " Ready!"
+	return txt
 
-## MODIFY TO DISPLAY A LOBBY W/OTHER PLAYERS DECK SHOWN (+Ready status) & READY-UP BUTTON
 # Called when we join a server
 func join_connected(_id:int=0) -> void:
 	$Waiting.hide()
 	$Lobby.show()
 	## Going to Server
-	lobby_joined.rpc(our_name, peer.get_unique_id(), true, prepared_deck.to_text())
+	lobby_joined.rpc(our_name, peer.get_unique_id(), deck_to_string(prepared_deck))
 
 # Sent from Server to update everyone when someone joins the lobby
 @rpc("authority", "call_remote", "reliable", 0)
@@ -104,60 +121,31 @@ func join_lobby(lobby:Array) -> void:
 
 ## Called from Client to Server
 @rpc("any_peer", "call_remote", "reliable", 0)
-func lobby_joined(player_name:String, p_ID:int, isplayer:bool, deck:Array[String]) -> void:
+func lobby_joined(player_name:String, p_ID:int, deck:Array[String]) -> void:
 	print("Player wants to join")
-	current_lobby_players.append([player_name, p_ID, isplayer, deck])
+	current_lobby_players.append([player_name, p_ID, false, deck, false])
 	reset_lobby()
 	## Going from Server to Client
 	join_lobby.rpc(current_lobby_players)
-
-#func ready_up() -> void:
-	#is_ready.rpc()
-	#if multiplayer.is_server():
-		#$GUI/Join/Game.is_ready(1)
-		#player_1_ready = true
-	#else:
-		#$GUI/Join/Game.is_ready(2)
-		#player_2_ready = true
-	#if player_1_ready and player_2_ready and multiplayer.is_server():
-		#start_game.rpc()
-#
-### This calls on the other client, so we always know it was the other person that readied when this code runs.
-#@rpc("any_peer", "call_remote", "reliable", 0)
-#func is_ready() -> void:
-	#if multiplayer.is_server():
-		#$GUI/Join/Game.is_ready(2)
-		#player_2_ready = true
-	#else:
-		#$GUI/Join/Game.is_ready(1)
-		#player_1_ready = true
-	#if player_1_ready and player_2_ready and multiplayer.is_server():
-		#start_game.rpc()
-
-# Host calls this (which also calls it on itself) which will cause everyone to load the playfield
-#@rpc("authority", "call_local", "reliable", 0)
-#func start_game() -> void:
-	#$GUI/Join.hide()
-	## Initialize Characters
 
 ## ADD SYNC CODE / COMMUNICATE GAMEPLAY
 
 ## Called when anyone joins the lobby
 func peer_connected(_id:int=0) -> void:
-	#our_ready = false
-	pass
-	#TODO: UPDATE VISUALS
+	for user in current_lobby_players:
+		user[4] = false
 
 var joining_lobby : bool = false
 func _disconnect(_whoid:int=0) -> void:
-	if joining_lobby:
+	if joining_lobby and _whoid == peer.get_unique_id():
 		return_to_menu()
 		return
 	# Temp; should update lobby visuals (if host) other wise return to menu if peer/connecting
-	for pla in current_lobby_players.size():
-		if current_lobby_players[pla][1] == _whoid:
-			current_lobby_players.remove_at(pla)
-			break
+	var player = get_player(_whoid)
+	current_lobby_players.remove_at(player) # When someone leaves or joins, reset everybody's ready status
+	for user in current_lobby_players:
+		user[4] = false
+	joining_lobby = false
 	reset_lobby()
 
 ## Clears and resets the lobby
@@ -165,6 +153,34 @@ func reset_lobby() -> void:
 	for child in $Lobby/PlayerList.get_children():
 		child.queue_free()
 	load_lobby_gui()
+
+## Gets a player's index in the lobby by their id or name.
+func get_player(who:Variant) -> int:
+	var search : int = 0
+	match(typeof(who)):
+		TYPE_STRING, TYPE_STRING_NAME:
+			search = 0
+		TYPE_INT:
+			search = 1
+	for player in current_lobby_players.size():
+		if current_lobby_players[player][search] == who:
+			return player
+	return -1
+
+func ready_button_pressed() -> void:
+	print("readying up!")
+	rpc("ready_up", peer.get_unique_id())
+
+@rpc("any_peer", "call_local", "reliable", 1)
+func ready_up(id:int) -> void:
+	print("I got a ready up!")
+	var who : int = get_player(id)
+	if who == -1:
+		push_error("A player that has left or couldn't be found tried to ready up!")
+		return
+	current_lobby_players[who][4] = true
+	reset_lobby()
+
 
 ## ^ MULTIPLAYER & NETWORKING
 
@@ -214,11 +230,13 @@ func string_to_deck(deck:Array[String]) -> Deck:
 					zombie.special_characters.append(chara)
 	return zombie
 
+func deck_to_string(deck:Deck) -> Array[String]:
+	var string : Array[String] = []
+	for spechar in deck.special_characters:
+		string.append("SpecialCharacter:" + spechar.name)
+	return string
 
 ## RESOURCE MANAGEMENT
-
-#func _ready() -> void:
-	#pass
 
 ## Loaded Resources
 
@@ -227,11 +245,13 @@ var pscripts : Array = []
 var specialcharacters : Array[Card] = []
 var images : Array[Texture] = []
 
+## Resource load functions
+
 func load_images(internal:bool = true) -> void:
 	var dir_path : String = "res://Data/Image/" if internal else "user://Image/"
 	var dir = DirAccess.open(dir_path)
 	if !dir:
-		push_error("No folders was found for Images!")
+		push_error("No folders was found for %sImages!" % dir_path)
 		return
 	dir.list_dir_begin()
 	var current_file : String = dir.get_next()
@@ -261,7 +281,7 @@ func load_resource(resource_name:String, internal:bool=true) -> void:
 	var tar_dir : String = "res://Data/" if internal else "user://"
 	var dir = DirAccess.open(tar_dir + resource_name)
 	if !dir:
-		push_error("No folder was found for %s!" % resource_name)
+		push_error("No folder was found for %s%s!" % [tar_dir, resource_name])
 		return
 	dir.list_dir_begin()
 	var current_file : String = dir.get_next()
@@ -277,11 +297,11 @@ func load_resource(resource_name:String, internal:bool=true) -> void:
 
 func load_resource_from_file(file:String, resource_name:String) -> void:
 	var JSONData = JSON.new()
-	var File := FileAccess.open("res://Data/" + resource_name + "/" + file, FileAccess.READ)
 	## This should never happen.
 	if not (FileAccess.file_exists("res://Data/" + resource_name + "/" + file)):
 		push_error("File \"%s\" was not found!" % ["res://Data/" + resource_name + "/" + file])
 		return
+	var File := FileAccess.open("res://Data/" + resource_name + "/" + file, FileAccess.READ)
 	var fileJSON : String = File.get_as_text()
 	var error = JSONData.parse(fileJSON)
 	if error:
@@ -319,6 +339,34 @@ func load_resource_from_file(file:String, resource_name:String) -> void:
 							new_char.attributes.append(atri)
 					specialcharacters.append(new_char)
 
+## TODO: save decks to user:// and load them from there
+func load_saved_decks() -> void:
+	var decks : Array[Deck] = []
+	var JSONData := JSON.new()
+	if not (FileAccess.file_exists("res://Data/Decks/defaults.json")):
+		push_error("Couldn't load decks because no defaults.json file was found!")
+		return
+	var file := FileAccess.open("res://Data/Decks/defaults.json", FileAccess.READ)
+	var fileJSON : String = file.get_as_text()
+	var error = JSONData.parse(fileJSON)
+	if error:
+		push_error("JSON Parsing Error in decks default.json: ", JSONData.get_error_message(), " at line ", JSONData.get_error_line())
+		return
+	var data = JSONData.data
+	if typeof(data) == TYPE_ARRAY:
+		for deck in data:
+			## string_to_deck expects Array[String] but data is an untyped Array[]
+			var type_cast : Array[String]
+			type_cast.assign(deck["deck"]) # this is so weird and unintuitive
+			var as_resource : Deck = string_to_deck(type_cast)
+			as_resource.name = deck["name"]
+			decks.append(as_resource)
+	print("decks: ", decks)
+	$BattleSelect.deck_list = decks
+	return
+
+
+## Resource search functions
 
 func find_resource(resource_type:String, resource_name:String) -> Variant:
 	var search_array : Array = []
