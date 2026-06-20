@@ -108,7 +108,7 @@ func join_lobby(lobby:Array, host:int) -> void:
 @rpc("any_peer", "call_remote", "reliable", 0)
 func lobby_joined(player_name:String, p_ID:int, deck:Array[String]) -> void:
 	print("Player wants to join")
-	current_lobby_players.append([player_name, p_ID, false, deck, false])
+	current_lobby_players.append([player_name, p_ID, deck, false])
 	reset_lobby()
 	## Going from Server to Client
 	join_lobby.rpc(current_lobby_players, host_id)
