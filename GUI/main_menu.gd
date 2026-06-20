@@ -242,11 +242,7 @@ func string_to_deck(deck:Array[String]) -> Deck:
 	for card in deck:
 		var split := card.split(":", 1)
 		match(split[0]):
-			"SpecialCharacter":
-				var chara = Resources.find_resource(split[0], split[1])
-				if chara != null:
-					zombie.special_characters.append(chara)
-			"Character":
+			"Character", "SpecialCharacter":
 				var chara = Resources.find_resource(split[0], split[1])
 				if chara != null:
 					zombie.characters.append(chara)
@@ -254,7 +250,7 @@ func string_to_deck(deck:Array[String]) -> Deck:
 
 func deck_to_string(deck:Deck) -> Array[String]:
 	var string : Array[String] = []
-	for spechar in deck.special_characters:
+	for spechar in deck.characters:
 		string.append("SpecialCharacter:" + spechar.name)
 	for chara in deck.characters:
 		string.append("Character:" + chara.name)
