@@ -1,6 +1,9 @@
 extends Resource
 class_name Card
 
+
+
+
 @export
 var name : String = ""
 
@@ -34,5 +37,3 @@ var armor_pierce : int = 0
 
 @export
 var attributes : Array[Attribute] = []
-
-var statuses : Array[Attribute] = []

@@ -1,7 +1,7 @@
 [gd_resource type="Theme" format=3 uid="uid://cblg4kypkjepe"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v7a0a"]
-bg_color = Color(0.5445032, 0.6037602, 0.7044696, 1)
+bg_color = Color(0.14384618, 0.16162342, 0.32153153, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -23,8 +23,13 @@ corner_detail = 5
 
 [resource]
 HBoxContainer/constants/separation = 0
-Label/colors/font_color = Color(0, 0, 0, 1)
+Label/colors/font_color = Color(0.9312236, 0.9312236, 0.9312236, 1)
 Label/colors/font_outline_color = Color(0, 0, 0, 1)
+Label/colors/font_shadow_color = Color(0.45759618, 0.45759618, 0.457596, 1)
+Label/constants/shadow_offset_x = 0
+Label/constants/shadow_offset_y = 0
+Label/constants/shadow_outline_size = 5
+Label/font_sizes/font_size = 24
 Panel/styles/panel = SubResource("StyleBoxFlat_v7a0a")
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_6nxvl")
 VBoxContainer/constants/separation = 0

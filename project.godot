@@ -24,6 +24,10 @@ boot_splash/minimum_display_time=3000
 
 Resources="*uid://dingxo658ftmu"
 
+[debug]
+
+gdscript/warnings/unused_parameter=0
+
 [display]
 
 window/size/viewport_width=1920
@@ -39,6 +43,7 @@ folder_colors={
 "res://Data/": "purple",
 "res://GUI/": "green",
 "res://Gameplay/": "red",
+"res://ParticleEffects/": "yellow",
 "res://Resources/": "purple",
 "res://Themes/": "yellow"
 }
@@ -57,5 +62,6 @@ card_interact={
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=2
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"

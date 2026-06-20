@@ -1,5 +1,5 @@
 @tool
-extends Panel
+extends Control
 
 
 @export var image : Texture2D :

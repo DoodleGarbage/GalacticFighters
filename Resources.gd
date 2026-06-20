@@ -16,7 +16,7 @@ func _ready() -> void:
 
 var attributes : Array[Attribute] = []
 var pscripts : Array = []
-var specialcharacters : Array[Card] = []
+var characters : Array[Card] = []
 var images : Array[Texture] = []
 
 
@@ -27,7 +27,7 @@ func find_resource(resource_type:String, resource_name:String) -> Variant:
 	var search_array : Array = []
 	match(resource_type):
 		"Attribute": search_array = attributes
-		"SpecialCharacter": search_array = specialcharacters
+		"SpecialCharacter", "Character": search_array = characters
 		"String":
 			return resource_name
 		"Images": ## Just an extra way to search for images (redundancy!)
@@ -36,7 +36,7 @@ func find_resource(resource_type:String, resource_name:String) -> Variant:
 	for resource in search_array:
 		if resource.name == resource_name:
 			return resource
-	push_error("Could not find resource of type %s for name \"%s\"!" % [resource_type, resource_name])
+	push_warning("Could not find resource of type %s for name \"%s\"!" % [resource_type, resource_name])
 	return null
 
 func find_image(imagename:String) -> Texture:
@@ -56,7 +56,7 @@ func load_images(internal:bool = true) -> void:
 	var dir_path : String = "res://Data/Image/" if internal else "user://Image/"
 	var dir = DirAccess.open(dir_path)
 	if !dir:
-		push_error("No folders was found for %sImages!" % dir_path)
+		push_warning("No folders was found for %sImages!" % dir_path)
 		return
 	dir.list_dir_begin()
 	var current_file : String = dir.get_next()
@@ -85,7 +85,7 @@ func load_resource(resource_name:String, internal:bool=true) -> void:
 	var tar_dir : String = "res://Data/" if internal else "user://"
 	var dir = DirAccess.open(tar_dir + resource_name)
 	if !dir:
-		push_error("No folder was found for %s%s!" % [tar_dir, resource_name])
+		push_warning("No folder was found for %s%s!" % [tar_dir, resource_name])
 		return
 	dir.list_dir_begin()
 	var current_file : String = dir.get_next()
@@ -127,8 +127,13 @@ func load_resource_from_file(file:String, resource_name:String) -> void:
 				"Pscript":
 					## Power scripts must be uniquely loaded due to their nature as scripts
 					pass
-				"SpecialCharacter": ## Must be loaded: Attributes, Images
+				"SpecialCharacter", "Character": ## Must be loaded: Attributes, Images
 					var new_char : Card = Card.new()
+					match(resource_name):
+						"SpecialCharacter":
+							new_char.type = 0
+						"Character":
+							new_char.type = 1
 					new_char.name = resource["Name"]
 					new_char.full_profile = find_image(resource["FullProfile"])
 					new_char.mini_profile = find_image(resource["MiniProfile"])
@@ -142,4 +147,4 @@ func load_resource_from_file(file:String, resource_name:String) -> void:
 						var atri = find_resource("Attribute", atrru)
 						if atri != null:
 							new_char.attributes.append(atri)
-					specialcharacters.append(new_char)
+					characters.append(new_char)

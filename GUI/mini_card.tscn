@@ -33,3 +33,5 @@ layout_mode = 2
 
 [node name="SwordGUI" type="Control" parent="." unique_id=458931969]
 layout_mode = 2
+
+[connection signal="stopped_dragging" from="FullCard" to="." method="_on_full_card_stopped_dragging"]

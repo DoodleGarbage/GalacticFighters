@@ -3,33 +3,25 @@ extends Node
 # low key just copying my previous multiplayer networking setup :pray:
 ## MULTIPLAYER & NETWORKING
 
+var peer : ENetMultiplayerPeer
+
 var our_name : String = "PLAYERNAME"
-## [name (string), ID (int), is host? (bool), deck (array[string]), ready_status (bool)]
+## [name (string), ID (int), deck (array[string]), ready_status (bool)]
 var current_lobby_players : Array = []
 
-@export
-var save_to_file_Decks : Array[Deck] = []
-
-var opponent_names : Array[String] = [""]
-
-var our_ready : bool = false
-var opponent_readies : Array[bool] = [false]
+var host_id : int
 
 func _ready() -> void:
-	var deck_txt : Array[Array] = []
-	for deck in save_to_file_Decks:
-		deck_txt.append(deck_to_string(deck))
-	print(JSON.stringify(deck_txt), "\t")
 	
 	## Networking
 	multiplayer.connected_to_server.connect(join_connected)
 	multiplayer.peer_connected.connect(peer_connected)
-	multiplayer.server_disconnected.connect(_disconnect)
+	multiplayer.server_disconnected.connect(_server_disconnect)
 	multiplayer.peer_disconnected.connect(_disconnect)
 	
 	load_saved_decks()
 
-var peer : ENetMultiplayerPeer
+
 ## Host a lobby
 func _attempt_host() -> void:
 	current_lobby_players = []
@@ -45,13 +37,14 @@ func _attempt_host() -> void:
 	
 	hide_all()
 	$MainMenu/Lobby.show()
-	load_lobby_gui()
+	reset_lobby()
 	var upnp = UPNP.new()
 	upnp.discover()
 	upnp.add_port_mapping(port)
 	$MainMenu/Lobby/corner/IPS/IP.text = str(upnp.query_external_address()) + ":" + str(port)
+	host_id = peer.get_unique_id()
 
-## TODO: Make this happen asynchronously so the whole game doesn't freeze
+## TODO: Make this happen asynchronously so the whole game doesn't freeze - however you do that
 
 ## Join a lobby
 func _attempt_join() -> void:
@@ -76,7 +69,6 @@ func _attempt_join() -> void:
 
 const plgui := preload("res://GUI/playerlobby_deck.tscn")
 func load_lobby_gui() -> void:
-	$MainMenu/Lobby.show()
 	var title : Label = Label.new()
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.text = "Players (" + str(current_lobby_players.size()) + "/2)"
@@ -85,15 +77,15 @@ func load_lobby_gui() -> void:
 		var new_play := plgui.instantiate()
 		
 		new_play.player = get_lobby_label(player)
-		var their_deck = string_to_deck(player[3])
+		var their_deck = string_to_deck(player[2])
 		new_play.load_deck(their_deck)
 		$MainMenu/Lobby/PlayerList.add_child(new_play)
 
 func get_lobby_label(player:Array) -> String:
 	var txt : String = player[0]
-	if player[2]:
+	if player[1] == host_id:
 		txt += " (Host)"
-	if player[4]:
+	if player[3]:
 		txt += " Ready!"
 	return txt
 
@@ -106,9 +98,10 @@ func join_connected(_id:int=0) -> void:
 
 # Sent from Server to update everyone when someone joins the lobby
 @rpc("authority", "call_remote", "reliable", 0)
-func join_lobby(lobby:Array) -> void:
+func join_lobby(lobby:Array, host:int) -> void:
 	print("Join was recieved!")
 	current_lobby_players = lobby
+	host_id = host
 	reset_lobby()
 
 ## Called from Client to Server
@@ -118,27 +111,40 @@ func lobby_joined(player_name:String, p_ID:int, deck:Array[String]) -> void:
 	current_lobby_players.append([player_name, p_ID, false, deck, false])
 	reset_lobby()
 	## Going from Server to Client
-	join_lobby.rpc(current_lobby_players)
+	join_lobby.rpc(current_lobby_players, host_id)
 
 ## ADD SYNC CODE / COMMUNICATE GAMEPLAY
 
 ## Called when anyone joins the lobby
 func peer_connected(_id:int=0) -> void:
 	for user in current_lobby_players:
-		user[4] = false
+		user[3] = false
 
+## Triggers when someone disconnects from us
 var joining_lobby : bool = false
 func _disconnect(_whoid:int=0) -> void:
 	if joining_lobby and _whoid == peer.get_unique_id():
 		return_to_menu()
-		return
-	# Temp; should update lobby visuals (if host) other wise return to menu if peer/connecting
+		return # Not sure if this code needs to be here. - may only be used in the server disconnect code
 	var player = get_player(_whoid)
+	if current_lobby_players[player][1] == host_id: # If host disconnects, everyone should return to menu.
+		return_to_menu()
+		return
 	current_lobby_players.remove_at(player) # When someone leaves or joins, reset everybody's ready status
 	for user in current_lobby_players:
-		user[4] = false
+		user[3] = false
+	$MainMenu/Lobby/corner/ready.show()
 	joining_lobby = false
 	reset_lobby()
+
+## Triggers when we disconnect from the server
+func _server_disconnect(_whoid:int=0) -> void:
+	return_to_menu()
+
+func _quit_lobby() -> void:
+	current_lobby_players = []
+	peer.close()
+	return_to_menu()
 
 ## Clears and resets the lobby
 func reset_lobby() -> void:
@@ -161,6 +167,7 @@ func get_player(who:Variant) -> int:
 
 func ready_button_pressed() -> void:
 	print("readying up!")
+	
 	rpc("ready_up", peer.get_unique_id())
 
 @rpc("any_peer", "call_local", "reliable", 1)
@@ -170,18 +177,24 @@ func ready_up(id:int) -> void:
 	if who == -1:
 		push_error("A player that has left or couldn't be found tried to ready up!")
 		return
-	current_lobby_players[who][4] = true
 	
-	if current_lobby_players[get_player(peer.get_unique_id())][2]:
+	current_lobby_players[who][3] = true
+	if current_lobby_players[who][1] == peer.get_unique_id():
+		$MainMenu/Lobby/corner/ready.hide()
+	# check if this is host
+	if peer.get_unique_id() == host_id:
 		var should_start : bool = true
 		for player in current_lobby_players:
-			should_start = should_start && player[4] && true
+			# the 'true' prevents two unreadied players from flipping should_start back to true
+			should_start = should_start && player[3] && true
 		if current_lobby_players.size() > 2:
 			push_error("Can't start game! Currently only supports 2 players.")
 			should_start = false
 		if should_start:
-			pass
-			#start_game()
+			print("All players ready! Starting!")
+			for player in current_lobby_players:
+				player.pop_back() # Remove the 'Ready' entry from the lobby
+			$Gameplay/Playfield.initalize_game(current_lobby_players, host_id)
 	
 	reset_lobby()
 
@@ -233,12 +246,24 @@ func string_to_deck(deck:Array[String]) -> Deck:
 				var chara = Resources.find_resource(split[0], split[1])
 				if chara != null:
 					zombie.special_characters.append(chara)
+			"Character":
+				var chara = Resources.find_resource(split[0], split[1])
+				if chara != null:
+					zombie.characters.append(chara)
 	return zombie
 
 func deck_to_string(deck:Deck) -> Array[String]:
 	var string : Array[String] = []
 	for spechar in deck.special_characters:
 		string.append("SpecialCharacter:" + spechar.name)
+	for chara in deck.characters:
+		string.append("Character:" + chara.name)
+	for gadg in deck.gadgets:
+		string.append("Gadget:" + gadg.name)
+	for item in deck.items:
+		string.append("Item:"+item.name)
+	if deck.sword != null:
+		string.append("Sword:"+deck.sword.name)
 	return string
 
 ## RESOURCE MANAGEMENT
@@ -278,6 +303,5 @@ func load_saved_decks() -> void:
 			var as_resource : Deck = string_to_deck(type_cast)
 			as_resource.name = deck["name"]
 			decks.append(as_resource)
-	print("decks: ", decks)
 	$MainMenu/BattleSelect.deck_list = decks
 	return

@@ -2,11 +2,13 @@
 
 [ext_resource type="Texture2D" uid="uid://j86vuaqxro1n" path="res://Art/defense.png" id="1_rcx07"]
 [ext_resource type="Script" uid="uid://ctwnnecb20vou" path="res://Resources/attribute.gd" id="1_wo5gm"]
+[ext_resource type="Script" uid="uid://dc7kgs5qdub5j" path="res://Data/Pscript/attack.gd" id="2_1ebu0"]
 
 [resource]
 script = ExtResource("1_wo5gm")
 name = "ABILITY DEMO"
 icon = ExtResource("1_rcx07")
+pscript = ExtResource("2_1ebu0")
 type = 1
 desc = "DESCRIPTION OF ABILITY FILLS THIS SPACE"
 metadata/_custom_type_script = "uid://ctwnnecb20vou"

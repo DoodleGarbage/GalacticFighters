@@ -50,3 +50,5 @@ text = "While Bloshy Blue is on the field, the nearest enemy character's attribu
 fit_content = true
 scroll_active = false
 autowrap_mode = 2
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

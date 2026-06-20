@@ -1,6 +1,10 @@
 extends PanelContainer
 
+var loaded_ability : Attribute
+
 func load_ability(ability:Attribute) -> void:
+	
+	loaded_ability = ability
 	
 	$Sizer/NT/Name.text = tr(ability.name)
 	
@@ -17,5 +21,8 @@ func load_ability(ability:Attribute) -> void:
 	
 	$Sizer/Desc.text = tr(ability.desc)
 
-#func _init(ability:Ability) -> void:
-	#load_ability(ability)
+# Note: Can't us INIT as nodes aren't initialized
+
+signal selected()
+func _on_button_pressed() -> void:
+	selected.emit(loaded_ability)

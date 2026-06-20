@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://o5oepqui30u7"]
+
+[ext_resource type="Script" uid="uid://cwwf261oir5re" path="res://GUI/saferoom.gd" id="1_npq7u"]
+
+[node name="Saferoom" type="Panel" unique_id=467618310]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 35.0
+offset_top = 7.0
+offset_right = -1102.0
+offset_bottom = -290.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_npq7u")
+margins = 50.0

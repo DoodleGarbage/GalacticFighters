@@ -7,16 +7,16 @@
 [ext_resource type="Script" uid="uid://bo85pa83hor1" path="res://GUI/battle_select.gd" id="5_ar3vo"]
 [ext_resource type="PackedScene" uid="uid://b7u8fehe1jgc" path="res://GUI/deck_menu.tscn" id="5_o1bug"]
 [ext_resource type="PackedScene" uid="uid://dhrx3hltyg7fb" path="res://Gameplay/playfield.tscn" id="6_bi43m"]
-[ext_resource type="Script" uid="uid://dfigbub4rfoyp" path="res://Resources/deck.gd" id="6_go3ra"]
-[ext_resource type="Resource" uid="uid://dsmvahj2ipkya" path="res://Resources/BasicResources/demo_deck.tres" id="7_urio0"]
 [ext_resource type="PackedScene" uid="uid://doaiy2ongcjk4" path="res://GUI/mini_deck.tscn" id="8_urio0"]
 [ext_resource type="Script" uid="uid://cxfuxt7ei4sgj" path="res://GUI/copy_button_text.gd" id="9_ygayt"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_urio0"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8s5l4"]
+bg_color = Color(0.40784314, 0.003921569, 0.05490196, 1)
+
 [node name="Root" type="Node" unique_id=595754331]
 script = ExtResource("2_o1bug")
-save_to_file_Decks = Array[ExtResource("6_go3ra")]([ExtResource("7_urio0"), ExtResource("7_urio0")])
 
 [node name="MainMenu" type="CanvasLayer" parent="." unique_id=997904690]
 
@@ -188,7 +188,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_readonly_color = Color(0, 0, 0, 1)
 theme_override_styles/read_only = SubResource("StyleBoxFlat_urio0")
-placeholder_text = "ENTER SERVER PORT (i.e. 4444)"
+placeholder_text = "SERVER PORT (i.e. 4444)"
 emoji_menu_enabled = false
 virtual_keyboard_enabled = false
 
@@ -258,6 +258,11 @@ script = ExtResource("9_ygayt")
 layout_mode = 2
 text = "Ready Up"
 
+[node name="exit" type="Button" parent="MainMenu/Lobby/corner" unique_id=1269716314]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_8s5l4")
+text = "EXIT"
+
 [node name="Gameplay" type="CanvasLayer" parent="." unique_id=1978859045]
 visible = false
 
@@ -274,3 +279,4 @@ visible = false
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Exit" to="." method="return_to_menu"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/IPS/IP" to="MainMenu/Lobby/corner/IPS/IP" method="_pressed"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/ready" to="." method="ready_button_pressed"]
+[connection signal="pressed" from="MainMenu/Lobby/corner/exit" to="." method="_quit_lobby"]
