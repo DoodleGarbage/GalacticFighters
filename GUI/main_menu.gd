@@ -33,7 +33,7 @@ func _attempt_host() -> void:
 	peer.create_server(port,32)
 	multiplayer.multiplayer_peer = peer
 	
-	current_lobby_players.append([our_name, peer.get_unique_id(), true, deck_to_string(prepared_deck), false])
+	current_lobby_players.append([our_name, peer.get_unique_id(), deck_to_string(prepared_deck), false])
 	
 	hide_all()
 	$MainMenu/Lobby.show()
