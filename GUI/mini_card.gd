@@ -18,23 +18,23 @@ func switch(mode:bool=false) -> void:
 	$FullCard.hide()
 	$Div.show()
 
-func _gui_input(event: InputEvent) -> void:
-	# Menu Interaction - opens the GUI for interacting
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and get_rect().has_point(get_global_mouse_position()):
-			$FullCard.primed_to_drag = true
-			return
-	if event is InputEventMouseMotion && $FullCard.primed_for_drag:
-		start_drag()
+#func _gui_input(event: InputEvent) -> void:
+	## Menu Interaction - opens the GUI for interacting
+	#if event is InputEventMouseButton:
+		#if event.button_index == MOUSE_BUTTON_LEFT and get_rect().has_point(get_global_mouse_position()):
+			#$FullCard.primed_to_drag = true
+			#return
+	#if event is InputEventMouseMotion && $FullCard.primed_for_drag:
+		#start_drag()
 
-func start_drag() -> void:
-	$FullCard.start_drag()
+#func start_drag() -> void:
+	#$FullCard.start_drag()
 
-func _physics_process(delta: float) -> void:
-	if $FullCard.dragging:
-		position = $FullCard.position
+#func _physics_process(delta: float) -> void:
+	#if $FullCard.dragging:
+		#position = $FullCard.position
 
 
-func _on_full_card_stopped_dragging() -> void:
-	$FullCard.position = position
-	$FullCard.target_position = position
+#func _on_full_card_stopped_dragging() -> void:
+	#$FullCard.position = position
+	#$FullCard.target_position = position
