@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://cl6nsdykekwnp"]
+
+[ext_resource type="Theme" uid="uid://cblg4kypkjepe" path="res://Themes/card_theme.tres" id="1_r8jwp"]
+[ext_resource type="Script" uid="uid://c3if0ityg8lx1" path="res://GUI/Card/ability_display.gd" id="2_84ajn"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_0u8ft"]
+
+[node name="AbilityDisplay" type="PanelContainer" unique_id=1184284239]
+z_index = 10
+offset_right = 400.0
+offset_bottom = 54.0
+theme = ExtResource("1_r8jwp")
+script = ExtResource("2_84ajn")
+
+[node name="Button" type="Button" parent="." unique_id=1034347239]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxEmpty_0u8ft")
+
+[node name="Sizer" type="VBoxContainer" parent="." unique_id=665526992]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="NT" type="HBoxContainer" parent="Sizer" unique_id=1894990212]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="Sizer/NT" unique_id=1958457438]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Seeker"
+horizontal_alignment = 1
+
+[node name="Type" type="Label" parent="Sizer/NT" unique_id=1652334375]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Passive"
+horizontal_alignment = 1
+
+[node name="Cost" type="HBoxContainer" parent="Sizer" unique_id=1674991463]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Desc" type="RichTextLabel" parent="Sizer" unique_id=614413146]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+text = "While Bloshy Blue is on the field, the nearest enemy character's attributes are disabled."
+fit_content = true
+scroll_active = false
+autowrap_mode = 2
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

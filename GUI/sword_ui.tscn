@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://d1gwxg7gtq2bl"]
+
+[ext_resource type="Texture2D" uid="uid://bq26w2kd6tauu" path="res://Data/Image/basicsword.png" id="1_n1acy"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8wxfg"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_n1acy"]
+
+[node name="SwordUI" type="Button" unique_id=825052792]
+anchors_preset = -1
+anchor_top = 0.75
+anchor_bottom = 0.751
+offset_right = 136.0
+offset_bottom = 136.0
+theme_override_styles/normal = SubResource("StyleBoxEmpty_8wxfg")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_n1acy")
+text = "0 SE"
+icon = ExtResource("1_n1acy")
+icon_alignment = 1

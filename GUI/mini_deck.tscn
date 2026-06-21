@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://doaiy2ongcjk4"]
+
+[ext_resource type="Theme" uid="uid://xog8n7ab0fc8" path="res://Themes/menu_theme.tres" id="1_k8k6j"]
+[ext_resource type="Script" uid="uid://yawfa2ocm2bm" path="res://GUI/mini_deck.gd" id="1_neijf"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_sbije"]
+
+[node name="MiniDeck" type="PanelContainer" unique_id=1191434496]
+offset_right = 92.0
+offset_bottom = 23.0
+theme = ExtResource("1_k8k6j")
+script = ExtResource("1_neijf")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=266937185]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="VBoxContainer" unique_id=1115329639]
+layout_mode = 2
+text = "DECK NAME"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=497713303]
+layout_mode = 2
+
+[node name="S1" type="TextureRect" parent="VBoxContainer/HBoxContainer" unique_id=1463791443]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 4
+
+[node name="S2" type="TextureRect" parent="VBoxContainer/HBoxContainer" unique_id=357715978]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 4
+
+[node name="S3" type="TextureRect" parent="VBoxContainer/HBoxContainer" unique_id=1256594910]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+expand_mode = 4
+
+[node name="Selector" type="Button" parent="." unique_id=1069856381]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxEmpty_sbije")

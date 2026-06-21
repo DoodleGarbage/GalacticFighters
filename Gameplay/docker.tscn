@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://c3hcw88cgdidp"]
+
+[ext_resource type="Script" uid="uid://doej5uri74jwf" path="res://char_field.gd" id="1_dfjpk"]
+
+[node name="CharField" type="Panel" unique_id=1409992743]
+anchors_preset = -1
+anchor_left = 0.22
+anchor_top = 0.358
+anchor_right = 0.806
+anchor_bottom = 0.408
+offset_left = -278.4
+offset_top = -77.640015
+offset_right = 166.47998
+offset_bottom = 543.36
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("1_dfjpk")
+margin = Vector2(50, 30)

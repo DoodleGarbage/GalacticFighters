@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://h4krniap83us"]
+
+[ext_resource type="Script" uid="uid://uromvus0k6e0" path="res://GUI/Card/stat_indicator.gd" id="1_mas6x"]
+[ext_resource type="Texture2D" uid="uid://d1y78w5kh58v8" path="res://Art/9rectSpecialCharacter.png" id="1_um8n4"]
+[ext_resource type="Texture2D" uid="uid://xubn84vnwod6" path="res://Art/heart.png" id="1_vbfkx"]
+
+[node name="PStat" type="NinePatchRect" unique_id=414244400]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 1
+texture = ExtResource("1_um8n4")
+region_rect = Rect2(200.05429, 172.9718, 75.09479, 75.249725)
+patch_margin_left = 23
+patch_margin_top = 23
+patch_margin_right = 23
+patch_margin_bottom = 23
+script = ExtResource("1_mas6x")
+
+[node name="Life" type="HBoxContainer" parent="." unique_id=1368513847]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="imgStat" type="TextureRect" parent="Life" unique_id=16180576]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("1_vbfkx")
+expand_mode = 3
+
+[node name="statText" type="Label" parent="Life" unique_id=1686359421]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Val."
+horizontal_alignment = 1

@@ -1,0 +1,67 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Galactic Fighters Prototype"
+config/description="This is the digital version of the card game Galactic Fighters."
+run/main_scene="uid://dpt64c3xv2lsh"
+config/features=PackedStringArray("4.7", "Mobile")
+run/max_fps=60
+boot_splash/stretch_mode=3
+boot_splash/image="uid://xcwhomf3qbof"
+config/icon="uid://ccmumpj1wk5d5"
+boot_splash/minimum_display_time=3000
+
+[autoload]
+
+Resources="*uid://dingxo658ftmu"
+
+[debug]
+
+gdscript/warnings/unused_parameter=0
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
+window/stretch/aspect="ignore"
+window/vsync/vsync_mode=0
+
+[file_customization]
+
+folder_colors={
+"res://Art/": "yellow",
+"res://Data/": "purple",
+"res://GUI/": "green",
+"res://Gameplay/": "red",
+"res://ParticleEffects/": "yellow",
+"res://Resources/": "purple",
+"res://Themes/": "yellow"
+}
+
+[input]
+
+card_interact={
+"deadzone": 0.2,
+"events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":2,"position":Vector2(174.74512, 20.735352),"global_position":Vector2(188.74512, 93.73535),"factor":1.0,"button_index":2,"canceled":false,"pressed":true,"double_click":false,"script":null)
+]
+}
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=2
+rendering_device/driver.windows="d3d12"
+renderer/rendering_method="mobile"
