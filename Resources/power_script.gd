@@ -1,4 +1,6 @@
 @abstract class_name PowerScript extends GDScript
+
+
 ## The Card that this script is attached to (via attribute, passive, status, etc.)
 ## - Use this for retrieving data and information about the card
 var source : Card_GUI

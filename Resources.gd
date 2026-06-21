@@ -2,11 +2,12 @@ extends Node
 
 
 
+
 func _init() -> void:
 	# Load Order: Images, Pscripts, Attributes, SpecialChars
 	for internal in [true,false]:
 		load_images(internal)
-		load_resource("Pscript", internal)
+		load_powerscripts(internal)
 		load_resource("Attribute", internal)
 		load_resource("Character", internal)
 		load_resource("Deck", internal)
@@ -16,7 +17,7 @@ func _init() -> void:
 ## Loaded Resources
 
 var attributes : Array[Attribute] = []
-var pscripts : Array = []
+var pscripts : Array[GDScript] = [] # PowerScripts, but can't be a typed array
 var characters : Array[Card] = []
 var decks : Array[Deck] = []
 var images : Array[Texture] = []
@@ -35,6 +36,8 @@ func find_resource(resource_type:String, resource_name:String) -> Variant:
 			return resource_name
 		"Images": ## Just an extra way to search for images (redundancy! or bloat...)
 			return find_image(resource_name)
+		"Pscript":
+			return find_pscript(resource_name)
 		_: push_error("Resource array for resource type %s does not exist!" % resource_type); return
 	for resource in search_array:
 		if resource.name == resource_name:
@@ -48,7 +51,12 @@ func find_image(imagename:String) -> Texture:
 			return image
 	return null
 
-
+## For some reason, script must return as GDscript and cannot be an extending type (PowerScript)
+func find_pscript(scriptname:String) -> GDScript:
+	for script in pscripts:
+		if script.resource_name == scriptname:
+			return script
+	return null
 
 
 
@@ -82,6 +90,29 @@ func load_images(internal:bool = true) -> void:
 			as_texture.resource_name = current_file.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg")
 			images.append(as_texture)
 		current_file= dir.get_next()
+	return
+
+func load_powerscripts(internal:bool=true) -> void:
+	var directory : String = "res://Data/Pscript/" if internal else "user://Pscript/"
+	var dir : DirAccess = DirAccess.open(directory)
+	if !dir:
+		push_warning("No folder was found for Powerscript: %s" % [directory])
+		return
+	dir.list_dir_begin()
+	var next : String = dir.get_next()
+	while next != "":
+		if dir.current_is_dir():
+			push_warning("Directory \"%s\" found inside %s folder. This directory is being ignored." % [next, directory])
+			next = dir.get_next()
+			continue
+		if not next.ends_with(".gd"):
+			push_warning("There is a non-.gd file in the Powerscript directory. File: %s" % [directory + next])
+			next = dir.get_next()
+			continue
+		var new_pscript = load(directory + next)
+		new_pscript.resource_name = next.trim_suffix(".gd")
+		pscripts.append(new_pscript)
+		next = dir.get_next()
 	return
 
 func load_resource(resource_name:String, internal:bool=true) -> void:
@@ -120,6 +151,7 @@ func load_resource_from_file(file:FileAccess, resource_name:String) -> void:
 			"Attribute": ## Must be loaded: Images, Pscripts
 				var new_attr : Attribute = Attribute.new()
 				new_attr.name = resource["Name"]
+				
 				new_attr.icon = find_image(resource["Icon"])
 				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
 				new_attr.type = resource["Type"]
@@ -127,6 +159,7 @@ func load_resource_from_file(file:FileAccess, resource_name:String) -> void:
 				new_attr.allow_burst = resource["AllowBurst"]
 				new_attr.targets = resource["Targets"]
 				new_attr.target_type = resource["TargetType"]
+				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
 				attributes.append(new_attr)
 			"Pscript":
 				## Power scripts must be uniquely loaded due to their nature as scripts

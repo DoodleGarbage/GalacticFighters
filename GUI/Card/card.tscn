@@ -99,6 +99,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 texture = ExtResource("4_t7cws")
 expand_mode = 4
 
@@ -232,6 +233,7 @@ anchor_right = 1.0
 offset_left = 50.0
 offset_right = 50.0
 grow_horizontal = 0
+mouse_filter = 1
 
 [node name="Abilities" type="VBoxContainer" parent="AttachPoint1" unique_id=1685534050]
 layout_mode = 0
@@ -247,6 +249,7 @@ offset_top = 50.0
 offset_right = -50.0
 offset_bottom = 50.0
 grow_vertical = 0
+mouse_filter = 1
 
 [node name="Statuses" type="VBoxContainer" parent="AttachPoint2" unique_id=1411719260]
 layout_mode = 0
@@ -260,6 +263,7 @@ anchor_bottom = 1.0
 offset_left = -450.0
 offset_right = -450.0
 grow_vertical = 0
+mouse_filter = 1
 
 [node name="Interactions" type="VBoxContainer" parent="AttachPoint3" unique_id=644834250]
 layout_mode = 1

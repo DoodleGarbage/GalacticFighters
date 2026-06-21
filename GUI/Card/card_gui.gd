@@ -140,7 +140,7 @@ func damage(amnt:int) -> void:
 
 func _ready() -> void:
 	target_position = position
-	initilize_interactions()
+	
 	## We set the 'Screen constant' - used for dragging - to be 100% of the screen per second
 	SCREEN_CONST = DisplayServer.screen_get_size().length() * 1.0
 
@@ -157,9 +157,9 @@ func initilize_interactions() -> void:
 	var m_script = move.pscript.new([self])
 	m_script.ability = move
 	attribute_scripts.append(m_script)
-	var attack : Attribute = Resources.find_resource("Attribute", "ATTACK")
-	attributes.append(attack)
-	var a_script = attack.pscript.new([self])
+	var aattack : Attribute = Resources.find_resource("Attribute", "ATTACK")
+	attributes.append(aattack)
+	var a_script = aattack.pscript.new([self])
 	attribute_scripts.append(a_script)
 	
 	
@@ -170,8 +170,8 @@ func initilize_interactions() -> void:
 	$AttachPoint3/Interactions.add_child(abg)
 	
 	abg = abi_gui.instantiate()
-	abg.ability_index = attributes.find(attack)
-	abg.load_ability(attack)
+	abg.ability_index = attributes.find(aattack)
+	abg.load_ability(aattack)
 	abg.selected.connect(ability_trigger)
 	$AttachPoint3/Interactions.add_child(abg)
 
@@ -191,6 +191,7 @@ func load_card(card:Card) -> void:
 	$Card/Character.texture = card.full_profile
 	$Card/CardIdent/Special.hide()
 	
+	initilize_interactions()
 	
 	var txttype : String = ""
 	match(card.type):

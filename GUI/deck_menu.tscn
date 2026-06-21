@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://b7u8fehe1jgc"]
 
 [ext_resource type="Script" uid="uid://dth5oh0lqysfb" path="res://GUI/deck_menu.gd" id="1_66vqr"]
-[ext_resource type="PackedScene" uid="uid://dnuvifl6s4b1j" path="res://GUI/mini_card.tscn" id="1_f8pkv"]
 [ext_resource type="PackedScene" uid="uid://4seey34xccc7" path="res://GUI/Card/empty_card.tscn" id="1_j3g7e"]
 
 [node name="Deck" type="Control" unique_id=1021093203]
@@ -34,15 +33,6 @@ layout_mode = 2
 [node name="Exit" type="Button" parent="Div/CurrentDeck/Exit" unique_id=922956708]
 layout_mode = 2
 text = "BACK"
-
-[node name="MiniCard" parent="Div/CurrentDeck" unique_id=1316056749 instance=ExtResource("1_f8pkv")]
-layout_mode = 2
-
-[node name="MiniCard2" parent="Div/CurrentDeck" unique_id=784732903 instance=ExtResource("1_f8pkv")]
-layout_mode = 2
-
-[node name="MiniCard3" parent="Div/CurrentDeck" unique_id=1626626748 instance=ExtResource("1_f8pkv")]
-layout_mode = 2
 
 [node name="Sep" type="VBoxContainer" parent="Div" unique_id=621303928]
 layout_mode = 2

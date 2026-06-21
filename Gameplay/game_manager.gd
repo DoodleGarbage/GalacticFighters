@@ -371,7 +371,7 @@ var selected_cards : Array[Card_GUI] = []
 var valid_cards : Array[Card_GUI] = []
 
 func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
-	print("tar type: ", ability.target_type, " amnt: ", ability.targets)
+	print("tar type: ", ability.target_type, " amnt: ", ability.targets, " ability name: ", ability.name)
 	if ability.targets == 0:
 		return []
 	selected_cards = []
