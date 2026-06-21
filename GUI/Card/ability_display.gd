@@ -1,5 +1,7 @@
 extends PanelContainer
 
+## Used by the parent Card_GUI to determine *which* attribute is saved on here
+var ability_index : int = -1
 var loaded_ability : Attribute
 
 func load_ability(ability:Attribute) -> void:
@@ -25,4 +27,4 @@ func load_ability(ability:Attribute) -> void:
 
 signal selected()
 func _on_button_pressed() -> void:
-	selected.emit(loaded_ability)
+	selected.emit(ability_index)

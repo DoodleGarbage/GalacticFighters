@@ -19,8 +19,6 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_server_disconnect)
 	multiplayer.peer_disconnected.connect(_disconnect)
 	
-	load_saved_decks()
-
 
 ## Host a lobby
 func _attempt_host() -> void:
@@ -123,9 +121,9 @@ func peer_connected(_id:int=0) -> void:
 ## Triggers when someone disconnects from us
 var joining_lobby : bool = false
 func _disconnect(_whoid:int=0) -> void:
-	if joining_lobby and _whoid == peer.get_unique_id():
+	if (joining_lobby and _whoid == peer.get_unique_id()) or current_lobby_players.size() < 1:
 		return_to_menu()
-		return # Not sure if this code needs to be here. - may only be used in the server disconnect code
+		return # ^ Not sure if this code needs to be here. - may only be used in the server disconnect code
 	var player = get_player(_whoid)
 	if current_lobby_players[player][1] == host_id: # If host disconnects, everyone should return to menu.
 		return_to_menu()
@@ -192,12 +190,26 @@ func ready_up(id:int) -> void:
 			should_start = false
 		if should_start:
 			print("All players ready! Starting!")
-			for player in current_lobby_players:
-				player.pop_back() # Remove the 'Ready' entry from the lobby
-			$Gameplay/Playfield.initalize_game(current_lobby_players, host_id)
-	
+			switch_to_game.rpc()
+			$Gameplay/Playfield.initalize_game()
 	reset_lobby()
 
+@rpc("authority", "call_local", "reliable", 0)
+func switch_to_game() -> void:
+	$MainMenu.hide()
+	$Gameplay.show()
+	$Gameplay/Playfield.peer = peer
+	$Gameplay/Playfield.host_id = host_id
+	var lobby_with_proper_resources : Array = []
+	for player in current_lobby_players:
+		var get_deck : Deck = string_to_deck(player[2])
+		var fixed_player : Array = []
+		fixed_player.assign(player)
+		fixed_player.pop_back() # Remove the 'Ready' entry from the lobby
+		fixed_player[2] = get_deck # Turn the Deck into a proper Deck resource
+		lobby_with_proper_resources.append(fixed_player)
+	$Gameplay/Playfield.current_players = lobby_with_proper_resources
+	$Gameplay/Playfield.assign_teams()
 
 ## ^ MULTIPLAYER & NETWORKING
 
@@ -242,7 +254,7 @@ func string_to_deck(deck:Array[String]) -> Deck:
 	for card in deck:
 		var split := card.split(":", 1)
 		match(split[0]):
-			"Character", "SpecialCharacter":
+			"Character":
 				var chara = Resources.find_resource(split[0], split[1])
 				if chara != null:
 					zombie.characters.append(chara)
@@ -250,8 +262,6 @@ func string_to_deck(deck:Array[String]) -> Deck:
 
 func deck_to_string(deck:Deck) -> Array[String]:
 	var string : Array[String] = []
-	for spechar in deck.characters:
-		string.append("SpecialCharacter:" + spechar.name)
 	for chara in deck.characters:
 		string.append("Character:" + chara.name)
 	for gadg in deck.gadgets:
@@ -263,41 +273,3 @@ func deck_to_string(deck:Deck) -> Array[String]:
 	return string
 
 ## RESOURCE MANAGEMENT
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## TODO: save decks to user:// and load them from there
-func load_saved_decks() -> void:
-	var decks : Array[Deck] = []
-	var JSONData := JSON.new()
-	if not (FileAccess.file_exists("res://Data/Decks/defaults.json")):
-		push_error("Couldn't load decks because no defaults.json file was found!")
-		return
-	var file := FileAccess.open("res://Data/Decks/defaults.json", FileAccess.READ)
-	var fileJSON : String = file.get_as_text()
-	var error = JSONData.parse(fileJSON)
-	if error:
-		push_error("JSON Parsing Error in decks default.json: ", JSONData.get_error_message(), " at line ", JSONData.get_error_line())
-		return
-	var data = JSONData.data
-	if typeof(data) == TYPE_ARRAY:
-		for deck in data:
-			## string_to_deck expects Array[String] but data is an untyped Array[]
-			var type_cast : Array[String]
-			type_cast.assign(deck["deck"]) # this is so weird and unintuitive
-			var as_resource : Deck = string_to_deck(type_cast)
-			as_resource.name = deck["name"]
-			decks.append(as_resource)
-	$MainMenu/BattleSelect.deck_list = decks
-	return

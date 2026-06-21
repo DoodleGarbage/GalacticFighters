@@ -2,12 +2,19 @@ extends Control
 
 class_name Card_GUI
 
+
+## Whether or not this card belongs to the current client/is controllable (aka, could be switched off under the "controlled" status effect)
+var controlled : bool = false
+
 var manager : Docker
 
 func assign_manager(new_manager:Docker, pos:int=-1) -> void:
+	if new_manager == null:
+		return
 	var check : int = get_manager_position()
 	if check > -1:
 		manager.assigned_cards.pop_at(check)
+	z_index += new_manager.z_index - manager.z_index if manager != null else new_manager.z_index
 	manager = new_manager
 	if pos > -1:
 		manager.assigned_cards.insert(pos, self)
@@ -58,16 +65,30 @@ var armor_pierce : int = 0 :
 		armor_pierce = value
 		$Card/BStats/Mid/ArmorPierce.stat = value
 
-
 var attributes : Array[Attribute] = []
 
-var statuses : Array[Attribute] = []
+## The scripts associated with each attribute - this is also how details such as duration/length/turns left/etc etc are tracked - plus any "script defined variables" (this will need to be implemented - thing get_var, set_var stuff)
+var attribute_scripts : Array = []
 
-var script_instance
+#var status_trackers : Array[Attribute] = []
 
 func get_stats() -> Array:
 	var stat : Array = [max_health, health, defense, attack, burst, heal, armor_pierce]
 	return stat
+func get_script_data() -> Array:
+	var return_data : Array = []
+	for script in attribute_scripts:
+		return_data.append(script.get_data())
+	return return_data
+func get_attributes() -> Array[String]:
+	var return_data : Array[String] = []
+	for attr in attributes:
+		return_data.append(attr.name)
+	return return_data
+
+
+
+
 ## Uses the array obtained to perform the inverse operation of applying it
 func apply_stats(stats:Array) -> void:
 	max_health = stats[0]
@@ -78,9 +99,19 @@ func apply_stats(stats:Array) -> void:
 	heal = stats[5]
 	armor_pierce = stats[6]
 
+## WARNING: Need safeguards to prevent the number of script instances in the script array from changing between get_data and set_data
+func update_scripts(data:Array) -> void:
+	var i : int = 0
+	for script in attribute_scripts:
+		script.set_data(data[i])
+		i += 1
 
-
-
+## WARNING: Ensure that the script data is the same between attributes and the associateds script instances
+func load_attributes(attribute_names:Array[String]) -> void:
+	attributes = []
+	for attr in attribute_names:
+		var true_attribute = Resources.find_resource("Attribute", attr)
+		attributes.append(true_attribute)
 
 ## Card interaction functions
 
@@ -105,8 +136,7 @@ func damage(amnt:int) -> void:
 
 
 
-## Whether or not this card belongs to the current client/is controllable (aka, could be switched off under the "controlled" status effect)
-var controlled : bool = false
+
 
 func _ready() -> void:
 	target_position = position
@@ -115,33 +145,47 @@ func _ready() -> void:
 	SCREEN_CONST = DisplayServer.screen_get_size().length() * 1.0
 
 const abi_gui = preload("res://GUI/Card/ability_display.tscn")
-const default_move = preload("res://Resources/BasicResources/default_move.tres")
-const default_attack = preload("res://Resources/BasicResources/default_attack.tres")
+#var default_move = preload("res://Resources/BasicResources/default_move.tres")
+#var default_attack = preload("res://Resources/BasicResources/default_attack.tres")
 
 # Initial loading of the card; adds the Move, Attack, etc. buttons.
 func initilize_interactions() -> void:
 	var abg : Control
 	
+	var move : Attribute = Resources.find_resource("Attribute", "MOVE")
+	attributes.append(move)
+	var m_script = move.pscript.new([self])
+	m_script.ability = move
+	attribute_scripts.append(m_script)
+	var attack : Attribute = Resources.find_resource("Attribute", "ATTACK")
+	attributes.append(attack)
+	var a_script = attack.pscript.new([self])
+	attribute_scripts.append(a_script)
+	
+	
 	abg = abi_gui.instantiate()
-	abg.load_ability(default_move)
+	abg.ability_index = attributes.find(move)
+	abg.load_ability(move)
 	abg.selected.connect(ability_trigger)
 	$AttachPoint3/Interactions.add_child(abg)
 	
 	abg = abi_gui.instantiate()
-	abg.load_ability(default_attack)
+	abg.ability_index = attributes.find(attack)
+	abg.load_ability(attack)
 	abg.selected.connect(ability_trigger)
 	$AttachPoint3/Interactions.add_child(abg)
 
 
 signal ability_triggered(ability:Attribute, us:Card_GUI)
-func ability_trigger(ability:Attribute) -> void:
+func ability_trigger(ability:int) -> void:
 	ability_triggered.emit(ability, self)
 
 const special_character_background := preload("res://Art/SpecialCharacterCardBack.png")
 const character_background := preload("res://Art/NormalCharacterCardBack.png")
-
+const empty_script := preload("res://Resources/BasicResources/empty_script.gd")
 
 func load_card(card:Card) -> void:
+	
 	stored_card = card
 	$Card/Name.text = card.name
 	$Card/Character.texture = card.full_profile
@@ -171,6 +215,15 @@ func load_card(card:Card) -> void:
 	burst = card.burst
 	heal = card.heal
 	
+	for attr in stored_card.attributes:
+		attributes.append(attr)
+		var new_script = null
+		if attr.pscript != null:
+			new_script = attr.pscript.new([self])
+		else:
+			new_script = empty_script.new([self])
+		new_script.ability = attr
+		attribute_scripts.append(new_script)
 	
 	if armor_pierce <= 0:
 		$Card/BStats/Mid/ArmorPierce.hide()
@@ -182,18 +235,18 @@ func load_card(card:Card) -> void:
 		$Card/BStats/Center/Heal.hide()
 	
 	## Load Passives (places them above abilities)
-	for ab in card.attributes:
-		if ab.type == 0:
+	for ab in card.attributes.size():
+		if card.attributes[ab].type == 0:
 			var abg := abil_gui.instantiate()
-			abg.load_ability(ab)
-			abg.selected.connect(ability_trigger)
+			abg.load_ability(card.attributes[ab])
+			abg.selected.connect(ability_trigger.bind(attribute_scripts[ab]))
 			$AttachPoint1/Abilities.add_child(abg)
 	## Load Abilities
-	for ab in card.attributes:
-		if ab.type == 1:
+	for ab in card.attributes.size():
+		if card.attributes[ab].type == 1:
 			var abg := abil_gui.instantiate()
-			abg.load_ability(ab)
-			abg.selected.connect(ability_trigger)
+			abg.load_ability(card.attributes[ab])
+			abg.selected.connect(ability_trigger.bind(attribute_scripts[ab]))
 			$AttachPoint1/Abilities.add_child(abg)
 	
 	
@@ -217,13 +270,13 @@ func _gui_input(event: InputEvent) -> void:
 
 # Opens/Closes the actions menu (move, attack, use ability)
 func open_interaction_menu() -> void:
-	z_index = 5
+	z_index = 5 + manager.z_index
 	$AttachPoint1.show()
 	$AttachPoint2.show()
 	if controlled: ## Only show the move/attack/etc for player cards
 		$AttachPoint3.show()
 func close_interaction_menu() -> void:
-	z_index = 0
+	z_index = 0 + manager.z_index
 	$AttachPoint1.hide()
 	$AttachPoint2.hide()
 	$AttachPoint3.hide()
@@ -246,14 +299,14 @@ func start_drag() -> void:
 		return
 	dragging = true
 	move_offset = get_local_mouse_position() * scale
-	z_index = 2
+	z_index = 2 + manager.z_index
 	_drag()
 
 signal stopped_dragging()
 func _drag() -> void:
 	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and dragging:
 		move_offset = Vector2(0,0)
-		z_index = 0
+		z_index = 0 + manager.z_index
 		dragging = false
 		stopped_dragging.emit()
 		return

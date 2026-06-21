@@ -2,13 +2,14 @@ extends Node
 
 
 
-func _ready() -> void:
+func _init() -> void:
 	# Load Order: Images, Pscripts, Attributes, SpecialChars
 	for internal in [true,false]:
 		load_images(internal)
 		load_resource("Pscript", internal)
 		load_resource("Attribute", internal)
-		load_resource("SpecialCharacter", internal)
+		load_resource("Character", internal)
+		load_resource("Deck", internal)
 
 
 
@@ -17,6 +18,7 @@ func _ready() -> void:
 var attributes : Array[Attribute] = []
 var pscripts : Array = []
 var characters : Array[Card] = []
+var decks : Array[Deck] = []
 var images : Array[Texture] = []
 
 
@@ -27,10 +29,11 @@ func find_resource(resource_type:String, resource_name:String) -> Variant:
 	var search_array : Array = []
 	match(resource_type):
 		"Attribute": search_array = attributes
-		"SpecialCharacter", "Character": search_array = characters
+		"Character": search_array = characters
+		"Deck": search_array = decks
 		"String":
 			return resource_name
-		"Images": ## Just an extra way to search for images (redundancy!)
+		"Images": ## Just an extra way to search for images (redundancy! or bloat...)
 			return find_image(resource_name)
 		_: push_error("Resource array for resource type %s does not exist!" % resource_type); return
 	for resource in search_array:
@@ -83,68 +86,80 @@ func load_images(internal:bool = true) -> void:
 
 func load_resource(resource_name:String, internal:bool=true) -> void:
 	var tar_dir : String = "res://Data/" if internal else "user://"
-	var dir = DirAccess.open(tar_dir + resource_name)
+	var dir : DirAccess = DirAccess.open(tar_dir + resource_name)
 	if !dir:
 		push_warning("No folder was found for %s%s!" % [tar_dir, resource_name])
 		return
 	dir.list_dir_begin()
-	var current_file : String = dir.get_next()
-	## current_file will equal "" if there are no files to be processed left.
-	while current_file != "":
+	var next : String = dir.get_next()
+	while next != "":
 		if dir.current_is_dir():
-			pass
-			#print("Directory \"%s\" found inside %s folder." % [current_file, resource_name])
-		else:
-			if current_file.ends_with(".json"):
-				load_resource_from_file(current_file, resource_name)
-		current_file = dir.get_next()
+			push_warning("Directory \"%s\" found inside %s folder. This directory is being ignored." % [next, resource_name])
+			next = dir.get_next()
+			continue
+		if next.ends_with(".json"):
+			var current_file : FileAccess = FileAccess.open(tar_dir + resource_name + "/" + next, FileAccess.READ)
+			load_resource_from_file(current_file, resource_name)
+		next = dir.get_next()
 
 
-func load_resource_from_file(file:String, resource_name:String) -> void:
+
+func load_resource_from_file(file:FileAccess, resource_name:String) -> void:
 	var JSONData = JSON.new()
-	## This should never happen.
-	if not (FileAccess.file_exists("res://Data/" + resource_name + "/" + file)):
-		push_error("File \"%s\" was not found!" % ["res://Data/" + resource_name + "/" + file])
-		return
-	var File := FileAccess.open("res://Data/" + resource_name + "/" + file, FileAccess.READ)
-	var fileJSON : String = File.get_as_text()
+	var fileJSON : String = file.get_as_text()
 	var error = JSONData.parse(fileJSON)
 	if error:
 		push_error("JSON Parsing Error in file %s: " % file, JSONData.get_error_message(), " at line ", JSONData.get_error_line(), "\nWhile loading resource %s." % resource_name)
 		return
 	var data = JSONData.data
-	if typeof(data) == TYPE_ARRAY:
-		for resource in data:
-			match(resource_name):
-				"Attribute": ## Must be loaded: Images, Pscripts
-					var new_attr : Attribute = Attribute.new()
-					new_attr.name = resource["Name"]
-					new_attr.icon = find_image(resource["Icon"])
-					#new_attr.pscript = find_resource("Pscript", resource["Pscript"])
-					new_attr.type = resource["Type"]
-					new_attr.desc = resource["Desc"]
-					attributes.append(new_attr)
-				"Pscript":
-					## Power scripts must be uniquely loaded due to their nature as scripts
-					pass
-				"SpecialCharacter", "Character": ## Must be loaded: Attributes, Images
-					var new_char : Card = Card.new()
-					match(resource_name):
-						"SpecialCharacter":
-							new_char.type = 0
+	if typeof(data) != TYPE_ARRAY:
+		push_error("Json file for resource type: ", resource_name, " does not contain an Array! File name: ", file)
+		return
+	for resource in data:
+		match(resource_name):
+			"Attribute": ## Must be loaded: Images, Pscripts
+				var new_attr : Attribute = Attribute.new()
+				new_attr.name = resource["Name"]
+				new_attr.icon = find_image(resource["Icon"])
+				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
+				new_attr.type = resource["Type"]
+				new_attr.desc = resource["Desc"]
+				new_attr.allow_burst = resource["AllowBurst"]
+				new_attr.targets = resource["Targets"]
+				new_attr.target_type = resource["TargetType"]
+				attributes.append(new_attr)
+			"Pscript":
+				## Power scripts must be uniquely loaded due to their nature as scripts
+				pass
+			"Character": ## Must be loaded: Attributes, Images
+				var new_char : Card = Card.new()
+				new_char.type = resource["Type"]
+				new_char.name = resource["Name"]
+				new_char.full_profile = find_image(resource["FullProfile"])
+				new_char.mini_profile = find_image(resource["MiniProfile"])
+				new_char.max_health = resource["Health"]
+				new_char.defense = resource["Defense"]
+				new_char.attack = resource["Attack"]
+				new_char.burst = resource["Burst"]
+				new_char.heal = resource["Heal"]
+				new_char.armor_pierce = resource["ArmorPierce"]
+				for atrru in resource["Attributes"]:
+					var atri = find_resource("Attribute", atrru)
+					if atri != null:
+						new_char.attributes.append(atri)
+				characters.append(new_char)
+			"Deck": ## Must be loaded: Everything else
+				var new_deck : Deck = Deck.new()
+				new_deck.name = resource["name"]
+				var deck_strings : Array[String] = []
+				deck_strings.assign(resource["deck"])
+				for component in deck_strings:
+					var split := component.split(":", true, 1)
+					match(split[0]):
 						"Character":
-							new_char.type = 1
-					new_char.name = resource["Name"]
-					new_char.full_profile = find_image(resource["FullProfile"])
-					new_char.mini_profile = find_image(resource["MiniProfile"])
-					new_char.max_health = resource["Health"]
-					new_char.defense = resource["Defense"]
-					new_char.attack = resource["Attack"]
-					new_char.burst = resource["Burst"]
-					new_char.heal = resource["Heal"]
-					new_char.armor_pierce = resource["ArmorPierce"]
-					for atrru in resource["Attributes"]:
-						var atri = find_resource("Attribute", atrru)
-						if atri != null:
-							new_char.attributes.append(atri)
-					characters.append(new_char)
+							var chara : Card = find_resource("Character", split[1])
+							if chara != null:
+								new_deck.characters.append(chara)
+						"Item", "Gadget", "Sword":
+							push_warning("loading deck that has ", split[0], ". Ignoring.")
+				decks.append(new_deck)

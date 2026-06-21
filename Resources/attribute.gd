@@ -35,3 +35,8 @@ var target_type : int = 0
 # 0b0010: enemies
 # 0b0100: allies (saferoom)
 # 0b1000: enemies (saferoom)
+
+## Duration
+
+## The length of the ability - decreases by 1 at the end of each turn, deleted at 0. If less than 0, infinite duration.
+var duration : int = -1

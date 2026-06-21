@@ -2,9 +2,8 @@ extends Control
 
 ## This is loaded by the main_menu script
 var deck_list : Array[Deck] = [] :
-	set(value):
-		deck_list = value
-		load_decks()
+	get():
+		return Resources.decks
 
 func _ready() -> void:
 	load_decks()
