@@ -171,7 +171,7 @@ func add_card(card : Card, docker : Docker, player_id:int, unique_id : int = -1)
 	new_card.ability_triggered.connect(trigger_ability)
 	add_child(new_card)
 	new_card.load_card(card)
-	new_card.stopped_dragging.connect(update_dockers)
+	#new_card.stopped_dragging.connect(update_dockers)
 	new_card.assign_manager(docker)
 	cards.append(new_card)
 	
