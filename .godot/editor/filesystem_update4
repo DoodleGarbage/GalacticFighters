@@ -1,0 +1,9 @@
+res://GUI/Card/card.tscn
+res://Themes/menu_theme.tres
+res://Themes/card_theme.tres
+res://Resources.gd
+res://GUI/Card/card_gui.gd
+res://Resources/power_script.gd
+res://GUI/deck_menu.tscn
+res://GUI/menu.tscn
+res://Gameplay/game_manager.gd
