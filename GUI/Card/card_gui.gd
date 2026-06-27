@@ -7,22 +7,28 @@ class_name Card_GUI
 var controlled : bool = false
 
 var manager : Docker
+var manager_position : int = -1
 
 func assign_manager(new_manager:Docker, pos:int=-1) -> void:
 	if new_manager == null:
 		return
-	var check : int = get_manager_position()
+	var check : int = get_true_manager_position()
 	if check > -1:
 		manager.assigned_cards.pop_at(check)
 	z_index += new_manager.z_index - manager.z_index if manager != null else new_manager.z_index
 	manager = new_manager
 	if pos > -1:
-		manager.assigned_cards.insert(pos, self)
+		if pos < manager.assigned_cards.size():
+			manager.assigned_cards.insert(pos, self)
+		else:
+			manager.assigned_cards.append(self)
+		manager_position = pos
 	else:
 		manager.assigned_cards.append(self)
+		manager_position = manager.assigned_cards.size() - 1
 
 ## -1 means it either wasn't assigned as a card (which should not be happening) or no manager exists
-func get_manager_position() -> int:
+func get_true_manager_position() -> int:
 	return manager.assigned_cards.find(self) if manager != null else -1
 
 ## These values are set when the card is generated on the playfield

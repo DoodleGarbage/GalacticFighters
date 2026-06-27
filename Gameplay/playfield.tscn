@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://bd4aetlrhf3tt" path="res://Gameplay/mulligan.gd" id="6_cqp8x"]
 [ext_resource type="PackedScene" uid="uid://o5oepqui30u7" path="res://GUI/saferoom.tscn" id="7_uswiv"]
 [ext_resource type="PackedScene" uid="uid://ddjs67y7hfeh" path="res://GUI/spin_box_modified.tscn" id="8_g3rnx"]
+[ext_resource type="Script" uid="uid://c61f3p3cqoxxo" path="res://card_docker.gd" id="9_w8ite"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6k7cj"]
 
@@ -51,8 +52,10 @@ anchor_left = 0.055
 anchor_top = 0.904
 anchor_right = 0.055
 anchor_bottom = 0.904
-offset_top = -136.0
-offset_bottom = 0.0
+offset_left = -69.6
+offset_top = -319.32
+offset_right = 66.4
+offset_bottom = -183.32
 grow_vertical = 0
 
 [node name="SwordUI2" parent="Unscalables" unique_id=1759115573 instance=ExtResource("1_fri3p")]
@@ -61,6 +64,10 @@ anchor_left = 0.073
 anchor_top = 0.116
 anchor_right = 0.073
 anchor_bottom = 0.116
+offset_left = 125.84
+offset_top = -83.28
+offset_right = 261.84
+offset_bottom = 52.72
 
 [node name="TurnTools" parent="Unscalables" unique_id=1701782066 instance=ExtResource("4_n0ks1")]
 layout_mode = 1
@@ -68,10 +75,10 @@ anchor_left = 0.1
 anchor_top = 0.774
 anchor_right = 0.3
 anchor_bottom = 0.887
-offset_left = -98.0
-offset_top = -156.91998
-offset_right = -98.0
-offset_bottom = -156.91998
+offset_left = -42.0
+offset_top = 101.08002
+offset_right = -42.0
+offset_bottom = 101.08002
 grow_vertical = 0
 
 [node name="MulliganBG" type="Panel" parent="Unscalables" unique_id=946155303]
@@ -118,12 +125,13 @@ text = "Confirm Selection"
 
 [node name="PlayerField" parent="." unique_id=1104884685 instance=ExtResource("1_mmpgb")]
 layout_mode = 1
-offset_left = 90.600006
-offset_top = 144.35999
-offset_right = 365.47998
-offset_bottom = 840.36
-scale = Vector2(0.6, 0.6)
+offset_left = 117.600006
+offset_top = 157.35999
+offset_right = 1014.7024
+offset_bottom = 853.36
+scale = Vector2(0.4, 0.4)
 mouse_filter = 2
+margin = Vector2(40, 30)
 player = 1
 id = 4
 identifier = "field"
@@ -133,11 +141,11 @@ player_controlled = true
 layout_mode = 1
 anchor_top = 0.074
 anchor_bottom = 0.074
-offset_left = 84.60004
-offset_top = -36.92
-offset_right = 359.47998
-offset_bottom = 713.08
-scale = Vector2(0.6, 0.6)
+offset_left = 120.600006
+offset_top = 140.08
+offset_right = 1006.59106
+offset_bottom = 890.08
+scale = Vector2(0.4, 0.4)
 mouse_filter = 2
 player = 2
 id = 3
@@ -145,14 +153,14 @@ identifier = "field"
 
 [node name="PlayerSaferoom" parent="." unique_id=1767086156 instance=ExtResource("7_uswiv")]
 layout_mode = 1
-offset_left = 1485.0
-offset_top = 587.0
-offset_right = 325.0
-offset_bottom = 537.0
+offset_left = 1387.0
+offset_top = 611.0
+offset_right = 726.99976
+offset_bottom = 595.9999
 scale = Vector2(0.4, 0.4)
 mouse_filter = 2
-card_spacing = Vector2(0.65, 0.55)
-step = 50.0
+card_spacing = Vector2(1.1, 0.85)
+step = 25.0
 player = 1
 id = 2
 identifier = "saferoom"
@@ -160,17 +168,38 @@ player_controlled = true
 
 [node name="EnemySaferoom" parent="." unique_id=1827674782 instance=ExtResource("7_uswiv")]
 layout_mode = 1
-offset_left = 1478.9999
-offset_top = 52.999992
-offset_right = 319.0
-offset_bottom = 3.0
+offset_left = 1390.0
+offset_top = 33.0
+offset_right = 730.0
+offset_bottom = 18.0
 scale = Vector2(0.4, 0.4)
 mouse_filter = 2
-card_spacing = Vector2(0.65, 0.55)
-step = 50.0
+card_spacing = Vector2(1.1, 0.85)
+step = 25.0
 player = 2
 id = 1
 identifier = "saferoom"
+
+[node name="ItemGadgetEnemy" type="Panel" parent="." unique_id=825941031]
+layout_mode = 0
+offset_left = 535.0
+offset_top = 7.0
+offset_right = 1349.0
+offset_bottom = 216.0
+script = ExtResource("9_w8ite")
+id = -1
+identifier = "itemgadget"
+
+[node name="ItemGadgetPlayer" type="Panel" parent="." unique_id=615901867]
+layout_mode = 0
+offset_left = 540.0
+offset_top = 857.0
+offset_right = 1354.0
+offset_bottom = 1066.0
+script = ExtResource("9_w8ite")
+id = -1
+identifier = "itemgadget"
+player_controlled = true
 
 [node name="Dimmer" type="Panel" parent="." unique_id=1069263564]
 visible = false

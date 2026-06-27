@@ -49,10 +49,6 @@ func initalize_cards(players:Array) -> void:
 			sync_card(new_card, true)
 
 ## The server should sync important information, like stats, but the more complex information - such as abilities, visual effects, etc, will rely on the client side info; if the client modifies them, only visual effects should change
-
-
-
-
 func sync_card(card:Card_GUI, upd_docker : bool = true) -> void:
 	var stats : Array = card.get_stats()
 	# Resource names
@@ -61,11 +57,12 @@ func sync_card(card:Card_GUI, upd_docker : bool = true) -> void:
 	var manager_identifier : String = card.manager.identifier
 	var script_data : Array = card.get_script_data()
 	var attributes : Array = card.get_attributes()
-	_update_individual_docker(card.manager)
-	recieved_card_sync.rpc(stats, card_resource, card_ids, manager_identifier, script_data, attributes, upd_docker)
+	var manager_position : int = card.manager_position
+	_update_individual_docker(card.manager, manager_position)
+	recieved_card_sync.rpc(stats, card_resource, card_ids, manager_identifier, manager_position, script_data, attributes, upd_docker)
 
 @rpc("authority", "call_remote", "reliable", 0)
-func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_id : String, script_data : Array, attribute_data : Array, do_docker_update : bool) -> void:
+func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_id : String, manager_pos :int, script_data : Array, attribute_data : Array, do_docker_update : bool) -> void:
 	var card_instance : Card_GUI
 	## Team is relative - need to get dockers by the docker identifier and the relative team
 	var current_docker := get_docker(manager_id, get_player_by_id(card_ids[1])[3])
@@ -75,11 +72,11 @@ func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_i
 	if card_instance == null:
 		card_instance = add_card(Resources.find_resource("Character", card_name), current_docker, card_ids[1], card_ids[0])
 	card_instance.apply_stats(stats)
-	card_instance.assign_manager(current_docker)
+	card_instance.assign_manager(current_docker, manager_pos)
 	card_instance.load_attributes(attribute_data)
 	card_instance.update_scripts(script_data)
 	if do_docker_update:
-		_update_individual_docker(card_instance.manager)
+		_update_individual_docker(card_instance.manager, manager_pos)
 
 
 
@@ -125,12 +122,24 @@ func send_mulligan_selection(selections:Array[int], player_id:int) -> void:
 	if players_finished_mulligan.has(player_id):
 		return
 	var player_team :int = get_player_by_id(player_id)[3]
-	for selected in selections:
-		var as_GUI : Card_GUI = get_card_by_id(selected)
-		as_GUI.assign_manager(get_docker("field", player_team))
+	var selections_gui : Array[Card_GUI] = get_card_array_by_id(selections)
+	for selected in selections_gui:
+		selected.assign_manager(get_docker("field", player_team))
+	for card in cards:
+		if card.player_id == player_id and not selections_gui.has(card):
+			card.assign_manager(get_docker("saferoom", player_team))
 	players_finished_mulligan.append(player_id)
+	if player_id != peer.get_unique_id(): # Prevent server from rpc'ing itself
+		reset_unused_mulligans.rpc_id(player_id)
 	if players_finished_mulligan.size() == current_players.size():
 		end_mulligan.rpc()
+
+## Called to the person who just sent in their mulligans to notify them to reset their cards back into the saferoom
+@rpc("authority", "call_remote", "reliable", 0)
+func reset_unused_mulligans() -> void:
+	for card in possible_mulligans:
+		if not mulligan_selections.has(card):
+			card.assign_manager(get_docker("saferoom", 1))
 
 @rpc("authority", "call_local", "reliable", 0)
 func end_mulligan() -> void:
@@ -296,6 +305,9 @@ func update_dockers(force_movement:bool=true) -> void:
 
 
 func _update_individual_docker(docker:Docker, force_movement:bool = true) -> void:
+	## Sorting algorithm is inefficient, but given that the assigned cards will always be small it's fine.
+	docker.assigned_cards = sort_card_gui_array_by_manager_position(docker.assigned_cards)
+	
 	var positions := docker.get_placements()
 	for card in docker.assigned_cards.size():
 		if force_movement:
@@ -303,6 +315,26 @@ func _update_individual_docker(docker:Docker, force_movement:bool = true) -> voi
 		docker.assigned_cards[card].target_position = positions[card]
 		docker.assigned_cards[card].scale = docker.scale
 	return
+
+func sort_card_gui_array_by_manager_position(array:Array[Card_GUI]) -> Array[Card_GUI]:
+	var re_sorted_positions : Array[Card_GUI] = array.duplicate()
+	var final_array : Array[Card_GUI] = []
+	while re_sorted_positions.size() > 0:
+		var get_lowest : int = get_min(re_sorted_positions)
+		final_array.append(re_sorted_positions[get_lowest])
+		re_sorted_positions.remove_at(get_lowest)
+	return final_array
+
+## Returns the index of the lowest in the array
+func get_min(array:Array[Card_GUI]) -> int:
+	var lowest : int = 0
+	var lowest_value : int = array[0].manager_position
+	for i in array.size():
+		if array[i].manager_position < lowest_value:
+			lowest = i
+			lowest_value = array[i].manager_position
+	return lowest
+
 
 
 func update_target_display() -> void:

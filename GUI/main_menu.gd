@@ -1,5 +1,11 @@
 extends Node
 
+const major_version : int = 0
+const minor_version : int = 1
+const revision : int = 0
+
+
+
 # low key just copying my previous multiplayer networking setup :pray:
 ## MULTIPLAYER & NETWORKING
 
@@ -19,6 +25,7 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_server_disconnect)
 	multiplayer.peer_disconnected.connect(_disconnect)
 	
+	generate_version_hash()
 
 ## Host a lobby
 func _attempt_host() -> void:
@@ -212,6 +219,14 @@ func switch_to_game() -> void:
 	$Gameplay/Playfield.assign_teams()
 
 ## ^ MULTIPLAYER & NETWORKING
+
+func generate_version_hash() -> void:
+	#var hash_array : Array = []
+	#hash_array.append(Resources.attributes.hash())
+	#hash_array.append(Resources.characters.hash())
+	#var final_hash : int = hash_array.hash()
+	$MainMenu/Version.text = "Version: " + str(major_version) + "." + str(minor_version) + "." + str(revision)# + " (checksum: " + str(final_hash) + ")"
+	## Note: using Array.hash() can generate completely different hashes for identical data
 
 func _start_pressed() -> void:
 	$MainMenu/Menu/VBoxContainer/Start.hide()

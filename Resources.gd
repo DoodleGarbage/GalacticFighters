@@ -67,7 +67,7 @@ func load_images(internal:bool = true) -> void:
 	var dir_path : String = "res://Data/Image/" if internal else "user://Image/"
 	var dir = DirAccess.open(dir_path)
 	if !dir:
-		push_warning("No folders was found for %sImages!" % dir_path)
+		push_warning("No folders was found for %s!" % dir_path)
 		return
 	dir.list_dir_begin()
 	var current_file : String = dir.get_next()

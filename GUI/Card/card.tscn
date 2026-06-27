@@ -233,10 +233,11 @@ anchor_right = 1.0
 offset_left = 50.0
 offset_right = 50.0
 grow_horizontal = 0
-mouse_filter = 1
+mouse_filter = 2
 
 [node name="Abilities" type="VBoxContainer" parent="AttachPoint1" unique_id=1685534050]
 layout_mode = 0
+mouse_filter = 2
 
 [node name="AttachPoint2" type="Control" parent="." unique_id=656092401]
 visible = false
@@ -249,10 +250,11 @@ offset_top = 50.0
 offset_right = -50.0
 offset_bottom = 50.0
 grow_vertical = 0
-mouse_filter = 1
+mouse_filter = 2
 
 [node name="Statuses" type="VBoxContainer" parent="AttachPoint2" unique_id=1411719260]
 layout_mode = 0
+mouse_filter = 2
 
 [node name="AttachPoint3" type="Control" parent="." unique_id=267903398]
 visible = false
@@ -263,7 +265,7 @@ anchor_bottom = 1.0
 offset_left = -450.0
 offset_right = -450.0
 grow_vertical = 0
-mouse_filter = 1
+mouse_filter = 2
 
 [node name="Interactions" type="VBoxContainer" parent="AttachPoint3" unique_id=644834250]
 layout_mode = 1
@@ -271,4 +273,5 @@ anchors_preset = -1
 anchor_top = 1.0
 anchor_bottom = 1.0
 grow_vertical = 0
+mouse_filter = 2
 alignment = 2

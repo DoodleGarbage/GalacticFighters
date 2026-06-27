@@ -15,6 +15,9 @@
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8s5l4"]
 bg_color = Color(0.40784314, 0.003921569, 0.05490196, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c4qn5"]
+bg_color = Color(0.8608791, 0.8608792, 0.86087906, 1)
+
 [node name="Root" type="Node" unique_id=595754331]
 script = ExtResource("2_o1bug")
 
@@ -262,6 +265,18 @@ text = "Ready Up"
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_8s5l4")
 text = "EXIT"
+
+[node name="Version" type="Label" parent="MainMenu" unique_id=1950586489]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -23.0
+offset_right = 97.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_c4qn5")
+text = "Version: XXX (hash)"
 
 [node name="Gameplay" type="CanvasLayer" parent="." unique_id=1978859045]
 visible = false
