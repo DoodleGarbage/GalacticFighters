@@ -14,3 +14,6 @@ signal turn_ended
 
 func _on_end_turn_pressed() -> void:
 	turn_ended.emit()
+
+func begin_turn() -> void:
+	$YourTurn.show()

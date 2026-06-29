@@ -52,10 +52,10 @@ anchor_left = 0.055
 anchor_top = 0.904
 anchor_right = 0.055
 anchor_bottom = 0.904
-offset_left = -69.6
-offset_top = -319.32
-offset_right = 66.4
-offset_bottom = -183.32
+offset_left = -68.6
+offset_top = -69.32001
+offset_right = 67.4
+offset_bottom = 66.67999
 grow_vertical = 0
 
 [node name="SwordUI2" parent="Unscalables" unique_id=1759115573 instance=ExtResource("1_fri3p")]
@@ -64,22 +64,23 @@ anchor_left = 0.073
 anchor_top = 0.116
 anchor_right = 0.073
 anchor_bottom = 0.116
-offset_left = 125.84
-offset_top = -83.28
-offset_right = 261.84
-offset_bottom = 52.72
+offset_left = -75.16
+offset_top = -85.28
+offset_right = 60.839996
+offset_bottom = 50.72
 
 [node name="TurnTools" parent="Unscalables" unique_id=1701782066 instance=ExtResource("4_n0ks1")]
+custom_minimum_size = Vector2(380, 160)
 layout_mode = 1
-anchor_left = 0.1
-anchor_top = 0.774
-anchor_right = 0.3
-anchor_bottom = 0.887
-offset_left = -42.0
-offset_top = 101.08002
-offset_right = -42.0
-offset_bottom = 101.08002
-grow_vertical = 0
+anchors_preset = 4
+anchor_top = 0.5
+anchor_right = 0.0
+anchor_bottom = 0.5
+offset_left = 155.0
+offset_top = -80.0
+offset_right = 535.0
+offset_bottom = 80.0
+grow_vertical = 2
 
 [node name="MulliganBG" type="Panel" parent="Unscalables" unique_id=946155303]
 visible = false
@@ -101,7 +102,7 @@ anchor_right = 1.0
 anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 1
+mouse_filter = 2
 script = ExtResource("6_cqp8x")
 player = 1
 id = 5
@@ -109,6 +110,8 @@ identifier = "mulligan"
 metadata/_custom_type_script = "uid://c61f3p3cqoxxo"
 
 [node name="ConfirmMulligan" type="Button" parent="Mulligan" unique_id=1745323159]
+visible = false
+custom_minimum_size = Vector2(300, 40)
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
@@ -121,6 +124,7 @@ offset_right = 73.0
 offset_bottom = 330.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_behavior_recursive = 2
 text = "Confirm Selection"
 
 [node name="PlayerField" parent="." unique_id=1104884685 instance=ExtResource("1_mmpgb")]
@@ -186,6 +190,7 @@ offset_left = 535.0
 offset_top = 7.0
 offset_right = 1349.0
 offset_bottom = 216.0
+mouse_filter = 2
 script = ExtResource("9_w8ite")
 id = -1
 identifier = "itemgadget"
@@ -196,6 +201,7 @@ offset_left = 540.0
 offset_top = 857.0
 offset_right = 1354.0
 offset_bottom = 1066.0
+mouse_filter = 2
 script = ExtResource("9_w8ite")
 id = -1
 identifier = "itemgadget"
@@ -243,7 +249,7 @@ alignment = 1
 
 [node name="ToSelTars" type="Label" parent="TargetingGUI/Options/Target" unique_id=1309988445]
 layout_mode = 2
-text = "SELECT_TARGETS:"
+text = "REMAINING_TARGETS:"
 
 [node name="TarAmntToSel" type="Label" parent="TargetingGUI/Options/Target" unique_id=125703097]
 layout_mode = 2
@@ -297,6 +303,7 @@ text = "Available:"
 layout_mode = 2
 text = "X"
 
+[connection signal="selection_complete" from="." to="." method="selection_confirmation"]
 [connection signal="turn_ended" from="Unscalables/TurnTools" to="." method="_turn_ended"]
 [connection signal="pressed" from="Mulligan/ConfirmMulligan" to="." method="submit_mulligan"]
 [connection signal="pressed" from="TargetingGUI/Options/Target/TarConfirm" to="." method="target_confirmation"]

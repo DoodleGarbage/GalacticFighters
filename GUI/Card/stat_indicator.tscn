@@ -7,7 +7,6 @@
 [node name="PStat" type="NinePatchRect" unique_id=414244400]
 size_flags_horizontal = 3
 size_flags_vertical = 3
-mouse_filter = 1
 texture = ExtResource("1_um8n4")
 region_rect = Rect2(200.05429, 172.9718, 75.09479, 75.249725)
 patch_margin_left = 23

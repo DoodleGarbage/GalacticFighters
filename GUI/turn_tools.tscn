@@ -4,6 +4,9 @@
 [ext_resource type="Script" uid="uid://cb3q3d5sg0w3n" path="res://GUI/turn_tools.gd" id="2_hpyn7"]
 [ext_resource type="Texture2D" uid="uid://qin5rmkwrd72" path="res://Art/GuiChecked.svg" id="3_npl7x"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8s5l4"]
+bg_color = Color(0, 0.47414583, 0.87082475, 1)
+
 [node name="TurnTools" type="Panel" unique_id=1701782066]
 anchors_preset = -1
 anchor_right = 0.2
@@ -51,8 +54,13 @@ anchor_right = 0.9
 anchor_bottom = 0.9
 grow_vertical = 0
 
-[node name="Label" type="Label" parent="HBoxContainer" unique_id=555570441]
+[node name="LabelMove" type="Label" parent="HBoxContainer" unique_id=555570441]
 layout_mode = 2
+tooltip_text = "The number of moves you have. Every action uses 1. 
+If you end your turn with unused moves, the defense 
+of all friendly characters increases by 1 for each unused 
+move until next turn."
+mouse_filter = 1
 text = "Moves:"
 
 [node name="Moves" type="CheckBox" parent="HBoxContainer" unique_id=1658016862]
@@ -68,5 +76,15 @@ mouse_filter = 2
 theme_override_icons/checked_disabled = ExtResource("3_npl7x")
 disabled = true
 button_pressed = true
+
+[node name="YourTurn" type="Label" parent="." unique_id=1627397838]
+visible = false
+layout_mode = 0
+offset_left = 118.0
+offset_top = -45.0
+offset_right = 239.0
+offset_bottom = -11.0
+theme_override_styles/normal = SubResource("StyleBoxFlat_8s5l4")
+text = "Your Turn!"
 
 [connection signal="pressed" from="EndTurn" to="." method="_on_end_turn_pressed"]

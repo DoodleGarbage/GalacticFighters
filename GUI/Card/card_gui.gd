@@ -168,21 +168,22 @@ func initilize_interactions() -> void:
 	var a_script = aattack.pscript.new([self])
 	attribute_scripts.append(a_script)
 	
+	var ability_index : int = -1
 	
 	abg = abi_gui.instantiate()
-	abg.ability_index = attributes.find(move)
+	ability_index = attributes.find(move)
 	abg.load_ability(move)
-	abg.selected.connect(ability_trigger)
+	abg.selected.connect(ability_trigger.bind(ability_index))
 	$AttachPoint3/Interactions.add_child(abg)
 	
 	abg = abi_gui.instantiate()
-	abg.ability_index = attributes.find(aattack)
+	ability_index = attributes.find(aattack)
 	abg.load_ability(aattack)
-	abg.selected.connect(ability_trigger)
+	abg.selected.connect(ability_trigger.bind(ability_index))
 	$AttachPoint3/Interactions.add_child(abg)
 
 
-signal ability_triggered(ability:Attribute, us:Card_GUI)
+signal ability_triggered(ability:int, us:Card_GUI)
 func ability_trigger(ability:int) -> void:
 	ability_triggered.emit(ability, self)
 
@@ -246,14 +247,14 @@ func load_card(card:Card) -> void:
 		if card.attributes[ab].type == 0:
 			var abg := abil_gui.instantiate()
 			abg.load_ability(card.attributes[ab])
-			abg.selected.connect(ability_trigger.bind(attribute_scripts[ab]))
+			abg.selected.connect(ability_trigger.bind(ab))
 			$AttachPoint1/Abilities.add_child(abg)
 	## Load Abilities
 	for ab in card.attributes.size():
 		if card.attributes[ab].type == 1:
 			var abg := abil_gui.instantiate()
 			abg.load_ability(card.attributes[ab])
-			abg.selected.connect(ability_trigger.bind(attribute_scripts[ab]))
+			abg.selected.connect(ability_trigger.bind(ab))
 			$AttachPoint1/Abilities.add_child(abg)
 	
 	
@@ -262,18 +263,18 @@ func load_card(card:Card) -> void:
 var menu_open : bool = false
 const abil_gui := preload("res://GUI/Card/ability_display.tscn")
 
-signal interaction(event)
+#signal interaction(event)
 
-func _gui_input(event: InputEvent) -> void:
-	# Menu Interaction - opens the GUI for interacting
-	if event is InputEventMouseButton:
-		interaction.emit(event)
-		if not controlled: ## Disables dragging for non-player cards
-			return
-		if event.button_index == MouseButton.MOUSE_BUTTON_LEFT && get_rect().has_point(get_global_mouse_position()):
-			primed_for_drag = true
-	if event is InputEventMouseMotion && primed_for_drag:
-		start_drag()
+#func _gui_input(event: InputEvent) -> void:
+	## Menu Interaction - opens the GUI for interacting
+	#if event is InputEventMouseButton:
+		#interaction.emit(event)
+		#if not controlled: ## Disables dragging for non-player cards
+			#return
+		#if event.button_index == MouseButton.MOUSE_BUTTON_LEFT && get_rect().has_point(get_global_mouse_position()):
+			#primed_for_drag = true
+	#if event is InputEventMouseMotion && primed_for_drag:
+		#start_drag()
 
 # Opens/Closes the actions menu (move, attack, use ability)
 func open_interaction_menu() -> void:
@@ -300,38 +301,40 @@ var target_position : Vector2 = Vector2(0,0)
 ## The number of pixels before we leave the deadzone and begin dragging
 var MOUSE_DEADZONE : float = 10.0
 
-func start_drag() -> void:
-	primed_for_drag = false
-	if not get_parent().allow_drag:
-		return
-	dragging = true
-	move_offset = get_local_mouse_position() * scale
-	z_index = 2 + manager.z_index
-	_drag()
+## All the code to implement dragging is here and should be functional with minimal fixing - currently unused and unneed by the current design
 
-signal stopped_dragging()
-func _drag() -> void:
-	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and dragging:
-		move_offset = Vector2(0,0)
-		z_index = 0 + manager.z_index
-		dragging = false
-		stopped_dragging.emit()
-		return
-	# get_parent should always get the Playfield (game_manager.gd)
-	if get_parent().allow_drag:
-		return
-	if not dragging:
-		return
-	target_position = get_global_mouse_position() - move_offset
+#func start_drag() -> void:
+	#primed_for_drag = false
+	#if not get_parent().allow_drag:
+		#return
+	#dragging = true
+	#move_offset = get_local_mouse_position() * scale
+	#z_index = 2 + manager.z_index
+	#_drag()
+
+#signal stopped_dragging()
+#func _drag() -> void:
+	#if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and dragging:
+		#move_offset = Vector2(0,0)
+		#z_index = 0 + manager.z_index
+		#dragging = false
+		#stopped_dragging.emit()
+		#return
+	## get_parent should always get the Playfield (game_manager.gd)
+	#if get_parent().allow_drag:
+		#return
+	#if not dragging:
+		#return
+	#target_position = get_global_mouse_position() - move_offset
 
 
 # When we start dragging a card, we drag it around the point we 'pulled it'
 var move_offset : Vector2 = Vector2(0,0)
 # See Ready() for the details of screen constant; it's how much of the screen we travel per second
 var SCREEN_CONST : float = 0.0
-func _process(_delta: float) -> void:
-	_drag()
-	position = target_position
+#func _process(_delta: float) -> void:
+	#_drag()
+	#position = target_position
 	#position.move_toward(target_position, SCREEN_CONST * delta)
 
 func set_selection(mode:bool) -> void:

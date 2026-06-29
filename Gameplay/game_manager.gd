@@ -5,8 +5,14 @@ var peer : ENetMultiplayerPeer
 
 var host_id : int
 ## [name (string), ID (int), deck (Deck), team (int)]
+# Team 1 is us, Team 2 is enemy team - to be expanded for more players
 const default_deck := preload("res://Resources/BasicResources/demo_deck.tres")
 var current_players : Array = [ ["default_player", 1, default_deck], ["default_enemy", 2, default_deck], ["player_3", 3, default_deck]]
+
+var cards : Array[Card_GUI] = [] # A reference to every single card on the board
+
+func _ready() -> void:
+	update_dockers()
 
 func get_player_by_id(id:int) -> Array:
 	for player in current_players:
@@ -15,11 +21,6 @@ func get_player_by_id(id:int) -> Array:
 	return []
 
 
-
-@export
-var test_decks:Array[Deck]
-
-## __ MULTIPLAYER (AND RELATED) FUNCTIONS __
 
 # current_players and host_id are updated by the Main_menu manager
 func initalize_game() -> void:
@@ -48,7 +49,128 @@ func initalize_cards(players:Array) -> void:
 			var new_card : Card_GUI = add_card(card, get_docker("saferoom", player[3]), player[1])
 			sync_card(new_card, true)
 
-## The server should sync important information, like stats, but the more complex information - such as abilities, visual effects, etc, will rely on the client side info; if the client modifies them, only visual effects should change
+##--------------------------------------------------------------------------------------------------
+##                                    MULLIGAN and GAME START CODE
+##--------------------------------------------------------------------------------------------------
+
+## required number of characters to choose for the game opening
+const MULLIGAN_TO_SELECT : int = 3
+
+# Displays all characters (not special characters) in a players deck and allows them to choose 3 and confirm, then deploys those cards onto the Field, notifies the other players, and puts the remaining in the safe room
+@rpc("authority", "call_local", "reliable", 0)
+func start_mulligan() -> void:
+	#$Unscalables/MulliganBG.show()
+	$Mulligan.show()
+	for card in cards:
+		if card.player_id == peer.get_unique_id() and card.stored_card.type == 1: # note: 1 is Special Character
+			valid_cards.append(card)
+			## ID 5 is the mulligan docker
+			card.assign_manager(id_to_docker(5))
+			if peer.get_unique_id() == host_id:
+				sync_card(card, true)
+	update_dockers()
+	selecting_cards = true
+	selecting_mulligan = true
+	max_selections = MULLIGAN_TO_SELECT ## The number of cards we can start with
+	selected_cards = []
+	players_finished_mulligan = []
+
+func submit_mulligan() -> void:
+	if selected_cards.size() != max_selections:
+		return
+	selecting_cards = false
+	selecting_mulligan = false
+	$Mulligan/ConfirmMulligan.hide()
+	for card in cards:
+		card.assign_manager(get_docker("saferoom", 1))
+	for card in selected_cards:
+		card.assign_manager(get_docker("field", 1))
+		card.set_selection(false)
+	update_dockers()
+	var cg_as_id : Array[int] = card_to_id_array(selected_cards)
+	send_mulligan_selection.rpc(cg_as_id, peer.get_unique_id())
+
+
+# List of Arrays; first item in array is player id, the rest are the unique id for all cards they are mulliganning with - See End_Mulligan array processing
+var players_finished_mulligan : Array = []
+
+## Sent from client to server, gives the server the player - needs to be call_local so the server can send this to itself.
+@rpc("any_peer", "call_local", "reliable", 0)
+func send_mulligan_selection(selections:Array[int], player_id:int) -> void:
+	if host_id != peer.get_unique_id():
+		return
+	for player in players_finished_mulligan:
+		if player[0] == player_id: # Prevent people from submitting their mulligan more than once
+			return
+	var append_array = [player_id]
+	append_array.append_array(selections)
+	players_finished_mulligan.append(append_array)
+	if players_finished_mulligan.size() == current_players.size():
+		end_mulligan.rpc(players_finished_mulligan)
+
+@rpc("authority", "call_local", "reliable", 0)
+func end_mulligan(player_mulligans:Array) -> void:
+	$Mulligan.hide()
+	for card in cards:
+		card.set_selection(false)
+		card.assign_manager(get_docker("saferoom", get_player_by_id(card.player_id)[3]))
+	for player in player_mulligans:
+		var dupe : Array[int] = []
+		dupe.assign(player)
+		var player_data : Array = get_player_by_id(dupe[0])
+		dupe.pop_front()
+		var as_card : Array[Card_GUI] = id_to_card_array(dupe)
+		
+		var tar_docker : Docker = get_docker("field", player_data[3])
+		for card in as_card.size():
+			as_card[card].assign_manager(tar_docker, card)
+	if host_id == peer.get_unique_id():
+		print("We're ready to start the game!!!")
+		for card in cards:
+			sync_card(card, true)
+		start_game()
+
+func start_game() -> void:
+	var coin_flip : int = randi_range(0, current_players.size()-1)
+	update_turn(current_players[coin_flip])
+
+func update_turn(player_id:int) -> void:
+	pass
+
+
+##-----------------------------------------------
+##            CARD AND SYNCING CODE
+##-----------------------------------------------
+
+const card_ui_scene := preload("res://GUI/Card/card.tscn")
+
+func add_card(card : Card, docker : Docker, player_id:int, unique_id : int = -1) -> Card_GUI:
+	var new_card := card_ui_scene.instantiate()
+	new_card.player_id = player_id
+	new_card.unique_id = get_unique_card_id() if unique_id == -1 else unique_id
+	new_card.controlled = player_id == peer.get_unique_id()
+	new_card.ability_triggered.connect(trigger_ability)
+	add_child(new_card)
+	new_card.load_card(card)
+	#new_card.stopped_dragging.connect(update_dockers)
+	new_card.assign_manager(docker)
+	cards.append(new_card)
+	
+	return new_card
+
+## Returns an ID not shared by all other cards
+func get_unique_card_id() -> int:
+	var invalid_id : bool = true
+	var new_id : int = 0
+	while invalid_id:
+		new_id = randi()
+		invalid_id = false
+		for card in cards:
+			if card.unique_id == new_id:
+				invalid_id = true
+	return new_id
+
+## The server should sync important information, like stats, but the more complex information - such as abilities, visual effects, etc, will rely on the client side info; if the client modifies them, only visual effects should change, since only the server's modifications to the board items (like stats) are permanent
 func sync_card(card:Card_GUI, upd_docker : bool = true) -> void:
 	var stats : Array = card.get_stats()
 	# Resource names
@@ -58,7 +180,7 @@ func sync_card(card:Card_GUI, upd_docker : bool = true) -> void:
 	var script_data : Array = card.get_script_data()
 	var attributes : Array = card.get_attributes()
 	var manager_position : int = card.manager_position
-	_update_individual_docker(card.manager, manager_position)
+	_update_individual_docker(card.manager, false)
 	recieved_card_sync.rpc(stats, card_resource, card_ids, manager_identifier, manager_position, script_data, attributes, upd_docker)
 
 @rpc("authority", "call_remote", "reliable", 0)
@@ -76,83 +198,54 @@ func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_i
 	card_instance.load_attributes(attribute_data)
 	card_instance.update_scripts(script_data)
 	if do_docker_update:
-		_update_individual_docker(card_instance.manager, manager_pos)
+		_update_individual_docker(card_instance.manager, false)
 
 
+## Updates all dockers in the scene
+func update_dockers() -> void:
+	for docker in get_dockers():
+		_update_individual_docker(docker)
+	return
 
-var awaiting_mulligan : bool = false
-var mulligan_selections : Array[Card_GUI] = []
-var possible_mulligans : Array[Card_GUI] = []
-## required number of characters to choose for the game opening
-const MULLIGAN_TO_SELECT : int = 3
+## Updates all cards assigned to a docker and updates their position accoridng to the docker
+func _update_individual_docker(docker:Docker, update_interact:bool=true) -> void:
+	## Sorting algorithm is inefficient, but given that the assigned cards will always be small it's fine.
+	docker.assigned_cards = sort_card_gui_array(docker.assigned_cards, "manager_position")
+	
+	var positions := docker.get_placements()
+	for card in docker.assigned_cards.size():
+		#if not update_interact and docker.assigned_cards[card] == active_interact_card:
+			#print("avoiding the interact card")
+			#continue
+		#if active_interact_card == docker.assigned_cards[card]:
+			#continue
+		#if force_movement:
+		docker.assigned_cards[card].position = positions[card]
+		#docker.assigned_cards[card].target_position = positions[card]
+		docker.assigned_cards[card].scale = docker.scale
+	if not update_interact:
+		open_interaction_menu(active_interact_card)
+	return
 
-# Displays all characters (not special characters) in a players deck and allows them to choose 3 and confirm, then deploys those cards onto the Field, notifies the other players, and puts the remaining in the safe room
-@rpc("authority", "call_local", "reliable", 0)
-func start_mulligan() -> void:
-	#$Unscalables/MulliganBG.show()
-	$Mulligan.show()
-	for card in cards:
-		if card.player_id == peer.get_unique_id() and card.stored_card.type == 1:
-			possible_mulligans.append(card)
-			## ID 5 is the mulligan docker
-			card.assign_manager(get_docker_by_id(5))
-			if peer.get_unique_id() == host_id:
-				sync_card(card, true)
-	update_dockers(true)
-	awaiting_mulligan = true
-	mulligan_selections = []
-	players_finished_mulligan = []
+## Sorts an array of Card_GUI, by variable property. (The property must be an int)
+func sort_card_gui_array(array:Array[Card_GUI], property:String, inverse:bool=false) -> Array[Card_GUI]:
+	var re_sorted_positions : Array[Card_GUI] = array.duplicate()
+	var final_array : Array[Card_GUI] = []
+	while re_sorted_positions.size() > 0:
+		var get_lowest : int = get_min(re_sorted_positions, property, inverse)
+		final_array.append(re_sorted_positions[get_lowest])
+		re_sorted_positions.remove_at(get_lowest)
+	return final_array
 
-func submit_mulligan() -> void:
-	if mulligan_selections.size() != MULLIGAN_TO_SELECT:
-		return
-	awaiting_mulligan = false
-	$Mulligan/ConfirmMulligan.hide()
-	var cg_as_id : Array[int] = get_card_array_as_id(mulligan_selections)
-	send_mulligan_selection.rpc(cg_as_id, peer.get_unique_id())
-
-
-var players_finished_mulligan : Array[int] = []
-
-## Sent from client to server, gives the server the player - needs to be call_local so the server can send this to itself.
-@rpc("any_peer", "call_local", "reliable", 0)
-func send_mulligan_selection(selections:Array[int], player_id:int) -> void:
-	if host_id != peer.get_unique_id():
-		return
-	if players_finished_mulligan.has(player_id):
-		return
-	var player_team :int = get_player_by_id(player_id)[3]
-	var selections_gui : Array[Card_GUI] = get_card_array_by_id(selections)
-	for selected in selections_gui:
-		selected.assign_manager(get_docker("field", player_team))
-	for card in cards:
-		if card.player_id == player_id and not selections_gui.has(card):
-			card.assign_manager(get_docker("saferoom", player_team))
-	players_finished_mulligan.append(player_id)
-	if player_id != peer.get_unique_id(): # Prevent server from rpc'ing itself
-		reset_unused_mulligans.rpc_id(player_id)
-	if players_finished_mulligan.size() == current_players.size():
-		end_mulligan.rpc()
-
-## Called to the person who just sent in their mulligans to notify them to reset their cards back into the saferoom
-@rpc("authority", "call_remote", "reliable", 0)
-func reset_unused_mulligans() -> void:
-	for card in possible_mulligans:
-		if not mulligan_selections.has(card):
-			card.assign_manager(get_docker("saferoom", 1))
-
-@rpc("authority", "call_local", "reliable", 0)
-func end_mulligan() -> void:
-	$Mulligan.hide()
-	for card in cards:
-		card.set_selection(false)
-	if host_id == peer.get_unique_id():
-		print("We're ready to start the game!!!")
-		for card in cards:
-			sync_card(card, true)
-		#start_game()
-
-var cards : Array[Card_GUI] = []
+## Returns the index of the lowest in the array - Note: Property must be an int
+func get_min(array:Array[Card_GUI], property:String, inverse:bool=false) -> int:
+	var lowest : int = 0
+	var farthest_value : int = array[0].get(property)
+	for i in array.size():
+		if ( not inverse and array[i].get(property) < farthest_value) or (inverse and array[i].get(property) > farthest_value):
+			lowest = i
+			farthest_value = array[i].get(property)
+	return lowest
 
 ## Gets every docker in the scene
 func get_dockers() -> Array[Docker]:
@@ -162,181 +255,136 @@ func get_dockers() -> Array[Docker]:
 			retr.append(child)
 	return retr
 
-
-const ui_scale = 0.5
-
-const card_ui_scene := preload("res://GUI/Card/card.tscn")
-
-func _ready() -> void:
-	update_dockers()
-
-
-func add_card(card : Card, docker : Docker, player_id:int, unique_id : int = -1) -> Card_GUI:
-	var new_card := card_ui_scene.instantiate()
-	new_card.player_id = player_id
-	new_card.unique_id = get_unique_card_id() if unique_id == -1 else unique_id
-	new_card.controlled = player_id == peer.get_unique_id()
-	new_card.interaction.connect(card_clicked.bind(new_card))
-	new_card.ability_triggered.connect(trigger_ability)
-	add_child(new_card)
-	new_card.load_card(card)
-	#new_card.stopped_dragging.connect(update_dockers)
-	new_card.assign_manager(docker)
-	cards.append(new_card)
-	
-	return new_card
-
-
-
-func get_unique_card_id() -> int:
-	var invalid_id : bool = true
-	var new_id : int = 0
-	while invalid_id:
-		new_id = randi()
-		invalid_id = false
-		for card in cards:
-			if card.unique_id == new_id:
-				invalid_id = true
-	return new_id
-
-func get_card_array_as_id(input:Array[Card_GUI]) -> Array[int]:
-	var ret_arr : Array[int] = []
-	for card in input:
-		ret_arr.append(card.unique_id)
-	return ret_arr
-
-
 func get_docker(which:String, team:int) -> Docker:
 	for docker in get_dockers():
 		if docker.identifier == which and (docker.player == team or team < 0 or docker.player < 0):
 			return docker
 	return
 
-func get_docker_by_id(id:int) -> Docker:
+func id_to_docker(id:int) -> Docker:
 	for docker in get_dockers():
 		if docker.id == id:
 			return docker
 	return
 
-func get_card_by_id(id:int) -> Card_GUI:
+
+## To get the ID of a card, just grab it's .unique_id property
+## This retrives a card's node reference from ID
+func id_to_card(id:int) -> Card_GUI:
 	for card in cards:
 		if card.unique_id == id:
 			return card
 	return
 
-func get_card_array_by_id(ids:Array[int]) -> Array[Card_GUI]:
+## This retrieves all card node references from an array of IDs
+func id_to_card_array(ids:Array[int]) -> Array[Card_GUI]:
 	var ret_arr : Array[Card_GUI] = []
 	for id in ids:
-		ret_arr.append(get_card_by_id(id))
+		ret_arr.append(id_to_card(id))
 	return ret_arr
+
+## This converts an array of card node references to an array of IDs
+func card_to_id_array(input:Array[Card_GUI]) -> Array[int]:
+	var ret_arr : Array[int] = []
+	for card in input:
+		ret_arr.append(card.unique_id)
+	return ret_arr
+
+
+##------------------------------------------
+##          INTERACTION CODE
+##------------------------------------------
+
+# Interaction Priority:
+# Right Click:
+#  -- Close Menu (anywhere) > Open Menu (Highest z_index hovered card)
+# Left Click:
+# -- Select (selecting_cards, awaiting_mulligan) (if valid card, hovered, prioritizing the highest z_index)
 
 var menu_open : bool = false
 var active_interact_card : Card_GUI
 var allow_drag : bool = true
 
-# Called when a card is clicked with the interaction menu key/mouse
-# note - the Card_GUI already culls and only emits if the event is mouse button
-func card_clicked(event: InputEvent, who:Card_GUI) -> void:
-	var area := Rect2(Vector2(0,0), self.size)
-	if area.has_point(get_local_mouse_position()):
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			if selecting_cards and valid_cards.has(who):
-				var ind : int = selected_cards.find(who)
-				if ind != -1:
-					who.set_selection(false)
-					selected_cards.pop_at(ind)
-					update_target_display()
-					return
-				# When clicking while at max, replace the last-clicked target
-				if not selected_cards.size() < max_selections:
-					selected_cards[-1].set_selection(false)
-					selected_cards.pop_back()
-				who.set_selection(true)
-				selected_cards.append(who)
-				update_target_display()
-				if selected_cards.size() == max_selections:
-					tar_conf.emit(true, "selection")
-				return
-			if awaiting_mulligan and possible_mulligans.has(who):
-				var exists : int = mulligan_selections.find(who)
-				if exists != -1:
-					who.set_selection(false)
-					mulligan_selections.pop_at(exists)
-					return
-				mulligan_selections.append(who)
-				who.set_selection(true)
-				return
-		if event.button_mask & MOUSE_BUTTON_MASK_RIGHT and not menu_open and not selected_cards:
-			active_interact_card = who
-			open_interaction_menu()
-			who.open_interaction_menu()
-	return
-
+## Input handling for cards - manages selecting cards and opening/closing interaction menu
 func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and not selecting_cards:
+	if event is InputEventMouseButton:
 		if menu_open and event.is_action_pressed("card_interact"):
 			close_interaction_menu()
-			accept_event()
+			return
+		## Get all cards being hovered during this button click:
+		var hovered_cards : Array[Card_GUI] = []
+		for card in cards:
+			var rect : Rect2 = Rect2(card.global_position, card.size * card.scale)
+			if rect.has_point(get_local_mouse_position()): # Indistinguishable from global mouse position
+				hovered_cards.append(card)
+		## Highest z_index is [0], least is [-1] - may be non-deterministic for same z_indexes
+		var sorted_hovered_cards : Array[Card_GUI] = sort_card_gui_array(hovered_cards, "z_index", true)
+		if not menu_open and event.is_action_pressed("card_interact") and sorted_hovered_cards.size() > 0:
+			open_interaction_menu(sorted_hovered_cards[0]) ## Open the menu for the top-most card
+			return
+		if selecting_cards and event.is_action_pressed("card_select"):
+			## Start with the highest z_index card, then work down list to find a valid selection target
+			for card in sorted_hovered_cards:
+				if valid_cards.has(card):
+					var already_selected = selected_cards.find(card)
+					if already_selected > -1:
+						selected_cards[already_selected].set_selection(false)
+						selected_cards.remove_at(already_selected)
+						break
+					if selected_cards.size() >= max_selections:
+						selected_cards[-1].set_selection(false)
+						selected_cards.pop_back()
+					selected_cards.append(card)
+					card.set_selection(true)
+					break
+			if selected_cards.size() == max_selections and max_selections <= 1:
+				selection_complete.emit()
+			update_input_displays()
+			return
 
+signal selection_complete() ## Emitted when the maximum (1) number of cards seeking selection are picked
 
-# Open the interaction menu!
-func open_interaction_menu() -> void:
+## Open the interaction menu! Displays information about a card and allows using its abilities
+func open_interaction_menu(card:Card_GUI) -> void:
+	if card == null:
+		push_warning("Tried to open the interaction menu for a null card!")
+		return
+	active_interact_card = card
 	menu_open = true
 	allow_drag = false
-	active_interact_card.scale = Vector2(1.0,1.0)
-	active_interact_card.position = get_viewport_rect().size * 0.5 - active_interact_card.size * 0.5
-	active_interact_card.target_position = get_viewport_rect().size * 0.5 - active_interact_card.size * 0.5
+	card.scale = Vector2(1.0,1.0)
+	card.position = get_viewport_rect().size * 0.5 - card.size * 0.5
+	card.target_position = get_viewport_rect().size * 0.5 - card.size * 0.5
+	card.open_interaction_menu()
 	$Dimmer.show()
-# Close it!
+
+## Close the interaction menu
 func close_interaction_menu() -> void:
 	if active_interact_card != null and not active_interact_card.is_queued_for_deletion():
 		active_interact_card.close_interaction_menu()
+	active_interact_card = null
 	menu_open = false
 	allow_drag = true
-	update_dockers(true)
+	update_dockers()
 	$Dimmer.hide()
 	reset_card_indexes()
 
 
-func update_dockers(force_movement:bool=true) -> void:
-	for docker in get_dockers():
-		_update_individual_docker(docker, force_movement)
-	return
-
-
-func _update_individual_docker(docker:Docker, force_movement:bool = true) -> void:
-	## Sorting algorithm is inefficient, but given that the assigned cards will always be small it's fine.
-	docker.assigned_cards = sort_card_gui_array_by_manager_position(docker.assigned_cards)
-	
-	var positions := docker.get_placements()
-	for card in docker.assigned_cards.size():
-		if force_movement:
-			docker.assigned_cards[card].position = positions[card]
-		docker.assigned_cards[card].target_position = positions[card]
-		docker.assigned_cards[card].scale = docker.scale
-	return
-
-func sort_card_gui_array_by_manager_position(array:Array[Card_GUI]) -> Array[Card_GUI]:
-	var re_sorted_positions : Array[Card_GUI] = array.duplicate()
-	var final_array : Array[Card_GUI] = []
-	while re_sorted_positions.size() > 0:
-		var get_lowest : int = get_min(re_sorted_positions)
-		final_array.append(re_sorted_positions[get_lowest])
-		re_sorted_positions.remove_at(get_lowest)
-	return final_array
-
-## Returns the index of the lowest in the array
-func get_min(array:Array[Card_GUI]) -> int:
-	var lowest : int = 0
-	var lowest_value : int = array[0].manager_position
-	for i in array.size():
-		if array[i].manager_position < lowest_value:
-			lowest = i
-			lowest_value = array[i].manager_position
-	return lowest
 
 
 
+
+
+func update_input_displays() -> void:
+	if selecting_ability:
+		update_target_display()
+	if selecting_mulligan:
+		if selected_cards.size() == max_selections:
+			$Mulligan/ConfirmMulligan.show()
+		else:
+			$Mulligan/ConfirmMulligan.hide()
+
+## Updates information on the 
 func update_target_display() -> void:
 	$TargetingGUI/Options/Target/TarAmntToSel.text = str(max_selections - selected_cards.size())
 	$TargetingGUI/Options/Target/TarConfirm.show()
@@ -351,7 +399,10 @@ func reset_card_indexes() -> void:
 	for card in cards:
 		card.z_index = 0 + card.manager.z_index
 
-## ABILITY TARGETING & TRIGGERS
+
+##
+## ABILITY TARGETING & TRIGGERS ##
+##
 
 ## The ability int refers to the position of the array in the Card_GUI's attributes. 
 func trigger_ability(ability:int, card:Card_GUI) -> void:
@@ -372,7 +423,7 @@ func trigger_ability(ability:int, card:Card_GUI) -> void:
 	var burst_amnt : int = 0
 	if card.attributes[ability].allow_burst:
 		burst_amnt = $TargetingGUI/Options/Burst/BurstSelect.value
-	var targets_to_id : Array[int] = get_card_array_as_id(targeting)
+	var targets_to_id : Array[int] = card_to_id_array(targeting)
 	trigger_ability_client.rpc(ability, card.unique_id, burst_amnt, targets_to_id)
 	
 
@@ -380,8 +431,8 @@ func trigger_ability(ability:int, card:Card_GUI) -> void:
 @rpc("any_peer", "call_local", "reliable", 0)
 func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array[int]) -> void:
 	# Runs the pscript's interaction effect
-	var card_as_gui : Card_GUI = get_card_by_id(card)
-	var target_guis : Array[Card_GUI] = get_card_array_by_id(targets)
+	var card_as_gui : Card_GUI = id_to_card(card)
+	var target_guis : Array[Card_GUI] = id_to_card_array(targets)
 	
 	for i in range(0, 1+burst_amnt):
 		card_as_gui.attribute_scripts[ability]._interaction(target_guis)
@@ -395,7 +446,8 @@ func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array
 
 
 
-
+var selecting_ability : bool = false ## Used to check if we need to update the Target GUI
+var selecting_mulligan : bool = false ## Used to check if we need to show/hide the Confirm Mulligan button
 
 var selecting_cards : bool = false
 var max_selections : int = 0
@@ -429,13 +481,15 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 	if valid_cards == []:
 		print("no valid cards, selecting self")
 		valid_cards = [user]
+	#close_interaction_menu() ## Close the interact menu once we know we've got targets
 	## Note: Don't auto-trigger if the user has burst available to use
-	if ability.targets < 0 or valid_cards.size() <= ability.targets:
+	if (ability.targets < 0 or valid_cards.size() <= ability.targets) and user.burst < 1:
 		return valid_cards
 	$Dimmer.show()
 	$TargetingGUI.show()
 	update_target_display()
 	selecting_cards = true
+	selecting_ability = true
 	max_selections = ability.targets
 	for vc in valid_cards:
 		vc.z_index = 5 + vc.manager.z_index
@@ -460,6 +514,7 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 		if confirmation[1] == "button" and (selected_cards.size() == ability.targets or bypass_selection_requirements):
 			break
 	selecting_cards = false
+	selecting_ability = false
 	reset_card_indexes()
 	$Dimmer.hide()
 	$TargetingGUI.hide()
@@ -473,13 +528,16 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 	max_selections = 0
 	return ret_value
 
-signal tar_conf(is_confirmed:bool)
+## This is connected to the selection_complete signal emitted from _input (in editor)
+func selection_confirmation() -> void:
+	print("called")
+	if selecting_ability:
+		print("also called")
+		tar_conf.emit(true, "selection")
+
+signal tar_conf(is_confirmed:bool, source:String)
 func target_confirmation() -> void:
 	tar_conf.emit(true, "button")
 
 func cancel_targeting() -> void:
 	tar_conf.emit(false, "button")
-
-
-func _turn_ended() -> void:
-	$Unscalables/TurnTools.moves = 2
