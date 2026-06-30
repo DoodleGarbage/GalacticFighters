@@ -2,6 +2,12 @@ extends Control
 
 class_name Card_GUI
 
+## Used by the _input code to allow selecting empty positions (with the right targeting flags)
+@export
+var input_metadata : String = ""
+## Skips this card when syncing across clients
+@export
+var dont_sync : bool = false
 
 ## Whether or not this card belongs to the current client/is controllable (aka, could be switched off under the "controlled" status effect)
 var controlled : bool = false
@@ -10,26 +16,41 @@ var manager : Docker
 var manager_position : int = -1
 
 func assign_manager(new_manager:Docker, pos:int=-1) -> void:
-	if new_manager == null:
+	if new_manager == null or (new_manager == manager and pos == manager_position):
 		return
 	var check : int = get_true_manager_position()
 	if check > -1:
 		manager.assigned_cards.pop_at(check)
 	z_index += new_manager.z_index - manager.z_index if manager != null else new_manager.z_index
 	manager = new_manager
-	if pos > -1:
-		if pos < manager.assigned_cards.size():
-			manager.assigned_cards.insert(pos, self)
-		else:
-			manager.assigned_cards.append(self)
+	var occupied_positions : Array[int] = []
+	for card in manager.assigned_cards:
+		occupied_positions.append(card.manager_position)
+	#print("Assigning Manager; Name: ", manager.identifier, " Team: ", manager.player)
+	if pos > -1 and not occupied_positions.has(pos):
 		manager_position = pos
+		#print("assigned pos: ", pos)
 	else:
-		manager.assigned_cards.append(self)
-		manager_position = manager.assigned_cards.size() - 1
+		#manager.get_unused_position()
+		var smallest_unoccupied : int = 0
+		while occupied_positions.has(smallest_unoccupied):
+			smallest_unoccupied += 1
+		manager_position = smallest_unoccupied
+		#print("unoccupied pos: ", smallest_unoccupied)
+	manager.assigned_cards.append(self)
 
+
+## Returns our actual index in the manager's assigned card array
 ## -1 means it either wasn't assigned as a card (which should not be happening) or no manager exists
 func get_true_manager_position() -> int:
 	return manager.assigned_cards.find(self) if manager != null else -1
+
+func remove_manager() -> void:
+	var us : int = get_true_manager_position()
+	if us > -1:
+		manager.assigned_cards.pop_at(us)
+		manager_position = -1
+
 
 ## These values are set when the card is generated on the playfield
 var unique_id : int = 0 # a unique identifier for synchronization/communication
@@ -78,6 +99,7 @@ var attribute_scripts : Array = []
 
 #var status_trackers : Array[Attribute] = []
 
+## Returns information of this card for the purposes of internet sync code
 func get_stats() -> Array:
 	var stat : Array = [max_health, health, defense, attack, burst, heal, armor_pierce]
 	return stat
@@ -105,7 +127,7 @@ func apply_stats(stats:Array) -> void:
 	heal = stats[5]
 	armor_pierce = stats[6]
 
-## WARNING: Need safeguards to prevent the number of script instances in the script array from changing between get_data and set_data
+## WARNING: Need safeguards to prevent the number of script instances in the script array from changing between get_data and set_data - well, this shouldn't happen since it gets immediately fed back in
 func update_scripts(data:Array) -> void:
 	var i : int = 0
 	for script in attribute_scripts:
@@ -122,12 +144,15 @@ func load_attributes(attribute_names:Array[String]) -> void:
 ## Card interaction functions
 
 const dmg_effect := preload("res://ParticleEffects/damage_effect.tscn")
+signal dead()
 
 func damage(amnt:int) -> void:
 	## Trigger any attached passives, play visual effects, etc.
 	var dmg : int = max(amnt - defense, 0)
 	print("suffering damage! amnt: ", dmg)
 	health -= dmg
+	if health <= 0:
+		dead.emit()
 	if dmg > 0:
 		var new_particle := dmg_effect.instantiate()
 		new_particle.finished.connect(new_particle.queue_free)
@@ -231,6 +256,8 @@ func load_card(card:Card) -> void:
 		else:
 			new_script = empty_script.new([self])
 		new_script.ability = attr
+		new_script.source = self
+		new_script._initialized()
 		attribute_scripts.append(new_script)
 	
 	if armor_pierce <= 0:

@@ -1,7 +1,83 @@
 [gd_scene format=3 uid="uid://4seey34xccc7"]
 
+[ext_resource type="Script" uid="uid://bckvxg0glp7ca" path="res://GUI/Card/card_gui.gd" id="1_6dmt0"]
+[ext_resource type="Texture2D" uid="uid://emt6pvakjn1r" path="res://icon.svg" id="2_y3nt1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7lb4k"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(0.14901961, 0.03137255, 0.8, 1)
+
+[sub_resource type="Curve" id="Curve_wynj8"]
+_data = [Vector2(0.41571313, 0), 0.0, 0.0, 0, 0, Vector2(0.7993181, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_vxewq"]
+curve = SubResource("Curve_wynj8")
+
+[sub_resource type="Curve" id="Curve_xv7vr"]
+_limits = [-200.0, 200.0, 0.0, 1.0]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_pbya0"]
+curve = SubResource("Curve_xv7vr")
+
+[sub_resource type="Curve" id="Curve_butxm"]
+_limits = [-200.0, 200.0, 0.0, 1.0]
+_data = [Vector2(0, 1), 0.0, -597.3842, 0, 0, Vector2(1, -200), -39.07233, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_c4qn5"]
+curve = SubResource("Curve_butxm")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_7yxwd"]
+particle_flag_disable_z = true
+angle_min = -179.99998
+angle_max = 180.00002
+initial_velocity_min = -450.0
+initial_velocity_max = 450.0
+gravity = Vector3(0, 0, 0)
+linear_accel_min = -10.000002
+linear_accel_max = 9.999997
+linear_accel_curve = SubResource("CurveTexture_pbya0")
+radial_accel_curve = SubResource("CurveTexture_c4qn5")
+alpha_curve = SubResource("CurveTexture_vxewq")
+
 [node name="EmptyCard" type="Panel" unique_id=2057930762]
+z_index = -1
 custom_minimum_size = Vector2(300, 500)
 offset_right = 300.0
 offset_bottom = 500.0
 mouse_filter = 2
+script = ExtResource("1_6dmt0")
+input_metadata = "empty"
+dont_sync = true
+
+[node name="Card" type="Control" parent="." unique_id=1328208938]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Selected" type="Panel" parent="Card" unique_id=12012640]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_7lb4k")
+
+[node name="ParticleEffect" type="GPUParticles2D" parent="Card/Selected" unique_id=1885948662]
+z_index = -1
+position = Vector2(150, 217)
+amount = 60
+texture = ExtResource("2_y3nt1")
+lifetime = 0.9
+explosiveness = 0.74
+process_material = SubResource("ParticleProcessMaterial_7yxwd")

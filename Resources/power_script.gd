@@ -28,14 +28,18 @@ func _init(input:Array) -> void:
 
 # Virtual Functions - Override in extensions
 
-## Triggered when the power script is activated (such as using an ability).
+## Called when the card this script/ability is attached to is first created.
+func _initialized() -> void:
+	pass
+
+## Called when the power script is activated (primarily, when using an ability).
 func _interaction(_targets:Array[Card_GUI]) -> void:
 	pass
 
-## Called at the start of the game turn
+## Called at the start of the player's turn.
 func _turnstart() -> void:
 	pass
 
-## Called when the turn ends.
+## Called when the player's turn ends.
 func _turnend() -> void:
 	pass

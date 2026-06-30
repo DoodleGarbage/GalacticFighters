@@ -17,16 +17,28 @@ var identifier : String = ""
 @export
 var player_controlled : bool = false
 
-## Maximum number of cards that can be assigned to this docker
+## Whether or not cards should be re-ordered (compressed together) on update or should maintain the same positions
+@export
+var ordering_matters : bool = false
+
+## Maximum number of cards that can be assigned to this docker - not enforced
+@export
 var max_cards : int = -1
 var assigned_cards : Array[Card_GUI] = [] :
 	set(value):
 		card_assignment_changed(assigned_cards, value)
 		assigned_cards = value
 
+func get_unused_position() -> int:
+	var occupied_positions : Array[int] = []
+	for card in assigned_cards:
+		occupied_positions.append(card.manager_position)
+	print(occupied_positions)
+	return -1
+
 func card_assignment_changed(_before, _after) -> void:
 	pass
 
 ## When -1 or less, default to getting the placements for the currently assigned cards.
-func get_placements(_number_of_cards:int=-1) -> Array[Vector2]:
+func get_placements() -> Array[Vector2]:
 	return []

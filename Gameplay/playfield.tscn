@@ -3,8 +3,6 @@
 [ext_resource type="PackedScene" uid="uid://d1gwxg7gtq2bl" path="res://GUI/sword_ui.tscn" id="1_fri3p"]
 [ext_resource type="PackedScene" uid="uid://c3hcw88cgdidp" path="res://Gameplay/docker.tscn" id="1_mmpgb"]
 [ext_resource type="Script" uid="uid://dhkj26diy8chc" path="res://Gameplay/game_manager.gd" id="1_uswiv"]
-[ext_resource type="Script" uid="uid://dfigbub4rfoyp" path="res://Resources/deck.gd" id="2_fri3p"]
-[ext_resource type="Resource" uid="uid://dsmvahj2ipkya" path="res://Resources/BasicResources/demo_deck.tres" id="3_uswiv"]
 [ext_resource type="PackedScene" uid="uid://d28oetjwilyx8" path="res://GUI/turn_tools.tscn" id="4_n0ks1"]
 [ext_resource type="Script" uid="uid://bd4aetlrhf3tt" path="res://Gameplay/mulligan.gd" id="6_cqp8x"]
 [ext_resource type="PackedScene" uid="uid://o5oepqui30u7" path="res://GUI/saferoom.tscn" id="7_uswiv"]
@@ -23,7 +21,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_uswiv")
-test_decks = Array[ExtResource("2_fri3p")]([ExtResource("3_uswiv"), ExtResource("3_uswiv")])
 
 [node name="Unscalables" type="Control" parent="." unique_id=1456994053]
 z_index = 1
@@ -69,17 +66,15 @@ offset_top = -85.28
 offset_right = 60.839996
 offset_bottom = 50.72
 
-[node name="TurnTools" parent="Unscalables" unique_id=1701782066 instance=ExtResource("4_n0ks1")]
-custom_minimum_size = Vector2(380, 160)
+[node name="TurnTools" parent="Unscalables" unique_id=2030337139 instance=ExtResource("4_n0ks1")]
 layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
-anchor_right = 0.0
 anchor_bottom = 0.5
-offset_left = 155.0
-offset_top = -80.0
-offset_right = 535.0
-offset_bottom = 80.0
+offset_left = 138.0
+offset_top = -61.0
+offset_right = 440.0
+offset_bottom = 62.0
 grow_vertical = 2
 
 [node name="MulliganBG" type="Panel" parent="Unscalables" unique_id=946155303]
@@ -140,6 +135,8 @@ player = 1
 id = 4
 identifier = "field"
 player_controlled = true
+ordering_matters = true
+max_cards = 3
 
 [node name="EnemyField" parent="." unique_id=80915247 instance=ExtResource("1_mmpgb")]
 layout_mode = 1
@@ -154,6 +151,8 @@ mouse_filter = 2
 player = 2
 id = 3
 identifier = "field"
+ordering_matters = true
+max_cards = 3
 
 [node name="PlayerSaferoom" parent="." unique_id=1767086156 instance=ExtResource("7_uswiv")]
 layout_mode = 1
@@ -304,7 +303,7 @@ layout_mode = 2
 text = "X"
 
 [connection signal="selection_complete" from="." to="." method="selection_confirmation"]
-[connection signal="turn_ended" from="Unscalables/TurnTools" to="." method="_turn_ended"]
+[connection signal="turn_ended" from="Unscalables/TurnTools" to="." method="signal_turn_end"]
 [connection signal="pressed" from="Mulligan/ConfirmMulligan" to="." method="submit_mulligan"]
 [connection signal="pressed" from="TargetingGUI/Options/Target/TarConfirm" to="." method="target_confirmation"]
 [connection signal="pressed" from="TargetingGUI/Options/Target/TarCancel" to="." method="cancel_targeting"]

@@ -4,33 +4,54 @@ extends Control
 var peer : ENetMultiplayerPeer
 
 var host_id : int
-## [name (string), ID (int), deck (Deck), team (int)]
+## [name (string), ID (int), deck (Deck), team (int), moves (int)]
 # Team 1 is us, Team 2 is enemy team - to be expanded for more players
 const default_deck := preload("res://Resources/BasicResources/demo_deck.tres")
 var current_players : Array = [ ["default_player", 1, default_deck], ["default_enemy", 2, default_deck], ["player_3", 3, default_deck]]
 
-var cards : Array[Card_GUI] = [] # A reference to every single card on the board
+# A pointer reference to every single card on the board
+var cards : Array[Card_GUI] = [] :
+	get():
+		return cards# + $PlayerField.card_shadows + $EnemyField.card_shadows
 
 func _ready() -> void:
-	update_dockers()
+	pass
 
-func get_player_by_id(id:int) -> Array:
+
+## Returns a pointer to the player's data array in current_players
+func get_player_array_by_id(id:int) -> Array:
 	for player in current_players:
 		if player[1] == id:
 			return player
 	return []
 
+## Returns the position in the current_players array of the id
+func get_player_by_id(id:int) -> int:
+	for player in current_players.size():
+		if current_players[player][1] == id:
+			return player
+	return -1
 
 
 # current_players and host_id are updated by the Main_menu manager
 func initalize_game() -> void:
+	#initalize_card_shadows()
+	
 	initalize_cards(current_players)
 	
 	#load_items(decks)
 	#load_gadgets(decks)
 	#load_sword(decks)
 	
+	$Unscalables/TurnTools.end_turn() ## reset display of TurnTools
+	
 	start_mulligan.rpc()
+
+#func initalize_card_shadows() -> void:
+	#for i in $PlayerField.max_cards:
+		#add_shadow_card($PlayerField, peer.get_unique_id(), i)
+	#for i in $EnemyField.max_cards:
+		#add_shadow_card($EnemyField, i)
 
 ## Clients send actions, the server executes them and sends the results back - while clients wait, they can 'predict' what happens and play their visual effects before the server responds, then update/correct their stats when the server informs them what happened
 
@@ -41,10 +62,15 @@ func assign_teams() -> void:
 			current_players[player].append(1)
 		else:
 			current_players[player].append(2)
+		## We append a second empty value to all players - this is their # of moves, to be tracked by the host
+		current_players[player].append(0)
 
 func initalize_cards(players:Array) -> void:
 	for player in players:
 		var deck : Deck = player[2]
+		var shadow_docker : Docker = get_docker("field", player[3])
+		for i in shadow_docker.max_cards:
+			add_shadow_card(shadow_docker, i, player[1])
 		for card in deck.characters:
 			var new_card : Card_GUI = add_card(card, get_docker("saferoom", player[3]), player[1])
 			sync_card(new_card, true)
@@ -62,6 +88,8 @@ func start_mulligan() -> void:
 	#$Unscalables/MulliganBG.show()
 	$Mulligan.show()
 	for card in cards:
+		if card.input_metadata != "":
+			continue
 		if card.player_id == peer.get_unique_id() and card.stored_card.type == 1: # note: 1 is Special Character
 			valid_cards.append(card)
 			## ID 5 is the mulligan docker
@@ -82,6 +110,8 @@ func submit_mulligan() -> void:
 	selecting_mulligan = false
 	$Mulligan/ConfirmMulligan.hide()
 	for card in cards:
+		if card.input_metadata != "":
+			continue
 		card.assign_manager(get_docker("saferoom", 1))
 	for card in selected_cards:
 		card.assign_manager(get_docker("field", 1))
@@ -112,12 +142,14 @@ func send_mulligan_selection(selections:Array[int], player_id:int) -> void:
 func end_mulligan(player_mulligans:Array) -> void:
 	$Mulligan.hide()
 	for card in cards:
+		if card.input_metadata != "":
+			continue
 		card.set_selection(false)
-		card.assign_manager(get_docker("saferoom", get_player_by_id(card.player_id)[3]))
+		card.assign_manager(get_docker("saferoom", get_player_array_by_id(card.player_id)[3]))
 	for player in player_mulligans:
 		var dupe : Array[int] = []
 		dupe.assign(player)
-		var player_data : Array = get_player_by_id(dupe[0])
+		var player_data : Array = get_player_array_by_id(dupe[0])
 		dupe.pop_front()
 		var as_card : Array[Card_GUI] = id_to_card_array(dupe)
 		
@@ -131,11 +163,74 @@ func end_mulligan(player_mulligans:Array) -> void:
 		start_game()
 
 func start_game() -> void:
-	var coin_flip : int = randi_range(0, current_players.size()-1)
-	update_turn(current_players[coin_flip])
+	current_players.shuffle() ## Puts them in a random order, instead of making the order based on who joined the server first - also gives us a random starting player
+	update_turn.rpc(current_players[0][1])
 
+##-----------------------------------------------
+##             GAMEPLAY CODE
+##-----------------------------------------------
+
+var current_turn_id : int = -1
+
+@rpc("authority", "call_local", "reliable", 0)
 func update_turn(player_id:int) -> void:
-	pass
+	_end_turn() # Note: only ends for the player we're switching away from
+	current_turn_id = player_id
+	_start_turn() # Note: only triggers for the player we're switching to
+	
+	if peer.get_unique_id() == host_id:
+		for pl in current_players:
+			pl[4] = 0
+		var player : Array = get_player_array_by_id(player_id)
+		player[4] = 2
+		sync_all_cards(true)
+	
+	## Display some visual thing to notify of a turn change
+	if peer.get_unique_id() != player_id:
+		$Unscalables/TurnTools.moves = 0
+		return
+	$Unscalables/TurnTools.moves = 2
+	
+
+
+## Called when the turn tools button is pressed
+func signal_turn_end() -> void:
+	if current_turn_id == peer.get_unique_id():
+		send_end_turn_notice.rpc(peer.get_unique_id())
+
+@rpc("any_peer", "call_local", "reliable", 0)
+func send_end_turn_notice(player_id:int) -> void:
+	if peer.get_unique_id() != host_id or player_id != current_turn_id:
+		return
+	_end_turn.rpc()
+	# TODO: Apply a status to all characters w/ duration 1 turn that adds 1 defense for each unused move
+	var next_player : int = get_player_by_id(current_turn_id) + 1
+	if next_player >= current_players.size():
+		next_player -= current_players.size()
+	update_turn.rpc(current_players[next_player][1])
+
+## Trigger all start_turn effects in powerscripts & decrement the duration of any statuses
+## Only triggers on an individual person's turn, rather than the round.
+func _start_turn() -> void:
+	if peer.get_unique_id() == current_turn_id:
+		$Unscalables/TurnTools.begin_turn() # Turn vfx
+	for card in cards:
+		if card.player_id == current_turn_id:
+			for script in card.attribute_scripts:
+				script._turnstart()
+	return
+
+## Trigger all end_turn effects in powerscripts
+## Only triggers on an individual person's turn, rather than the round.
+@rpc("authority", "call_local", "reliable", 0)
+func _end_turn() -> void:
+	if peer.get_unique_id() == current_turn_id:
+		$Unscalables/TurnTools.end_turn() # Turn vfx
+	for card in cards:
+		if card.player_id == current_turn_id:
+			for script in card.attribute_scripts:
+				script._turnend()
+	return
 
 
 ##-----------------------------------------------
@@ -143,6 +238,7 @@ func update_turn(player_id:int) -> void:
 ##-----------------------------------------------
 
 const card_ui_scene := preload("res://GUI/Card/card.tscn")
+const empty_card_scene := preload("res://GUI/Card/empty_card.tscn")
 
 func add_card(card : Card, docker : Docker, player_id:int, unique_id : int = -1) -> Card_GUI:
 	var new_card := card_ui_scene.instantiate()
@@ -152,11 +248,36 @@ func add_card(card : Card, docker : Docker, player_id:int, unique_id : int = -1)
 	new_card.ability_triggered.connect(trigger_ability)
 	add_child(new_card)
 	new_card.load_card(card)
+	new_card.dead.connect(dead_card.bind(new_card))
 	#new_card.stopped_dragging.connect(update_dockers)
 	new_card.assign_manager(docker)
 	cards.append(new_card)
 	
 	return new_card
+
+## Adds an Empty card for targeting - used for the fields
+func add_shadow_card(docker : Docker, manager_pos : int, player_id:int, unique_id : int = -1) -> void:
+	var new_shadow := empty_card_scene.instantiate()
+	if unique_id != -1:
+		new_shadow.unique_id = get_unique_card_id()
+	else:
+		new_shadow.unique_id = unique_id
+	docker.add_child(new_shadow)
+	cards.append(new_shadow)
+	new_shadow.player_id = player_id
+	new_shadow.manager = docker
+	new_shadow.manager_position = manager_pos
+	new_shadow.global_position = docker.get_one_placement(manager_pos)
+	if peer.get_unique_id() != host_id:
+		return
+	sync_shadow_card.rpc(docker.id, manager_pos, new_shadow.unique_id)
+
+@rpc("authority", "call_remote", "reliable", 0)
+func sync_shadow_card(docker_id:int, manager_pos:int, unique_id:int) -> void:
+	if peer.get_unique_id() == host_id:
+		return
+	var docker : Docker = id_to_docker(docker_id)
+	add_shadow_card(docker, manager_pos, unique_id)
 
 ## Returns an ID not shared by all other cards
 func get_unique_card_id() -> int:
@@ -172,6 +293,8 @@ func get_unique_card_id() -> int:
 
 ## The server should sync important information, like stats, but the more complex information - such as abilities, visual effects, etc, will rely on the client side info; if the client modifies them, only visual effects should change, since only the server's modifications to the board items (like stats) are permanent
 func sync_card(card:Card_GUI, upd_docker : bool = true) -> void:
+	if card.dont_sync:
+		return
 	var stats : Array = card.get_stats()
 	# Resource names
 	var card_resource : String = card.stored_card.name
@@ -180,14 +303,18 @@ func sync_card(card:Card_GUI, upd_docker : bool = true) -> void:
 	var script_data : Array = card.get_script_data()
 	var attributes : Array = card.get_attributes()
 	var manager_position : int = card.manager_position
-	_update_individual_docker(card.manager, false)
+	_update_individual_docker(card.manager, true)
 	recieved_card_sync.rpc(stats, card_resource, card_ids, manager_identifier, manager_position, script_data, attributes, upd_docker)
+
+func sync_all_cards(upd_docker:bool = true) -> void:
+	for card in cards:
+		sync_card(card, upd_docker)
 
 @rpc("authority", "call_remote", "reliable", 0)
 func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_id : String, manager_pos :int, script_data : Array, attribute_data : Array, do_docker_update : bool) -> void:
 	var card_instance : Card_GUI
 	## Team is relative - need to get dockers by the docker identifier and the relative team
-	var current_docker := get_docker(manager_id, get_player_by_id(card_ids[1])[3])
+	var current_docker := get_docker(manager_id, get_player_array_by_id(card_ids[1])[3])
 	for card in cards:
 		if card.unique_id == card_ids[0]:
 			card_instance = card
@@ -198,7 +325,28 @@ func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_i
 	card_instance.load_attributes(attribute_data)
 	card_instance.update_scripts(script_data)
 	if do_docker_update:
-		_update_individual_docker(card_instance.manager, false)
+		_update_individual_docker(card_instance.manager, true)
+
+
+func dead_card(card:Card_GUI) -> void:
+	# Only do something if we're the host, so clients don't get prematurely trigger happy
+	if peer.get_unique_id() == host_id:
+		dead_server_card.rpc(card.unique_id)
+
+const death_vfx := preload("res://ParticleEffects/death_vfx.tscn")
+
+@rpc("authority", "call_local", "reliable", 0)
+func dead_server_card(card:int) -> void:
+	var gui_card : Card_GUI = id_to_card(card)
+	var index : int = cards.find(gui_card)
+	cards.remove_at(index) # This makes the card officially not a part of the game, from the perspective of the game
+	gui_card.remove_manager()
+	# ^ We can now safely queue_free the card at any time.
+	# Display death vfx and then delete once the effect expires
+	var new_fx : GPUParticles2D = death_vfx.instantiate()
+	new_fx.finished.connect(gui_card.queue_free)
+	gui_card.add_child(new_fx)
+	new_fx.emitting = true
 
 
 ## Updates all dockers in the scene
@@ -209,21 +357,15 @@ func update_dockers() -> void:
 
 ## Updates all cards assigned to a docker and updates their position accoridng to the docker
 func _update_individual_docker(docker:Docker, update_interact:bool=true) -> void:
-	## Sorting algorithm is inefficient, but given that the assigned cards will always be small it's fine.
-	docker.assigned_cards = sort_card_gui_array(docker.assigned_cards, "manager_position")
+	if not docker.ordering_matters: #This will compress the cards to the smallest arrangment if false;
+		for card in docker.assigned_cards:
+			card.assign_manager(docker)
 	
 	var positions := docker.get_placements()
 	for card in docker.assigned_cards.size():
-		#if not update_interact and docker.assigned_cards[card] == active_interact_card:
-			#print("avoiding the interact card")
-			#continue
-		#if active_interact_card == docker.assigned_cards[card]:
-			#continue
-		#if force_movement:
 		docker.assigned_cards[card].position = positions[card]
-		#docker.assigned_cards[card].target_position = positions[card]
 		docker.assigned_cards[card].scale = docker.scale
-	if not update_interact:
+	if not update_interact and active_interact_card != null:
 		open_interaction_menu(active_interact_card)
 	return
 
@@ -313,14 +455,18 @@ func _input(event: InputEvent) -> void:
 			return
 		## Get all cards being hovered during this button click:
 		var hovered_cards : Array[Card_GUI] = []
+		# Reminder that the card shadows are inside the cards array
 		for card in cards:
 			var rect : Rect2 = Rect2(card.global_position, card.size * card.scale)
-			if rect.has_point(get_local_mouse_position()): # Indistinguishable from global mouse position
+			if rect.has_point(get_global_mouse_position()): # Indistinguishable from global mouse position
 				hovered_cards.append(card)
-		## Highest z_index is [0], least is [-1] - may be non-deterministic for same z_indexes
+		## Highest z_index card is [0] - may be non-deterministic for same z_indexes
 		var sorted_hovered_cards : Array[Card_GUI] = sort_card_gui_array(hovered_cards, "z_index", true)
-		if not menu_open and event.is_action_pressed("card_interact") and sorted_hovered_cards.size() > 0:
-			open_interaction_menu(sorted_hovered_cards[0]) ## Open the menu for the top-most card
+		if not menu_open and event.is_action_pressed("card_interact"):
+			for card in sorted_hovered_cards:
+				if card.input_metadata != "":
+					continue
+				open_interaction_menu(card)
 			return
 		if selecting_cards and event.is_action_pressed("card_select"):
 			## Start with the highest z_index card, then work down list to find a valid selection target
@@ -337,7 +483,7 @@ func _input(event: InputEvent) -> void:
 					selected_cards.append(card)
 					card.set_selection(true)
 					break
-			if selected_cards.size() == max_selections and max_selections <= 1:
+			if selected_cards.size() == max_selections and max_selections == 1:
 				selection_complete.emit()
 			update_input_displays()
 			return
@@ -410,6 +556,9 @@ func trigger_ability(ability:int, card:Card_GUI) -> void:
 	if $Unscalables/TurnTools.moves < 1:
 		print("not enough moves! Cancelling!")
 		return
+	if current_turn_id != peer.get_unique_id():
+		print("Tried to perform an action while it isn't our turn!")
+		return
 	close_interaction_menu() # Abilities are often triggered when this is open
 	allow_drag = false # Prevent dragging during the ability trigger
 	var targeting : Array[Card_GUI] = await get_targets(card, card.attributes[ability])
@@ -430,6 +579,12 @@ func trigger_ability(ability:int, card:Card_GUI) -> void:
 ## card [int] is the unique ID of the Card_GUI that is the source
 @rpc("any_peer", "call_local", "reliable", 0)
 func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array[int]) -> void:
+	var who : int = get_player_by_id(current_turn_id)
+	if peer.get_unique_id() == host_id:
+		if current_players[who][4] < 1:
+			print("A client tried to take an action when they shouldn't be able to!")
+			return
+	
 	# Runs the pscript's interaction effect
 	var card_as_gui : Card_GUI = id_to_card(card)
 	var target_guis : Array[Card_GUI] = id_to_card_array(targets)
@@ -438,7 +593,10 @@ func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array
 		card_as_gui.attribute_scripts[ability]._interaction(target_guis)
 	update_dockers()
 	
+	$Unscalables/TurnTools.moves -= 1
+	
 	if peer.get_unique_id() == host_id:
+		current_players[who][4] -= 1
 		for unit in cards:
 			sync_card(unit, true)
 		# Change the move counter, etc.
@@ -453,13 +611,18 @@ var selecting_cards : bool = false
 var max_selections : int = 0
 var selected_cards : Array[Card_GUI] = []
 var valid_cards : Array[Card_GUI] = []
+## Currently just used for allowing targeting empty positions on the field
+var valid_metadata : Array[String] = []
 
 func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 	print("tar type: ", ability.target_type, " amnt: ", ability.targets, " ability name: ", ability.name)
 	if ability.targets == 0:
 		return []
 	selected_cards = []
+	valid_metadata = [""]
 	valid_cards = []
+	if ability.allowed_metadata & 0b1:
+		valid_metadata.append("empty")
 	$TargetingGUI/Options/Burst/BurstSelect.value = 0
 	if ability.allow_burst and user.burst > 0:
 		$TargetingGUI/Options/Burst.show()
@@ -468,7 +631,7 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 	# Target Validation Logic
 	for card in cards:
 		## For the sake of readability and debugging, these are nested if statements.
-		if card.player_id == user.player_id:
+		if card.player_id == user.player_id and valid_metadata.has(card.input_metadata):
 			if card.manager.identifier == "saferoom" and ability.target_type & 0b0100:
 				valid_cards.append(card)
 			elif card.manager.identifier != "saferoom" and ability.target_type & 0b0001:
@@ -481,6 +644,7 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 	if valid_cards == []:
 		print("no valid cards, selecting self")
 		valid_cards = [user]
+	
 	#close_interaction_menu() ## Close the interact menu once we know we've got targets
 	## Note: Don't auto-trigger if the user has burst available to use
 	if (ability.targets < 0 or valid_cards.size() <= ability.targets) and user.burst < 1:
@@ -532,7 +696,7 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 func selection_confirmation() -> void:
 	print("called")
 	if selecting_ability:
-		print("also called")
+		#print("also called")
 		tar_conf.emit(true, "selection")
 
 signal tar_conf(is_confirmed:bool, source:String)

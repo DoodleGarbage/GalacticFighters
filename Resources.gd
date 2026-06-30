@@ -159,6 +159,7 @@ func load_resource_from_file(file:FileAccess, resource_name:String) -> void:
 				new_attr.allow_burst = resource["AllowBurst"]
 				new_attr.targets = resource["Targets"]
 				new_attr.target_type = resource["TargetType"]
+				new_attr.allowed_metadata = resource["AllowedMetadata"]
 				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
 				attributes.append(new_attr)
 			"Pscript":

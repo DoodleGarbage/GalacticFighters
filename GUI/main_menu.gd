@@ -155,6 +155,7 @@ func _quit_lobby() -> void:
 func reset_lobby() -> void:
 	for child in $MainMenu/Lobby/PlayerList.get_children():
 		child.queue_free()
+	#$MainMenu/Lobby/corner/ready.show()
 	load_lobby_gui()
 
 ## Gets a player's index in the lobby by their id or name.
@@ -184,8 +185,8 @@ func ready_up(id:int) -> void:
 		return
 	
 	current_lobby_players[who][3] = true
-	if current_lobby_players[who][1] == peer.get_unique_id():
-		$MainMenu/Lobby/corner/ready.hide()
+	#if current_lobby_players[who][1] == peer.get_unique_id():
+		#$MainMenu/Lobby/corner/ready.hide()
 	# check if this is host
 	if peer.get_unique_id() == host_id:
 		var should_start : bool = true

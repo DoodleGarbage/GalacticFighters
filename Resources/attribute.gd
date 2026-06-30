@@ -36,6 +36,9 @@ var target_type : int = 0
 # 0b0100: allies (saferoom)
 # 0b1000: enemies (saferoom)
 
+@export_flags("Empty")
+var allowed_metadata : int = 0
+
 ## Duration
 
 ## The length of the ability - decreases by 1 at the end of each turn, deleted at 0. If less than 0, infinite duration.

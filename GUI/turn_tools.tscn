@@ -3,58 +3,68 @@
 [ext_resource type="Theme" uid="uid://cblg4kypkjepe" path="res://Themes/card_theme.tres" id="1_5aqq2"]
 [ext_resource type="Script" uid="uid://cb3q3d5sg0w3n" path="res://GUI/turn_tools.gd" id="2_hpyn7"]
 [ext_resource type="Texture2D" uid="uid://qin5rmkwrd72" path="res://Art/GuiChecked.svg" id="3_npl7x"]
+[ext_resource type="Texture2D" uid="uid://best5vs0rlm2x" path="res://Art/AttackFinal.png" id="4_e2yi8"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8s5l4"]
 bg_color = Color(0, 0.47414583, 0.87082475, 1)
 
-[node name="TurnTools" type="Panel" unique_id=1701782066]
-anchors_preset = -1
-anchor_right = 0.2
-anchor_bottom = 0.15
+[node name="TurnTools" type="PanelContainer" unique_id=2030337139]
+offset_right = 302.0
+offset_bottom = 123.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
 theme = ExtResource("1_5aqq2")
 script = ExtResource("2_hpyn7")
 
-[node name="EndTurn" type="Button" parent="." unique_id=2123458499]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.1
-anchor_top = 0.1
-anchor_right = 0.75
-anchor_bottom = 0.6
-grow_horizontal = 2
-grow_vertical = 2
-text = "ENDTURN"
+[node name="YourTurn" type="Label" parent="." unique_id=1627397838]
+visible = false
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_8s5l4")
+text = "Your Turn!"
 
-[node name="RoundCounter" type="PanelContainer" parent="." unique_id=556794339]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.791
-anchor_top = 0.25
-anchor_right = 0.95
-anchor_bottom = 0.45
-offset_left = -1.0
-offset_top = -11.5
-offset_bottom = 11.5
-grow_horizontal = 0
-grow_vertical = 2
+[node name="Mgn" type="MarginContainer" parent="." unique_id=1684311270]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="vls" type="VBoxContainer" parent="Mgn" unique_id=1681964191]
+layout_mode = 2
+
+[node name="ret" type="HBoxContainer" parent="Mgn/vls" unique_id=1194008748]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 10
+
+[node name="RoundCounter" type="PanelContainer" parent="Mgn/vls/ret" unique_id=556794339]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
 tooltip_text = "ROUNDCOUNTER"
 
-[node name="RoundCount" type="Label" parent="RoundCounter" unique_id=1653026677]
+[node name="RoundCount" type="Label" parent="Mgn/vls/ret/RoundCounter" unique_id=1653026677]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 40
 text = "2"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=250891924]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.1
-anchor_top = 0.65
-anchor_right = 0.9
-anchor_bottom = 0.9
-grow_vertical = 0
+[node name="EndTurn" type="Button" parent="Mgn/vls/ret" unique_id=2123458499]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "ENDTURN"
 
-[node name="LabelMove" type="Label" parent="HBoxContainer" unique_id=555570441]
+[node name="TurnIndicator" type="TextureRect" parent="Mgn/vls/ret" unique_id=1400399360]
+visible = false
+layout_mode = 2
+texture = ExtResource("4_e2yi8")
+expand_mode = 2
+
+[node name="mms" type="HBoxContainer" parent="Mgn/vls" unique_id=250891924]
+layout_mode = 2
+
+[node name="LabelMove" type="Label" parent="Mgn/vls/mms" unique_id=555570441]
 layout_mode = 2
 tooltip_text = "The number of moves you have. Every action uses 1. 
 If you end your turn with unused moves, the defense 
@@ -63,28 +73,18 @@ move until next turn."
 mouse_filter = 1
 text = "Moves:"
 
-[node name="Moves" type="CheckBox" parent="HBoxContainer" unique_id=1658016862]
+[node name="Moves" type="CheckBox" parent="Mgn/vls/mms" unique_id=1658016862]
 layout_mode = 2
 mouse_filter = 2
 theme_override_icons/checked_disabled = ExtResource("3_npl7x")
 disabled = true
 button_pressed = true
 
-[node name="Moves2" type="CheckBox" parent="HBoxContainer" unique_id=1222471376]
+[node name="Moves2" type="CheckBox" parent="Mgn/vls/mms" unique_id=1222471376]
 layout_mode = 2
 mouse_filter = 2
 theme_override_icons/checked_disabled = ExtResource("3_npl7x")
 disabled = true
 button_pressed = true
 
-[node name="YourTurn" type="Label" parent="." unique_id=1627397838]
-visible = false
-layout_mode = 0
-offset_left = 118.0
-offset_top = -45.0
-offset_right = 239.0
-offset_bottom = -11.0
-theme_override_styles/normal = SubResource("StyleBoxFlat_8s5l4")
-text = "Your Turn!"
-
-[connection signal="pressed" from="EndTurn" to="." method="_on_end_turn_pressed"]
+[connection signal="pressed" from="Mgn/vls/ret/EndTurn" to="." method="_on_end_turn_pressed"]
