@@ -9,6 +9,9 @@ var input_metadata : String = ""
 @export
 var dont_sync : bool = false
 
+## Used to prevent killing a card multiple times
+var flagged_for_death : bool = false
+
 ## Whether or not this card belongs to the current client/is controllable (aka, could be switched off under the "controlled" status effect)
 var controlled : bool = false
 
@@ -127,12 +130,6 @@ func apply_stats(stats:Array) -> void:
 	heal = stats[5]
 	armor_pierce = stats[6]
 
-## WARNING: Need safeguards to prevent the number of script instances in the script array from changing between get_data and set_data - well, this shouldn't happen since it gets immediately fed back in
-func update_scripts(data:Array) -> void:
-	var i : int = 0
-	for script in attribute_scripts:
-		script.set_data(data[i])
-		i += 1
 
 ## WARNING: Ensure that the script data is the same between attributes and the associateds script instances
 func load_attributes(attribute_names:Array[String]) -> void:
@@ -140,6 +137,32 @@ func load_attributes(attribute_names:Array[String]) -> void:
 	for attr in attribute_names:
 		var true_attribute = Resources.find_resource("Attribute", attr)
 		attributes.append(true_attribute)
+	attribute_scripts = []
+	for attribute in attributes:
+		attribute_scripts.append(init_script(attribute))
+
+## WARNING: Need safeguards to prevent the number of script instances in the script array from changing between get_data and set_data - well, this shouldn't happen since it gets immediately fed back in
+func update_scripts(data:Array) -> void:
+	var i : int = 0
+	for script in attribute_scripts:
+		script.set_data(data[i])
+		i += 1
+	update_ability_buttons()
+
+
+func init_script(attribute:Attribute) -> GDScript:
+	var new_script = null
+	if attribute.pscript != null:
+		new_script = attribute.pscript.new([self])
+	else:
+		new_script = empty_script.new([self])
+	new_script.ability = attribute
+	new_script.source = self
+	new_script._initialized()
+	return new_script
+
+
+
 
 ## Card interaction functions
 
@@ -161,7 +184,16 @@ func damage(amnt:int) -> void:
 		new_particle.position = Vector2(150, 250)
 		add_child(new_particle)
 
-
+func apply_status(status:String) -> void:
+	var status_effect : Attribute = Resources.find_resource("Attribute", status)
+	if status_effect == null:
+		return
+	print("We're applying status: ", status)
+	attributes.append(status_effect)
+	attribute_scripts.append(init_script(status_effect))
+	attribute_scripts[-1].duration_tracker = status_effect.duration
+	
+	update_ability_buttons()
 
 
 
@@ -208,8 +240,44 @@ func initilize_interactions() -> void:
 	$AttachPoint3/Interactions.add_child(abg)
 
 
+func update_ability_buttons() -> void:
+	## Added because empty cards crash because of this
+	var abg_point : Control = get_node_or_null("AttachPoint1/Abilities")
+	if abg_point != null:
+		for child in abg_point.get_children():
+			child.queue_free()
+	else:
+		return ## I think this will only be called on the empty cards
+	
+	## Load Passives (places them above abilities)
+	for ab in attributes.size():
+		if attributes[ab].type == 0:
+			var abg := abil_gui.instantiate()
+			abg.load_ability(attributes[ab])
+			abg.selected.connect(ability_trigger.bind(ab))
+			abg_point.add_child(abg)
+			abg.duration = attribute_scripts[ab].duration_tracker
+	## Load Abilities
+	for ab in attributes.size():
+		if attributes[ab].type == 1:
+			var abg := abil_gui.instantiate()
+			abg.load_ability(attributes[ab])
+			abg.selected.connect(ability_trigger.bind(ab))
+			abg_point.add_child(abg)
+			abg.duration = attribute_scripts[ab].duration_tracker
+	## Load Status Effects
+	for ab in attributes.size():
+		if attributes[ab].type == 3:
+			var abg := abil_gui.instantiate()
+			abg.load_ability(attributes[ab])
+			abg.selected.connect(ability_trigger.bind(ab))
+			abg_point.add_child(abg)
+			abg.duration = attribute_scripts[ab].duration_tracker
+
+
 signal ability_triggered(ability:int, us:Card_GUI)
 func ability_trigger(ability:int) -> void:
+	print("Triggering ability: ", ability)
 	ability_triggered.emit(ability, self)
 
 const special_character_background := preload("res://Art/SpecialCharacterCardBack.png")
@@ -248,17 +316,10 @@ func load_card(card:Card) -> void:
 	burst = card.burst
 	heal = card.heal
 	
+	## Initialize scripts for the first time
 	for attr in stored_card.attributes:
 		attributes.append(attr)
-		var new_script = null
-		if attr.pscript != null:
-			new_script = attr.pscript.new([self])
-		else:
-			new_script = empty_script.new([self])
-		new_script.ability = attr
-		new_script.source = self
-		new_script._initialized()
-		attribute_scripts.append(new_script)
+		attribute_scripts.append(init_script(attr))
 	
 	if armor_pierce <= 0:
 		$Card/BStats/Mid/ArmorPierce.hide()
@@ -269,23 +330,7 @@ func load_card(card:Card) -> void:
 	if heal <= 0:
 		$Card/BStats/Center/Heal.hide()
 	
-	## Load Passives (places them above abilities)
-	for ab in card.attributes.size():
-		if card.attributes[ab].type == 0:
-			var abg := abil_gui.instantiate()
-			abg.load_ability(card.attributes[ab])
-			abg.selected.connect(ability_trigger.bind(ab))
-			$AttachPoint1/Abilities.add_child(abg)
-	## Load Abilities
-	for ab in card.attributes.size():
-		if card.attributes[ab].type == 1:
-			var abg := abil_gui.instantiate()
-			abg.load_ability(card.attributes[ab])
-			abg.selected.connect(ability_trigger.bind(ab))
-			$AttachPoint1/Abilities.add_child(abg)
-	
-	
-
+	update_ability_buttons()
 
 var menu_open : bool = false
 const abil_gui := preload("res://GUI/Card/ability_display.tscn")

@@ -160,7 +160,9 @@ func load_resource_from_file(file:FileAccess, resource_name:String) -> void:
 				new_attr.targets = resource["Targets"]
 				new_attr.target_type = resource["TargetType"]
 				new_attr.allowed_metadata = resource["AllowedMetadata"]
+				new_attr.pscript_sync_data.assign(resource["SyncData"])
 				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
+				new_attr.duration = resource["Duration"]
 				attributes.append(new_attr)
 			"Pscript":
 				## Power scripts must be uniquely loaded due to their nature as scripts

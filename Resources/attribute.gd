@@ -10,6 +10,9 @@ var icon : Texture
 @export
 var pscript : GDScript
 
+@export
+var pscript_sync_data : Array[StringName] = []
+
 @export_enum("Passive", "Ability", "Interaction", "Status")
 var type : int = 0
 

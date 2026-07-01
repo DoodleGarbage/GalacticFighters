@@ -7,12 +7,12 @@ var host_id : int
 ## [name (string), ID (int), deck (Deck), team (int), moves (int)]
 # Team 1 is us, Team 2 is enemy team - to be expanded for more players
 const default_deck := preload("res://Resources/BasicResources/demo_deck.tres")
-var current_players : Array = [ ["default_player", 1, default_deck], ["default_enemy", 2, default_deck], ["player_3", 3, default_deck]]
+var current_players : Array = []
 
 # A pointer reference to every single card on the board
 var cards : Array[Card_GUI] = [] :
 	get():
-		return cards# + $PlayerField.card_shadows + $EnemyField.card_shadows
+		return cards
 
 func _ready() -> void:
 	pass
@@ -90,7 +90,7 @@ func start_mulligan() -> void:
 	for card in cards:
 		if card.input_metadata != "":
 			continue
-		if card.player_id == peer.get_unique_id() and card.stored_card.type == 1: # note: 1 is Special Character
+		if card.player_id == peer.get_unique_id() and card.stored_card.type == 0: # note: 0 is Special Character
 			valid_cards.append(card)
 			## ID 5 is the mulligan docker
 			card.assign_manager(id_to_docker(5))
@@ -202,7 +202,6 @@ func signal_turn_end() -> void:
 func send_end_turn_notice(player_id:int) -> void:
 	if peer.get_unique_id() != host_id or player_id != current_turn_id:
 		return
-	_end_turn.rpc()
 	# TODO: Apply a status to all characters w/ duration 1 turn that adds 1 defense for each unused move
 	var next_player : int = get_player_by_id(current_turn_id) + 1
 	if next_player >= current_players.size():
@@ -218,18 +217,32 @@ func _start_turn() -> void:
 		if card.player_id == current_turn_id:
 			for script in card.attribute_scripts:
 				script._turnstart()
+	
 	return
 
 ## Trigger all end_turn effects in powerscripts
 ## Only triggers on an individual person's turn, rather than the round.
 @rpc("authority", "call_local", "reliable", 0)
 func _end_turn() -> void:
+	print("calling turn end for player: ", current_turn_id)
 	if peer.get_unique_id() == current_turn_id:
 		$Unscalables/TurnTools.end_turn() # Turn vfx
 	for card in cards:
+		var finished_attributes : Array[int] = []
 		if card.player_id == current_turn_id:
-			for script in card.attribute_scripts:
-				script._turnend()
+			for script in card.attribute_scripts.size():
+				card.attribute_scripts[script]._turnend()
+				if card.attribute_scripts[script].duration_tracker > -1:
+					print("decrementing attribute! attr: ", card.attributes[script].name)
+					print("old duration: ", card.attribute_scripts[script].duration_tracker	)
+					card.attribute_scripts[script].duration_tracker -= 1
+					print("new duration: ", card.attribute_scripts[script].duration_tracker)
+					if card.attribute_scripts[script].duration_tracker == 0:
+						finished_attributes.append(script)
+			finished_attributes.reverse() # so that we we can remove the right moving to the left, so the array indexes stay the same as we remove them
+			for attr in finished_attributes:
+				card.attributes.remove_at(attr)
+				card.attribute_scripts.remove_at(attr)
 	return
 
 
@@ -303,6 +316,7 @@ func sync_card(card:Card_GUI, upd_docker : bool = true) -> void:
 	var script_data : Array = card.get_script_data()
 	var attributes : Array = card.get_attributes()
 	var manager_position : int = card.manager_position
+	card.update_ability_buttons()
 	_update_individual_docker(card.manager, true)
 	recieved_card_sync.rpc(stats, card_resource, card_ids, manager_identifier, manager_position, script_data, attributes, upd_docker)
 
@@ -324,6 +338,7 @@ func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_i
 	card_instance.assign_manager(current_docker, manager_pos)
 	card_instance.load_attributes(attribute_data)
 	card_instance.update_scripts(script_data)
+	card_instance.update_ability_buttons()
 	if do_docker_update:
 		_update_individual_docker(card_instance.manager, true)
 
@@ -338,6 +353,9 @@ const death_vfx := preload("res://ParticleEffects/death_vfx.tscn")
 @rpc("authority", "call_local", "reliable", 0)
 func dead_server_card(card:int) -> void:
 	var gui_card : Card_GUI = id_to_card(card)
+	if gui_card == null or gui_card.flagged_for_death:
+		return
+	gui_card.flagged_for_death = true
 	var index : int = cards.find(gui_card)
 	cards.remove_at(index) # This makes the card officially not a part of the game, from the perspective of the game
 	gui_card.remove_manager()
@@ -458,7 +476,7 @@ func _input(event: InputEvent) -> void:
 		# Reminder that the card shadows are inside the cards array
 		for card in cards:
 			var rect : Rect2 = Rect2(card.global_position, card.size * card.scale)
-			if rect.has_point(get_global_mouse_position()): # Indistinguishable from global mouse position
+			if rect.has_point(get_global_mouse_position()):
 				hovered_cards.append(card)
 		## Highest z_index card is [0] - may be non-deterministic for same z_indexes
 		var sorted_hovered_cards : Array[Card_GUI] = sort_card_gui_array(hovered_cards, "z_index", true)
@@ -631,7 +649,9 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 	# Target Validation Logic
 	for card in cards:
 		## For the sake of readability and debugging, these are nested if statements.
-		if card.player_id == user.player_id and valid_metadata.has(card.input_metadata):
+		if not valid_metadata.has(card.input_metadata):
+			continue
+		if card.player_id == user.player_id:
 			if card.manager.identifier == "saferoom" and ability.target_type & 0b0100:
 				valid_cards.append(card)
 			elif card.manager.identifier != "saferoom" and ability.target_type & 0b0001:
@@ -644,6 +664,9 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 	if valid_cards == []:
 		print("no valid cards, selecting self")
 		valid_cards = [user]
+	
+	if not ability.allowed_metadata & 0b1:
+		print("metadata (if empty not allowed): ", valid_metadata)
 	
 	#close_interaction_menu() ## Close the interact menu once we know we've got targets
 	## Note: Don't auto-trigger if the user has burst available to use

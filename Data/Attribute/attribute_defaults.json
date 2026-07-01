@@ -1,6 +1,8 @@
 [
-	{"Name":"MOVE","Icon":"defense","Pscript":"move","Type":2,"Desc":"moves characters", "AllowBurst":false, "Targets":1, "TargetType":5, "AllowedMetadata":1},
-	{"Name":"ATTACK","Icon":"defense","Pscript":"attack","Type":2,"Desc":"allows attacking", "AllowBurst":true, "Targets":1, "TargetType":2, "AllowedMetadata":0},
-	{"Name":"ABILITY DEMO","Icon":"defense","Pscript":"attack","Type":1,"Desc":"DESCRIPTION OF ABILITY FILLS THIS SPACE", "AllowBurst":false, "Targets":1, "TargetType":0, "AllowedMetadata":0},
-	{"Name":"PASSIVE DEMO","Icon":"heart","Pscript":"","Type":0,"Desc":"DEMOS OF THE WHAT THE PASSIVE DOES IS DESCRIBED IN THIS LOCATION", "AllowBurst":false, "Targets":-1, "TargetType":0, "AllowedMetadata":0},
+	{"Name":"MOVE","Icon":"defense","Pscript":"move","Type":2,"Desc":"moves characters", "AllowBurst":false, "Targets":1, "TargetType":5, "AllowedMetadata":1, "SyncData":[], "Duration":-1},
+	{"Name":"ATTACK","Icon":"defense","Pscript":"attack","Type":2,"Desc":"allows attacking", "AllowBurst":true, "Targets":1, "TargetType":2, "AllowedMetadata":0, "SyncData":[], "Duration":-1},
+	{"Name":"ABILITY DEMO","Icon":"defense","Pscript":"attack","Type":1,"Desc":"DESCRIPTION OF ABILITY FILLS THIS SPACE", "AllowBurst":false, "Targets":1, "TargetType":0, "AllowedMetadata":0, "SyncData":[], "Duration":-1},
+	{"Name":"PASSIVE DEMO","Icon":"heart","Pscript":"","Type":0,"Desc":"DEMOS OF THE WHAT THE PASSIVE DOES IS DESCRIBED IN THIS LOCATION", "AllowBurst":false, "Targets":-1, "TargetType":0, "AllowedMetadata":0, "SyncData":[], "Duration":-1},
+	{"Name":"FIRE BLAST","Icon":"heart","Pscript":"fireblast","Type":1,"Desc":"Applies the fire status", "AllowBurst":false, "Targets":1, "TargetType":2, "AllowedMetadata":0, "SyncData":[], "Duration":-1},
+	{"Name":"Fire","Icon":"heart","Pscript":"fire","Type":3,"Desc":"Deals 4 damage at the start of each turn", "AllowBurst":false, "Targets":-1, "TargetType":0, "AllowedMetadata":0, "SyncData":[], "Duration":3},
 ]

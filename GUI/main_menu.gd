@@ -179,6 +179,8 @@ func ready_button_pressed() -> void:
 @rpc("any_peer", "call_local", "reliable", 1)
 func ready_up(id:int) -> void:
 	print("I got a ready up!")
+	if current_lobby_players.size() < 2:
+		return
 	var who : int = get_player(id)
 	if who == -1:
 		push_error("A player that has left or couldn't be found tried to ready up!")
