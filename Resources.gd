@@ -4,15 +4,18 @@ extends Node
 
 
 func _init() -> void:
-	# Load Order: Images, Pscripts, Attributes, SpecialChars
 	for internal in [true,false]:
 		load_images(internal)
-		load_powerscripts(internal)
+		load_scene("VFX", internal)
+		load_scene("PowerScript", internal)
 		load_resource("Attribute", internal)
 		load_resource("Character", internal)
 		load_resource("Deck", internal)
 
+## Default Resources
 
+const VFX_character_death : PackedScene = preload("res://Data/VFX/death_vfx.tscn")
+const VFX_null : PackedScene = preload("res://Data/VFX/null_vfx.tscn")
 
 ## Loaded Resources
 
@@ -20,6 +23,7 @@ var attributes : Array[Attribute] = []
 var pscripts : Array[GDScript] = [] # PowerScripts, but can't be a typed array
 var characters : Array[Card] = []
 var decks : Array[Deck] = []
+var vfx : Array[PackedScene] = [] ## Isn't restricted to particle effect nodes to allow for more creative effects, so long as the root node script has a few properties of GPUParticle2D - namely, 'position',  'amount', 'emitting', and signal 'finished'
 var images : Array[Texture] = []
 
 
@@ -36,8 +40,8 @@ func find_resource(resource_type:String, resource_name:String) -> Variant:
 			return resource_name
 		"Images": ## Just an extra way to search for images (redundancy! or bloat...)
 			return find_image(resource_name)
-		"Pscript":
-			return find_pscript(resource_name)
+		"Pscript", "PowerScript", "VFX":
+			return find_scene(resource_type, resource_name)
 		_: push_error("Resource array for resource type %s does not exist!" % resource_type); return
 	for resource in search_array:
 		if resource.name == resource_name:
@@ -51,13 +55,16 @@ func find_image(imagename:String) -> Texture:
 			return image
 	return null
 
-## For some reason, script must return as GDscript and cannot be an extending type (PowerScript)
-func find_pscript(scriptname:String) -> GDScript:
-	for script in pscripts:
-		if script.resource_name == scriptname:
-			return script
+## For some reason, script must return as GDscript and cannot be an extending type (PowerScript) - probably due to how they're initalized only later and the 'Classname' and other properties aren't known until later, JIT compilation shit or something
+func find_scene(scene_type : String, scenename:String) -> Variant:
+	var search_array : Array = []
+	match(scene_type):
+		"VFX": search_array = vfx
+		"PowerScript", "Pscript": search_array = pscripts
+	for scene in search_array:
+		if scene.resource_name == scenename:
+			return scene
 	return null
-
 
 
 
@@ -92,11 +99,11 @@ func load_images(internal:bool = true) -> void:
 		current_file= dir.get_next()
 	return
 
-func load_powerscripts(internal:bool=true) -> void:
-	var directory : String = "res://Data/Pscript/" if internal else "user://Pscript/"
+func load_scene(resource_type : String, internal:bool=true) -> void:
+	var directory : String = "res://Data/%s/" % resource_type if internal else "user://%s/" % resource_type
 	var dir : DirAccess = DirAccess.open(directory)
 	if !dir:
-		push_warning("No folder was found for Powerscript: %s" % [directory])
+		push_warning("No folder was found for %s: %s" % [resource_type, directory])
 		return
 	dir.list_dir_begin()
 	var next : String = dir.get_next()
@@ -105,15 +112,18 @@ func load_powerscripts(internal:bool=true) -> void:
 			push_warning("Directory \"%s\" found inside %s folder. This directory is being ignored." % [next, directory])
 			next = dir.get_next()
 			continue
-		if not next.ends_with(".gd"):
-			push_warning("There is a non-.gd file in the Powerscript directory. File: %s" % [directory + next])
+		if (resource_type == "PowerScript" and not next.ends_with(".gd")) or (resource_type == "VFX" and not next.ends_with(".tscn")):
+			push_warning("There is an incorrect file type for %s in directory. File: %s" % [resource_type, directory + next])
 			next = dir.get_next()
 			continue
-		var new_pscript = load(directory + next)
-		new_pscript.resource_name = next.trim_suffix(".gd")
-		pscripts.append(new_pscript)
+		var new_scene = load(directory + next)
+		new_scene.resource_name = next.trim_suffix(".gd").trim_suffix(".tscn")
+		match(resource_type):
+			"VFX": vfx.append(new_scene)
+			"PowerScript": pscripts.append(new_scene)
 		next = dir.get_next()
 	return
+
 
 func load_resource(resource_name:String, internal:bool=true) -> void:
 	var tar_dir : String = "res://Data/" if internal else "user://"
@@ -163,8 +173,16 @@ func load_resource_from_file(file:FileAccess, resource_name:String) -> void:
 				new_attr.pscript_sync_data.assign(resource["SyncData"])
 				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
 				new_attr.duration = resource["Duration"]
+				
+				new_attr.VFX_target = find_resource("VFX", resource["VFX_target"])
+				if new_attr.VFX_target == null:
+					new_attr.VFX_target = VFX_null
+				new_attr.VFX_damage = find_resource("VFX", resource["VFX_damage"])
+				if new_attr.VFX_damage == null:
+					new_attr.VFX_target = VFX_null
+				
 				attributes.append(new_attr)
-			"Pscript":
+			"PowerScript":
 				## Power scripts must be uniquely loaded due to their nature as scripts
 				pass
 			"Character": ## Must be loaded: Attributes, Images
@@ -183,6 +201,12 @@ func load_resource_from_file(file:FileAccess, resource_name:String) -> void:
 					var atri = find_resource("Attribute", atrru)
 					if atri != null:
 						new_char.attributes.append(atri)
+				
+				var new_vfx_death = find_resource("VFX", resource["VFX_death"])
+				if new_vfx_death == null:
+					new_vfx_death = VFX_character_death
+				new_char.VFX_death = new_vfx_death
+				
 				characters.append(new_char)
 			"Deck": ## Must be loaded: Everything else
 				var new_deck : Deck = Deck.new()

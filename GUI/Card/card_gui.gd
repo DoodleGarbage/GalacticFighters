@@ -166,10 +166,13 @@ func init_script(attribute:Attribute) -> GDScript:
 
 ## Card interaction functions
 
-const dmg_effect := preload("res://ParticleEffects/damage_effect.tscn")
+const dmg_effect := preload("res://Data/VFX/damage_effect.tscn")
 signal dead()
 
-func damage(amnt:int) -> void:
+func damage(trigger : Attribute, amnt:int) -> void:
+	var dmg_vfx = dmg_effect
+	if trigger != null and trigger.VFX_damage != null:
+		dmg_vfx = trigger.VFX_damage
 	## Trigger any attached passives, play visual effects, etc.
 	var dmg : int = max(amnt - defense, 0)
 	print("suffering damage! amnt: ", dmg)
@@ -177,7 +180,7 @@ func damage(amnt:int) -> void:
 	if health <= 0:
 		dead.emit()
 	if dmg > 0:
-		var new_particle := dmg_effect.instantiate()
+		var new_particle = dmg_vfx.instantiate()
 		new_particle.finished.connect(new_particle.queue_free)
 		new_particle.amount = amnt - defense
 		new_particle.emitting = true
@@ -192,6 +195,7 @@ func apply_status(status:String) -> void:
 	attributes.append(status_effect)
 	attribute_scripts.append(init_script(status_effect))
 	attribute_scripts[-1].duration_tracker = status_effect.duration
+	
 	
 	update_ability_buttons()
 

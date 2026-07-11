@@ -29,20 +29,28 @@ var allow_burst : bool = false
 var targets : int = -1
 
 # The targeting method - uses a bit flag to check which cards to target are valid
-@export_flags("Allies", "Enemies", "Allies (Saferoom)", "Enemies (Saferoom)")
+@export_flags("Self", "Allies", "Enemies", "Allies (Saferoom)", "Enemies (Saferoom)")
 var target_type : int = 0
 ## Targeting
-#export targeting details
-# 0b0000: self
-# 0b0001: allies
-# 0b0010: enemies
-# 0b0100: allies (saferoom)
-# 0b1000: enemies (saferoom)
+# (1)   0b00001: self
+# (2)   0b00010: allies
+# (4)   0b00100: enemies
+# (8)   0b01000: allies (saferoom)
+# (16)  0b10000: enemies (saferoom)
 
 @export_flags("Empty")
 var allowed_metadata : int = 0
+## Flags based, as opposed to an array of strings currently. TODO: The cards should be updated to use int metadata or use an array of strings
+
+
+## The effect that is displayed when an ability is used on a character
+var VFX_target : PackedScene
+
+var VFX_damage : PackedScene
+
+## The sound effect that is displayed when an ability is used
+#var sound_effect_trigger : AudioEffect
 
 ## Duration
-
 ## The length of the ability - decreases by 1 at the end of each turn, deleted at 0. If less than 0, infinite duration.
 var duration : int = -1

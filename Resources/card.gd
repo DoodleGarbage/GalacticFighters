@@ -37,3 +37,5 @@ var armor_pierce : int = 0
 
 @export
 var attributes : Array[Attribute] = []
+
+var VFX_death : PackedScene

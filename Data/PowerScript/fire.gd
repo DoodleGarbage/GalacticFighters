@@ -10,4 +10,4 @@ func _turnstart() -> void:
 
 ## Called when the turn ends.
 func _turnend() -> void:
-	source.damage(4)
+	source.damage(ability, 4)

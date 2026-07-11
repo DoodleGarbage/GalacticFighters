@@ -348,7 +348,6 @@ func dead_card(card:Card_GUI) -> void:
 	if peer.get_unique_id() == host_id:
 		dead_server_card.rpc(card.unique_id)
 
-const death_vfx := preload("res://ParticleEffects/death_vfx.tscn")
 
 @rpc("authority", "call_local", "reliable", 0)
 func dead_server_card(card:int) -> void:
@@ -361,9 +360,10 @@ func dead_server_card(card:int) -> void:
 	gui_card.remove_manager()
 	# ^ We can now safely queue_free the card at any time.
 	# Display death vfx and then delete once the effect expires
-	var new_fx : GPUParticles2D = death_vfx.instantiate()
+	var new_fx : Node2D = gui_card.stored_card.VFX_death.instantiate()
 	new_fx.finished.connect(gui_card.queue_free)
 	gui_card.add_child(new_fx)
+	new_fx.position = Vector2(150, 250)
 	new_fx.emitting = true
 
 
@@ -607,6 +607,14 @@ func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array
 	var card_as_gui : Card_GUI = id_to_card(card)
 	var target_guis : Array[Card_GUI] = id_to_card_array(targets)
 	
+	for target in target_guis:
+		var apply_vfx : Node2D = card_as_gui.attributes[ability].VFX_target.instantiate()
+		apply_vfx.finished.connect(apply_vfx.queue_free)
+		target.add_child(apply_vfx)
+		apply_vfx.position = Vector2(150, 250)
+		apply_vfx.emitting = true
+	
+	
 	for i in range(0, 1+burst_amnt):
 		card_as_gui.attribute_scripts[ability]._interaction(target_guis)
 	update_dockers()
@@ -634,7 +642,7 @@ var valid_metadata : Array[String] = []
 
 func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 	print("tar type: ", ability.target_type, " amnt: ", ability.targets, " ability name: ", ability.name)
-	if ability.targets == 0:
+	if ability.targets <= 0 or ability.target_type == 0b0:
 		return []
 	selected_cards = []
 	valid_metadata = [""]
@@ -652,24 +660,22 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 		if not valid_metadata.has(card.input_metadata):
 			continue
 		if card.player_id == user.player_id:
-			if card.manager.identifier == "saferoom" and ability.target_type & 0b0100:
+			if card.manager.identifier == "saferoom" and ability.target_type & 0b01000:
 				valid_cards.append(card)
-			elif card.manager.identifier != "saferoom" and ability.target_type & 0b0001:
+			elif card.manager.identifier != "saferoom" and ability.target_type & 0b00010:
 				valid_cards.append(card)
 		else:
-			if card.manager.identifier == "saferoom" and ability.target_type & 0b1000:
+			if card.manager.identifier == "saferoom" and ability.target_type & 0b10000:
 				valid_cards.append(card)
-			elif card.manager.identifier != "saferoom" and ability.target_type & 0b0010:
+			elif card.manager.identifier != "saferoom" and ability.target_type & 0b00100:
 				valid_cards.append(card)
 	if valid_cards == []:
-		print("no valid cards, selecting self")
-		valid_cards = [user]
+		print("no valid cards found")
 	
 	if not ability.allowed_metadata & 0b1:
 		print("metadata (if empty not allowed): ", valid_metadata)
 	
-	#close_interaction_menu() ## Close the interact menu once we know we've got targets
-	## Note: Don't auto-trigger if the user has burst available to use
+	## NOTE: Don't auto-trigger if the user has burst available to use
 	if (ability.targets < 0 or valid_cards.size() <= ability.targets) and user.burst < 1:
 		return valid_cards
 	$Dimmer.show()

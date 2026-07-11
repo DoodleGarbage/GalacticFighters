@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://dd80kuja1788c" path="res://Art/attack.png" id="1_buye0"]
 [ext_resource type="Script" uid="uid://ctwnnecb20vou" path="res://Resources/attribute.gd" id="1_ojc14"]
-[ext_resource type="Script" uid="uid://dc7kgs5qdub5j" path="res://Data/Pscript/attack.gd" id="2_881lj"]
+[ext_resource type="Script" uid="uid://dc7kgs5qdub5j" path="res://Data/PowerScript/attack.gd" id="2_881lj"]
 
 [resource]
 script = ExtResource("1_ojc14")

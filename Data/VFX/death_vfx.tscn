@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b64p6or3du2nl"]
 
-[ext_resource type="Texture2D" uid="uid://b0oirvmwsh773" path="res://Art/HealthFinal.png" id="1_np8p5"]
+[ext_resource type="Texture2D" uid="uid://b0oirvmwsh773" path="res://Art/HealthFinal.png" id="1_4kw1v"]
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_8s5l4"]
 particle_flag_disable_z = true
@@ -14,7 +14,7 @@ scale_max = 0.29999998
 [node name="death_vfx" type="GPUParticles2D" unique_id=230223861]
 emitting = false
 amount = 12
-texture = ExtResource("1_np8p5")
+texture = ExtResource("1_4kw1v")
 one_shot = true
 explosiveness = 0.88
 process_material = SubResource("ParticleProcessMaterial_8s5l4")
