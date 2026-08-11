@@ -21,7 +21,7 @@ var controlled : bool = false
 var manager : Docker
 var manager_position : int = -1
 
-func assign_manager(new_manager:Docker, pos:int=-1) -> void:
+func assign_manager(new_manager:Docker, pos:int=-1, force:bool=false) -> void:
 	if new_manager == null or (new_manager == manager and pos == manager_position):
 		return
 	var check : int = get_true_manager_position()
@@ -33,7 +33,7 @@ func assign_manager(new_manager:Docker, pos:int=-1) -> void:
 	for card in manager.assigned_cards:
 		occupied_positions.append(card.manager_position)
 	#print("Assigning Manager; Name: ", manager.identifier, " Team: ", manager.player)
-	if pos > -1 and not occupied_positions.has(pos):
+	if pos > -1 and (not occupied_positions.has(pos) or force):
 		manager_position = pos
 		#print("assigned pos: ", pos)
 	else:

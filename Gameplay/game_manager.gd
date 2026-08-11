@@ -211,11 +211,11 @@ func initalize_dockers() -> void:
 		new_saferoom_docker.scale = SAFEROOM_DOCKER_GUI_SCALE
 		new_item_docker.scale = ITEM_DOCKER_GUI_SCALE
 	
-	total_lower_placements = used_lower_placements_left + used_lower_placements_right
-	total_upper_placements = used_upper_placements_left + used_upper_placements_right
-	current_lower_field = used_lower_placements_left
-	current_upper_field = used_upper_placements_left
-	
+	total_lower_placements = used_lower_placements_left-1 + used_lower_placements_right
+	total_upper_placements = used_upper_placements_left-1 + used_upper_placements_right
+	current_lower_field = used_lower_placements_left-1
+	current_upper_field = used_upper_placements_left-1
+	print("total placements: ", total_upper_placements, " current pos: ", current_upper_field)
 	
 	
 	update_field_buttons_gui()
@@ -249,13 +249,13 @@ func update_field_buttons_gui() -> void:
 	$SwitchFields/RightUpper.show()
 	$SwitchFields/LeftUpper.show()
 	$SwitchFields/LeftLower.show()
-	if current_upper_field >= total_upper_placements-1:
+	if current_upper_field >= total_upper_placements:
 		$SwitchFields/RightUpper.hide()
-	if current_upper_field <= 0:
+	if current_upper_field <= 0 or total_upper_placements <= 1:
 		$SwitchFields/LeftUpper.hide()
-	if current_lower_field >= total_lower_placements-1:
+	if current_lower_field >= total_lower_placements:
 		$SwitchFields/RightLower.hide()
-	if current_lower_field <= 0:
+	if current_lower_field <= 0 or total_lower_placements <= 1:
 		$SwitchFields/LeftLower.hide()
 	
 
@@ -541,7 +541,7 @@ func sync_all_cards(upd_docker:bool = true) -> void:
 	for card in cards:
 		sync_card(card, upd_docker)
 
-@rpc("authority", "call_remote", "reliable", 0)
+@rpc("authority", "call_remote", "reliable", 1)
 func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_id : String, manager_pos :int, script_data : Array, attribute_data : Array, do_docker_update : bool) -> void:
 	var card_instance : Card_GUI
 	## Team is relative - need to get dockers by the docker identifier and the player id
@@ -552,7 +552,7 @@ func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_i
 	if card_instance == null:
 		card_instance = add_card(Resources.find_resource("Character", card_name), current_docker, card_ids[1], card_ids[0])
 	card_instance.apply_stats(stats)
-	card_instance.assign_manager(current_docker, manager_pos)
+	card_instance.assign_manager(current_docker, manager_pos, true)
 	card_instance.load_attributes(attribute_data)
 	card_instance.update_scripts(script_data)
 	card_instance.update_ability_buttons()
@@ -731,7 +731,6 @@ func _input(event: InputEvent) -> void:
 				hovered_cards.append(card)
 		## Highest z_index card is [0] - may be non-deterministic for same z_indexes
 		var sorted_hovered_cards : Array[Card_GUI] = sort_card_gui_array(hovered_cards, "priority", true)
-		print("sorted array of valid card targets: ", sorted_hovered_cards)
 		if not menu_open and event.is_action_pressed("card_interact"):
 			for card in sorted_hovered_cards:
 				if card.input_metadata != "":
@@ -847,12 +846,12 @@ func trigger_ability(ability:int, card:Card_GUI) -> void:
 		burst_amnt = $TargetingGUI/Options/Burst/BurstSelect.value
 	var targets_to_id : Array[int] = card_to_id_array(targeting)
 	print("Triggering an ability. Our ID: ", get_player_array_by_id(peer.get_unique_id())[1])
-	trigger_ability_client.rpc(ability, card.unique_id, burst_amnt, targets_to_id)
+	trigger_ability_client.rpc_id(host_id,peer.get_unique_id(),ability, card.unique_id, burst_amnt, targets_to_id)
 	
 
 ## card [int] is the unique ID of the Card_GUI that is the source
-@rpc("any_peer", "call_local", "reliable", 0)
-func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array[int]) -> void:
+@rpc("any_peer", "call_remote", "reliable", 0)
+func trigger_ability_client(peer_id:int, ability:int, card:int, burst_amnt:int, targets:Array[int]) -> void:
 	print("Ability Triggered on client: ", get_player_array_by_id(peer.get_unique_id())[1])
 	var who : int = get_player_by_id(current_turn_id)
 	if peer.get_unique_id() == host_id:
@@ -861,6 +860,28 @@ func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array
 			return
 	
 	# Runs the pscript's interaction effect
+	var card_as_gui : Card_GUI = id_to_card(card)
+	var target_guis : Array[Card_GUI] = id_to_card_array(targets)
+	
+	for i in range(0, 1+burst_amnt):
+		card_as_gui.attribute_scripts[ability]._interaction(target_guis)
+	update_dockers()
+	
+	# Change the move counter, etc.
+	current_players[who][4] -= 1
+	sync_all_cards(true)
+	
+	update_turn_counter.rpc_id(peer_id,current_players[who][4])
+	ability_trigger_server_notif.rpc(ability, card, burst_amnt, targets, who)
+	return
+
+@rpc("authority", "call_remote", "reliable", 1)
+func update_turn_counter(moves:int) -> void:
+	$Unscalables/TurnTools.moves = moves
+
+@rpc("authority", "call_local", "reliable", 0)
+func ability_trigger_server_notif(ability:int, card:int, burst_amnt:int, targets:Array[int], turn_used:int) -> void:
+	# Runs the pscript's interaction visuals
 	var card_as_gui : Card_GUI = id_to_card(card)
 	var target_guis : Array[Card_GUI] = id_to_card_array(targets)
 	
@@ -875,22 +896,7 @@ func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array
 		target.add_child(apply_vfx)
 		apply_vfx.position = Vector2(150, 250)
 		apply_vfx.emitting = true
-	
-	
-	for i in range(0, 1+burst_amnt):
-		card_as_gui.attribute_scripts[ability]._interaction(target_guis)
-	update_dockers()
-	
-	$Unscalables/TurnTools.moves -= 1
-	
-	if peer.get_unique_id() == host_id:
-		print("Syncing cards - sent from host")
-		current_players[who][4] -= 1
-		for unit in cards:
-			sync_card(unit, true)
-		# Change the move counter, etc.
 	return
-
 
 
 var selecting_ability : bool = false ## Used to check if we need to update the Target GUI

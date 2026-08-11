@@ -13,7 +13,7 @@ func _interaction(_targets:Array[Card_GUI]) -> void:
 	if _targets[0].input_metadata != "empty":
 		#print("yup, we are switching with a non-empty")
 		_targets[0].remove_manager()
-		_targets[0].assign_manager(s_store, spos)
-	source.assign_manager(t_store, tpos)
+		_targets[0].assign_manager(s_store, spos, true)
+	source.assign_manager(t_store, tpos, true)
 	
 	
