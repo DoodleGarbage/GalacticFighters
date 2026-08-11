@@ -1,0 +1,22 @@
+[gd_resource type="Theme" format=3 uid="uid://ccfw6xnp2jubf"]
+
+[ext_resource type="FontFile" uid="uid://b6r06lvledlcu" path="res://Art/Fonts/Tinos/Tinos-Bold.ttf" id="1_wwuod"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8vths"]
+bg_color = Color(0.46350914, 0.09052641, 0.16846949, 1)
+border_width_left = 7
+border_width_top = 7
+border_width_right = 7
+border_width_bottom = 7
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+corner_detail = 5
+
+[resource]
+Button/font_sizes/font_size = 70
+Label/font_sizes/font_size = 64
+Label/fonts/font = ExtResource("1_wwuod")
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_8vths")

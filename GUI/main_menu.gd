@@ -33,8 +33,8 @@ func _attempt_host() -> void:
 	our_name = $MainMenu/Waiting/VBoxContainer/Name/PlayerName.text
 	peer = ENetMultiplayerPeer.new()
 	var port : int = int($MainMenu/Waiting/VBoxContainer/Host/HostIP.text)
-	if port < 1024 or port > 65535: # Checks the validity of the port. Below 1024 is privleged (not doable) stuff
-		port = 7777
+	if port < 1024 or port > 65535: # Checks the validity of the port. Below 1024 is privileged (not doable) stuff
+		port = 7777 ## TODO: Make this error instead of defaulting to this port
 	peer.create_server(port,32)
 	multiplayer.multiplayer_peer = peer
 	
@@ -44,9 +44,12 @@ func _attempt_host() -> void:
 	$MainMenu/Lobby.show()
 	reset_lobby()
 	var upnp = UPNP.new()
-	upnp.discover()
-	upnp.add_port_mapping(port)
-	$MainMenu/Lobby/corner/IPS/IP.text = str(upnp.query_external_address()) + ":" + str(port)
+	var success : int = upnp.discover(1000) # 1000 is timeout in milliseconds
+	if success == 0:
+		upnp.add_port_mapping(port)
+		$MainMenu/Lobby/corner/IPS/IP.text = str(upnp.query_external_address()) + ":" + str(port)
+	else:
+		$MainMenu/Lobby/corner/IPS/IP.text = "Port (IP unknown/not online): " + str(port)
 	host_id = peer.get_unique_id()
 
 ## TODO: Make this happen asynchronously so the whole game doesn't freeze - however you do that
@@ -186,7 +189,8 @@ func ready_up(id:int) -> void:
 		push_error("A player that has left or couldn't be found tried to ready up!")
 		return
 	
-	current_lobby_players[who][3] = true
+	## allows them to de-ready
+	current_lobby_players[who][3] = not current_lobby_players[who][3]
 	#if current_lobby_players[who][1] == peer.get_unique_id():
 		#$MainMenu/Lobby/corner/ready.hide()
 	# check if this is host
@@ -195,14 +199,17 @@ func ready_up(id:int) -> void:
 		for player in current_lobby_players:
 			# the 'true' prevents two unreadied players from flipping should_start back to true
 			should_start = should_start && player[3] && true
-		if current_lobby_players.size() > 2:
-			push_error("Can't start game! Currently only supports 2 players.")
-			should_start = false
 		if should_start:
-			print("All players ready! Starting!")
-			switch_to_game.rpc()
-			$Gameplay/Playfield.initalize_game()
+			print("All players ready! Allowing host to start!")
+			$MainMenu/Lobby/corner/gamestarter.show()
+		else:
+			$MainMenu/Lobby/corner/gamestarter.hide()
 	reset_lobby()
+
+func button_start_game() -> void:
+	print("Host has started the game!")
+	switch_to_game.rpc()
+	$Gameplay/Playfield.initalize_game()
 
 @rpc("authority", "call_local", "reliable", 0)
 func switch_to_game() -> void:

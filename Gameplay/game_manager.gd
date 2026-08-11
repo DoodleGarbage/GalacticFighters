@@ -3,9 +3,10 @@ extends Control
 ## This information is transferred from the Main Menu script on game initialization
 var peer : ENetMultiplayerPeer
 
+var game_active : bool = false
+
 var host_id : int
 ## [name (string), ID (int), deck (Deck), team (int), moves (int)]
-# Team 1 is us, Team 2 is enemy team - to be expanded for more players
 const default_deck := preload("res://Resources/BasicResources/demo_deck.tres")
 var current_players : Array = []
 
@@ -14,9 +15,7 @@ var cards : Array[Card_GUI] = [] :
 	get():
 		return cards
 
-func _ready() -> void:
-	pass
-
+var docker_list : Array[Docker] = []
 
 ## Returns a pointer to the player's data array in current_players
 func get_player_array_by_id(id:int) -> Array:
@@ -35,9 +34,15 @@ func get_player_by_id(id:int) -> int:
 
 # current_players and host_id are updated by the Main_menu manager
 func initalize_game() -> void:
-	#initalize_card_shadows()
+	game_active = true
+	reset_playfield()
 	
-	initalize_cards(current_players)
+	initalize_dockers.rpc()
+	
+	if peer.get_unique_id() != host_id:
+		return
+	
+	initalize_cards()
 	
 	#load_items(decks)
 	#load_gadgets(decks)
@@ -47,33 +52,232 @@ func initalize_game() -> void:
 	
 	start_mulligan.rpc()
 
-#func initalize_card_shadows() -> void:
-	#for i in $PlayerField.max_cards:
-		#add_shadow_card($PlayerField, peer.get_unique_id(), i)
-	#for i in $EnemyField.max_cards:
-		#add_shadow_card($EnemyField, i)
+func reset_playfield() -> void:
+	for docker in docker_list:
+		docker.queue_free()
+	$EndScreen/List/Vic.hide()
+	$EndScreen/List/Def.hide()
+	$EndScreen.hide()
+
+@onready var field_docker_scene := preload("res://GUI/field_docker.tscn")
+@onready var saferoom_docker_scene := preload("res://GUI/saferoom_docker.tscn")
+@onready var item_docker_scene := preload("res://GUI/item_docker.tscn")
+
+# Scale to apply to things
+const FIELD_DOCKER_GUI_SCALE := Vector2(0.4,0.4)
+const SAFEROOM_DOCKER_GUI_SCALE := Vector2(0.4,0.4)
+const ITEM_DOCKER_GUI_SCALE := Vector2(1,1)
+# Seperates each GUI by this much left/right
+const DOCKER_GUI_SEPERATION : float = 1920
+
+# Where to position stuff, relative to the top left corner; if on bottom, this is shifted down half a screen
+const FIELD_DOCKER_GUI_POSITION := Vector2(540,230)
+# (Relative to the field docker)
+const SAFEROOM_DOCKER_GUI_POSITION := Vector2(835, -190)
+# (Relative to the field docker)
+const ITEM_DOCKER_GUI_POSITION := Vector2(0,-220)
+
+## Where to position stuff if it's on the bottom half
+#const BOT_FIELD_DOCKER_GUI_POSITION := Vector2(540,550)
+## (Relative to the field docker)
+#const BOT_SAFEROOM_DOCKER_GUI_POSITION := Vector2(835,50)
+## (Relative to the field docker)
+#const BOT_ITEM_DOCKER_GUI_POSITION := Vector2(0,310)
+
+## These are used to determine how many fields there are
+var total_upper_placements : int = 0
+var total_lower_placements : int = 0
+
+## Which field is currently being viewed (to prevent scroll away from all the fields)
+var current_upper_field : int = 0
+var current_lower_field : int = 0
+
+@rpc("authority", "call_local", "reliable", 0)
+func initalize_dockers() -> void:
+	docker_list = [$Mulligan]
+	
+	# Check the number of teams
+	var total_teams : Array[int] = []
+	for player in current_players:
+		if not total_teams.has(player[3]):
+			total_teams.append(player[3])
+	var us := get_player_array_by_id(peer.get_unique_id())
+	
+	## used_*_placements_left = 1 if the center is filled
+	var used_upper_placements_left :int= 0
+	var used_upper_placements_right :int= 0
+	var used_lower_placements_left :int= 1 # us, the player, is added before anything
+	var used_lower_placements_right :int = 0
+	
+	$Mulligan.player = us[1]
+	
+	for player in current_players:
+		## Determine where to place the dockers properly
+		var upper_if_true : bool = true
+		var left_if_true : bool = true
+		
+		## Relevant if not us:
+		#if total_teams.size() <= 2:
+			#if player[3] == us[3]:
+				#upper_if_true = false
+				#if used_lower_placements_left > used_lower_placements_right:
+					#left_if_true = false
+			#else:
+				#upper_if_true = true
+				#if used_upper_placements_left-1 > used_upper_placements_right:
+					#left_if_true = false
+		if us != player:
+			if used_upper_placements_left + used_upper_placements_right > used_lower_placements_left + used_lower_placements_right:
+				upper_if_true = false
+				if used_lower_placements_left > used_lower_placements_right:
+					left_if_true = false
+			else:
+				upper_if_true = true
+				if used_upper_placements_left > used_upper_placements_right:
+					left_if_true = false
+			
+			if upper_if_true:
+				if left_if_true:
+					used_upper_placements_left += 1
+				else:
+					used_upper_placements_right += 1
+			else:
+				if left_if_true:
+					used_lower_placements_left += 1
+				else:
+					used_lower_placements_right += 1
+		
+		## Final determined position
+		var origin : Vector2 = FIELD_DOCKER_GUI_POSITION
+		#if upper_if_true:
+			#origin = TOP_FIELD_DOCKER_GUI_POSITION
+		#else:
+			#origin = BOT_FIELD_DOCKER_GUI_POSITION
+		## Horizontal offset
+		var offset : float = 0
+		if upper_if_true:
+			offset = -(used_upper_placements_left-1) if left_if_true else used_upper_placements_right
+		else:
+			offset = -(used_lower_placements_left-1) if left_if_true else used_lower_placements_right
+		offset *= DOCKER_GUI_SEPERATION
+		
+		## Feels bad to place this after doing all the processing but gotta bypass it somewhere
+		if player == us:
+			upper_if_true = false
+			left_if_true = true
+			#origin = BOT_FIELD_DOCKER_GUI_POSITION
+			offset = 0
+		
+		
+		var new_field_docker := field_docker_scene.instantiate()
+		var new_saferoom_docker := saferoom_docker_scene.instantiate()
+		var new_item_docker := item_docker_scene.instantiate()
+		
+		new_field_docker.player = player[1]
+		## Unique IDs are only useful if this gets synced with the server
+		#new_field_docker.id = get_unique_docker_id()
+		new_saferoom_docker.player = player[1]
+		#new_saferoom_docker.id = get_unique_docker_id()
+		new_item_docker.player = player[1]
+		#new_item_docker.id = get_unique_docker_id()
+		
+		docker_list.append(new_field_docker)
+		docker_list.append(new_saferoom_docker)
+		docker_list.append(new_item_docker)
+		
+		if player == us:
+			new_field_docker.player_controlled = true
+			new_saferoom_docker.player_controlled = true
+			new_item_docker.player_controlled = true
+		
+		if upper_if_true:
+			$UpperDockers.add_child(new_field_docker, true)
+			$UpperDockers.add_child(new_saferoom_docker)
+			$UpperDockers.add_child(new_item_docker)
+		else:
+			$LowerDockers.add_child(new_field_docker, true)
+			$LowerDockers.add_child(new_saferoom_docker)
+			$LowerDockers.add_child(new_item_docker)
+		
+		
+		new_field_docker.position = origin
+		new_field_docker.position.x += offset
+		new_saferoom_docker.position = origin + SAFEROOM_DOCKER_GUI_POSITION
+		new_saferoom_docker.position.x += offset
+		new_item_docker.position = origin + ITEM_DOCKER_GUI_POSITION
+		new_item_docker.position.x += offset
+		
+		new_field_docker.scale = FIELD_DOCKER_GUI_SCALE
+		new_saferoom_docker.scale = SAFEROOM_DOCKER_GUI_SCALE
+		new_item_docker.scale = ITEM_DOCKER_GUI_SCALE
+	
+	total_lower_placements = used_lower_placements_left + used_lower_placements_right
+	total_upper_placements = used_upper_placements_left + used_upper_placements_right
+	current_lower_field = used_lower_placements_left-1
+	current_upper_field = used_upper_placements_left
+	
+	
+	
+	update_field_buttons_gui()
+	return
+
+
+## Used to add interaction to buttons
+func move_field(upper:bool, left:bool) -> void:
+	if upper:
+		if left:# and current_upper_field > 0:
+			current_upper_field -= 1
+			$UpperDockers.position.x -= DOCKER_GUI_SEPERATION
+		if not left:# and current_upper_field < total_upper_placements:
+			current_upper_field += 1
+			$UpperDockers.position.x += DOCKER_GUI_SEPERATION
+	else:
+		if left:# and current_lower_field > 0:
+			current_lower_field -= 1
+			$LowerDockers.position.x -= DOCKER_GUI_SEPERATION
+		if not left:# and current_lower_field < total_lower_placements:
+			current_lower_field += 1
+			$LowerDockers.position.x += DOCKER_GUI_SEPERATION
+	update_field_buttons_gui()
+	update_dockers()
+	return
+
+func update_field_buttons_gui() -> void:
+	$Unscalables/SwitchFields/RightLower.show()
+	$Unscalables/SwitchFields/RightUpper.show()
+	$Unscalables/SwitchFields/LeftUpper.show()
+	$Unscalables/SwitchFields/LeftLower.show()
+	if current_upper_field >= total_upper_placements-1:
+		$Unscalables/SwitchFields/RightUpper.hide()
+	if current_upper_field <= 0:
+		$Unscalables/SwitchFields/LeftUpper.hide()
+	if current_lower_field >= total_lower_placements-1:
+		$Unscalables/SwitchFields/RightLower.hide()
+	if current_lower_field <= 0:
+		$Unscalables/SwitchFields/LeftLower.hide()
+	
+
 
 ## Clients send actions, the server executes them and sends the results back - while clients wait, they can 'predict' what happens and play their visual effects before the server responds, then update/correct their stats when the server informs them what happened
 
-## This currently only supports 2 players. This code will need to be revised to allow for multiple players in the future.
+## TODO: Currently just does a FFA - need to allow setting an option in the lobby to choose team picking method, then main_menu.gd will pass that info as arguments when it calls the assign_teams() function
 func assign_teams() -> void:
 	for player in current_players.size():
-		if current_players[player][1] == peer.get_unique_id():
-			current_players[player].append(1)
-		else:
-			current_players[player].append(2)
-		## We append a second empty value to all players - this is their # of moves, to be tracked by the host
+		current_players[player].append(player)
+		## We append a second empty value to all players here (to prevent invalid position errors) - this is their # of moves, to be tracked by the host
 		current_players[player].append(0)
 
-func initalize_cards(players:Array) -> void:
-	for player in players:
+func initalize_cards() -> void:
+	for player in current_players:
+		print(player)
 		var deck : Deck = player[2]
-		var shadow_docker : Docker = get_docker("field", player[3])
+		var shadow_docker : Docker = get_docker("field", player[1])
 		for i in shadow_docker.max_cards:
 			add_shadow_card(shadow_docker, i, player[1])
 		for card in deck.characters:
-			var new_card : Card_GUI = add_card(card, get_docker("saferoom", player[3]), player[1])
-			sync_card(new_card, true)
+			var new_card : Card_GUI = add_card(card, get_docker("saferoom", player[1]), player[1])
+			#sync_card(new_card, true)
+	sync_all_cards(true)
 
 ##--------------------------------------------------------------------------------------------------
 ##                                    MULLIGAN and GAME START CODE
@@ -90,12 +294,12 @@ func start_mulligan() -> void:
 	for card in cards:
 		if card.input_metadata != "":
 			continue
-		if card.player_id == peer.get_unique_id() and card.stored_card.type == 0: # note: 0 is Special Character
+		if card.player_id == peer.get_unique_id() and card.stored_card.type == 1: # note: 0 is Special Character, 1 is units (per the rules, can only start with units)
 			valid_cards.append(card)
 			## ID 5 is the mulligan docker
-			card.assign_manager(id_to_docker(5))
-			if peer.get_unique_id() == host_id:
-				sync_card(card, true)
+			card.assign_manager(get_docker("mulligan", card.player_id))
+			#if peer.get_unique_id() == host_id:
+				#sync_card(card, true)
 	update_dockers()
 	selecting_cards = true
 	selecting_mulligan = true
@@ -112,9 +316,9 @@ func submit_mulligan() -> void:
 	for card in cards:
 		if card.input_metadata != "":
 			continue
-		card.assign_manager(get_docker("saferoom", 1))
+		card.assign_manager(get_docker("saferoom", peer.get_unique_id()))
 	for card in selected_cards:
-		card.assign_manager(get_docker("field", 1))
+		card.assign_manager(get_docker("field", peer.get_unique_id()))
 		card.set_selection(false)
 	update_dockers()
 	var cg_as_id : Array[int] = card_to_id_array(selected_cards)
@@ -145,7 +349,7 @@ func end_mulligan(player_mulligans:Array) -> void:
 		if card.input_metadata != "":
 			continue
 		card.set_selection(false)
-		card.assign_manager(get_docker("saferoom", get_player_array_by_id(card.player_id)[3]))
+		card.assign_manager(get_docker("saferoom", get_player_array_by_id(card.player_id)[1]))
 	for player in player_mulligans:
 		var dupe : Array[int] = []
 		dupe.assign(player)
@@ -153,7 +357,7 @@ func end_mulligan(player_mulligans:Array) -> void:
 		dupe.pop_front()
 		var as_card : Array[Card_GUI] = id_to_card_array(dupe)
 		
-		var tar_docker : Docker = get_docker("field", player_data[3])
+		var tar_docker : Docker = get_docker("field", player_data[1])
 		for card in as_card.size():
 			as_card[card].assign_manager(tar_docker, card)
 	if host_id == peer.get_unique_id():
@@ -283,14 +487,14 @@ func add_shadow_card(docker : Docker, manager_pos : int, player_id:int, unique_i
 	new_shadow.global_position = docker.get_one_placement(manager_pos)
 	if peer.get_unique_id() != host_id:
 		return
-	sync_shadow_card.rpc(docker.id, manager_pos, new_shadow.unique_id)
+	print("syncing shadow cards")
+	#var docker = get_docker("field", player)
+	sync_shadow_card.rpc(docker.player, manager_pos, new_shadow.unique_id, new_shadow.player_id)
 
 @rpc("authority", "call_remote", "reliable", 0)
-func sync_shadow_card(docker_id:int, manager_pos:int, unique_id:int) -> void:
-	if peer.get_unique_id() == host_id:
-		return
-	var docker : Docker = id_to_docker(docker_id)
-	add_shadow_card(docker, manager_pos, unique_id)
+func sync_shadow_card(docker_player:int, manager_pos:int, unique_id:int, player_id:int) -> void:
+	var docker : Docker = get_docker("field", docker_player)
+	add_shadow_card(docker, manager_pos, player_id, unique_id)
 
 ## Returns an ID not shared by all other cards
 func get_unique_card_id() -> int:
@@ -301,6 +505,17 @@ func get_unique_card_id() -> int:
 		invalid_id = false
 		for card in cards:
 			if card.unique_id == new_id:
+				invalid_id = true
+	return new_id
+
+func get_unique_docker_id() -> int:
+	var invalid_id : bool = true
+	var new_id : int = 0
+	while invalid_id:
+		new_id = randi()
+		invalid_id = false
+		for dock in docker_list:
+			if dock.id == new_id:
 				invalid_id = true
 	return new_id
 
@@ -327,8 +542,8 @@ func sync_all_cards(upd_docker:bool = true) -> void:
 @rpc("authority", "call_remote", "reliable", 0)
 func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_id : String, manager_pos :int, script_data : Array, attribute_data : Array, do_docker_update : bool) -> void:
 	var card_instance : Card_GUI
-	## Team is relative - need to get dockers by the docker identifier and the relative team
-	var current_docker := get_docker(manager_id, get_player_array_by_id(card_ids[1])[3])
+	## Team is relative - need to get dockers by the docker identifier and the player id
+	var current_docker := get_docker(manager_id, get_player_array_by_id(card_ids[1])[1])
 	for card in cards:
 		if card.unique_id == card_ids[0]:
 			card_instance = card
@@ -365,7 +580,35 @@ func dead_server_card(card:int) -> void:
 	gui_card.add_child(new_fx)
 	new_fx.position = Vector2(150, 250)
 	new_fx.emitting = true
+	
+	if host_id != peer.get_unique_id():
+		return
+	
+	var who_has_living_cards : Array[int] = []
+	print("checking if anyone died")
+	for in_play in cards:
+		if not in_play.dont_sync and not who_has_living_cards.has(in_play.player_id):
+			who_has_living_cards.append(in_play.player_id)
+	for player in current_players:
+		if not who_has_living_cards.has(player[1]):
+			end_game.rpc(player[1])
+			break
+	print("Results: ", who_has_living_cards)
 
+@rpc("authority", "call_local", "reliable", 0)
+func end_game(victor_id:int) -> void:
+	peer.close() ## Exit multiplayer
+	$EndScreen.show()
+	if peer.get_unique_id() == victor_id:
+		$EndScreen/List/Vic.show()
+	else:
+		$EndScreen/List/Def.show()
+	return
+
+signal return_to_lobby
+func _on_exit_pressed() -> void:
+	game_active = false
+	return_to_lobby.emit()
 
 ## Updates all dockers in the scene
 func update_dockers() -> void:
@@ -409,23 +652,25 @@ func get_min(array:Array[Card_GUI], property:String, inverse:bool=false) -> int:
 
 ## Gets every docker in the scene
 func get_dockers() -> Array[Docker]:
-	var retr : Array[Docker] = []
-	for child in get_children():
-		if child is Docker:
-			retr.append(child)
-	return retr
+	return docker_list
+	
+	#var retr : Array[Docker] = []
+	#for child in get_children():
+		#if child is Docker:
+			#retr.append(child)
+	#return retr
 
-func get_docker(which:String, team:int) -> Docker:
-	for docker in get_dockers():
-		if docker.identifier == which and (docker.player == team or team < 0 or docker.player < 0):
+func get_docker(which:String, player:int) -> Docker:
+	for docker in docker_list:
+		if docker.identifier == which and (docker.player == player):
 			return docker
 	return
 
-func id_to_docker(id:int) -> Docker:
-	for docker in get_dockers():
-		if docker.id == id:
-			return docker
-	return
+#func id_to_docker(id:int) -> Docker:
+	#for docker in get_dockers():
+		#if docker.id == id:
+			#return docker
+	#return
 
 
 ## To get the ID of a card, just grab it's .unique_id property
@@ -591,22 +836,27 @@ func trigger_ability(ability:int, card:Card_GUI) -> void:
 	if card.attributes[ability].allow_burst:
 		burst_amnt = $TargetingGUI/Options/Burst/BurstSelect.value
 	var targets_to_id : Array[int] = card_to_id_array(targeting)
+	print("Triggering an ability. Our ID: ", get_player_array_by_id(peer.get_unique_id())[1])
 	trigger_ability_client.rpc(ability, card.unique_id, burst_amnt, targets_to_id)
 	
 
 ## card [int] is the unique ID of the Card_GUI that is the source
 @rpc("any_peer", "call_local", "reliable", 0)
 func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array[int]) -> void:
+	print("Ability Triggered on client: ", get_player_array_by_id(peer.get_unique_id())[1])
 	var who : int = get_player_by_id(current_turn_id)
 	if peer.get_unique_id() == host_id:
 		if current_players[who][4] < 1:
-			print("A client tried to take an action when they shouldn't be able to!")
+			print("A client tried to take an action when they shouldn't be able to (Not enough moves remaining)!")
 			return
 	
 	# Runs the pscript's interaction effect
 	var card_as_gui : Card_GUI = id_to_card(card)
 	var target_guis : Array[Card_GUI] = id_to_card_array(targets)
 	
+	
+	if card_as_gui == null: ## If the card dies, and the card sync update (that deletes the card) arrives late, this will cause a null error
+		return
 	for target in target_guis:
 		var apply_vfx : Node2D = card_as_gui.attributes[ability].VFX_target.instantiate()
 		apply_vfx.finished.connect(apply_vfx.queue_free)
@@ -622,6 +872,7 @@ func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array
 	$Unscalables/TurnTools.moves -= 1
 	
 	if peer.get_unique_id() == host_id:
+		print("Syncing cards - sent from host")
 		current_players[who][4] -= 1
 		for unit in cards:
 			sync_card(unit, true)

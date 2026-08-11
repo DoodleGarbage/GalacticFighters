@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://b5tg1b7jfp2c5"]
+
+[ext_resource type="Script" uid="uid://c61f3p3cqoxxo" path="res://card_docker.gd" id="1_7kjm1"]
+
+[node name="ItemGadgetEnemy" type="Panel" unique_id=12157030]
+offset_right = 814.0
+offset_bottom = 209.0
+mouse_filter = 2
+script = ExtResource("1_7kjm1")
+id = -1
+identifier = "itemgadget"

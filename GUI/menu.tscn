@@ -261,6 +261,11 @@ script = ExtResource("9_ygayt")
 layout_mode = 2
 text = "Ready Up"
 
+[node name="gamestarter" type="Button" parent="MainMenu/Lobby/corner" unique_id=221875940]
+visible = false
+layout_mode = 2
+text = "Start Game"
+
 [node name="exit" type="Button" parent="MainMenu/Lobby/corner" unique_id=1269716314]
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_8s5l4")
@@ -294,4 +299,6 @@ visible = false
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Exit" to="." method="return_to_menu"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/IPS/IP" to="MainMenu/Lobby/corner/IPS/IP" method="_pressed"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/ready" to="." method="ready_button_pressed"]
+[connection signal="pressed" from="MainMenu/Lobby/corner/gamestarter" to="." method="button_start_game"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/exit" to="." method="_quit_lobby"]
+[connection signal="return_to_lobby" from="Gameplay/Playfield" to="." method="return_to_menu"]

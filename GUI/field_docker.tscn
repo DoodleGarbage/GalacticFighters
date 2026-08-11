@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://c3hcw88cgdidp"]
+
+[ext_resource type="Script" uid="uid://doej5uri74jwf" path="res://char_field.gd" id="1_me1js"]
+
+[node name="CharField" type="Panel" unique_id=1409992743]
+anchors_preset = -1
+offset_left = -2.0
+offset_top = 10.0
+offset_right = 1998.0
+offset_bottom = 760.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("1_me1js")
+margin = Vector2(50, 30)
+identifier = "field"
+ordering_matters = true
+max_cards = 3

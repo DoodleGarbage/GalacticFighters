@@ -24,6 +24,7 @@ func get_placements() -> Array[Vector2]:
 	return ret_val
 
 func get_one_placement(manager_pos:int) -> Vector2:
+	@warning_ignore("narrowing_conversion")
 	var distribution : int = (size.x - margin.x * 2) / (max_cards)
 	var x_modifier : float = 0.5 * (distribution - 300) if distribution > (300) else 0.0
 	var ret_vec = global_position + scale * Vector2(

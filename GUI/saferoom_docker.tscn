@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://o5oepqui30u7"]
+
+[ext_resource type="Script" uid="uid://cwwf261oir5re" path="res://GUI/saferoom_docker.gd" id="1_npq7u"]
+
+[node name="Saferoom" type="Panel" unique_id=467618310]
+offset_right = 783.0
+offset_bottom = 783.0
+mouse_filter = 2
+script = ExtResource("1_npq7u")
+margins = 50.0
+identifier = "saferoom"

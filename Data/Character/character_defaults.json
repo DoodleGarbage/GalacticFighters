@@ -1,6 +1,8 @@
 [
-	{"Name":"Bloshy Blu","FullProfile":"BloshFullProfile","MiniProfile":"BloshMiniProfile", "Type":0, "Health":40, "Defense": 1, "Attack": 5, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["ABILITY DEMO", "PASSIVE DEMO"], "VFX_death":"death_vfx"},
-	{"Name":"Dummy","FullProfile":"dummy","MiniProfile":"dummy_headshot", "Type":1, "Health":99, "Defense": 0, "Attack": 10, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["ABILITY DEMO", "PASSIVE DEMO"], "VFX_death":"death_vfx"},
-	{"Name":"Zunie","FullProfile":"ZunieFullProfile","MiniProfile":"ZunieMiniProfile", "Type":0, "Health":25, "Defense": 3, "Attack": 8, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["ABILITY DEMO", "PASSIVE DEMO"], "VFX_death":"death_vfx"},
-	{"Name":"Ray Blaster","FullProfile":"RayblasterFullProfile","MiniProfile":"RayblasterMiniProfile", "Type":0, "Health":17, "Defense": 2, "Attack": 6, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["FIRE BLAST"], "VFX_death":""},
+	{"Name":"Bloshy Blu","FullProfile":"BloshFullProfile","MiniProfile":"BloshMiniProfile", "Type":0, "Health":4, "Defense": 1, "Attack": 5, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["ABILITY DEMO", "PASSIVE DEMO"], "VFX_death":"death_vfx"},
+	{"Name":"Dummy","FullProfile":"dummy","MiniProfile":"dummy_headshot", "Type":1, "Health":9, "Defense": 0, "Attack": 10, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["ABILITY DEMO", "PASSIVE DEMO"], "VFX_death":"death_vfx"},
+	{"Name":"Zunie","FullProfile":"ZunieFullProfile","MiniProfile":"ZunieMiniProfile", "Type":0, "Health":2, "Defense": 3, "Attack": 8, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["ABILITY DEMO", "PASSIVE DEMO"], "VFX_death":"death_vfx"},
+	{"Name":"Ray Blaster","FullProfile":"RayblasterFullProfile","MiniProfile":"RayblasterMiniProfile", "Type":0, "Health":1, "Defense": 2, "Attack": 6, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["FIRE BLAST"], "VFX_death":""},
+	
+	{"Name":"Summoner","FullProfile":"RayblasterFullProfile","MiniProfile":"RayblasterMiniProfile", "Type":0, "Health":17, "Defense": 2, "Attack": 6, "Burst": 0, "Heal": 0, "ArmorPierce": 0, "Attributes":["FIRE BLAST"], "VFX_death":""},
 ]
