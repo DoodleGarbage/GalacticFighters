@@ -213,7 +213,7 @@ func initalize_dockers() -> void:
 	
 	total_lower_placements = used_lower_placements_left + used_lower_placements_right
 	total_upper_placements = used_upper_placements_left + used_upper_placements_right
-	current_lower_field = used_lower_placements_left-1
+	current_lower_field = used_lower_placements_left
 	current_upper_field = used_upper_placements_left
 	
 	
@@ -224,6 +224,8 @@ func initalize_dockers() -> void:
 
 ## Used to add interaction to buttons
 func move_field(upper:bool, left:bool) -> void:
+	if active_interact_card != null:
+		return
 	if upper:
 		if left:# and current_upper_field > 0:
 			current_upper_field -= 1
@@ -243,18 +245,18 @@ func move_field(upper:bool, left:bool) -> void:
 	return
 
 func update_field_buttons_gui() -> void:
-	$Unscalables/SwitchFields/RightLower.show()
-	$Unscalables/SwitchFields/RightUpper.show()
-	$Unscalables/SwitchFields/LeftUpper.show()
-	$Unscalables/SwitchFields/LeftLower.show()
+	$SwitchFields/RightLower.show()
+	$SwitchFields/RightUpper.show()
+	$SwitchFields/LeftUpper.show()
+	$SwitchFields/LeftLower.show()
 	if current_upper_field >= total_upper_placements-1:
-		$Unscalables/SwitchFields/RightUpper.hide()
+		$SwitchFields/RightUpper.hide()
 	if current_upper_field <= 0:
-		$Unscalables/SwitchFields/LeftUpper.hide()
+		$SwitchFields/LeftUpper.hide()
 	if current_lower_field >= total_lower_placements-1:
-		$Unscalables/SwitchFields/RightLower.hide()
+		$SwitchFields/RightLower.hide()
 	if current_lower_field <= 0:
-		$Unscalables/SwitchFields/LeftLower.hide()
+		$SwitchFields/LeftLower.hide()
 	
 
 
@@ -632,12 +634,16 @@ func _update_individual_docker(docker:Docker, update_interact:bool=true) -> void
 
 ## Sorts an array of Card_GUI, by variable property. (The property must be an int)
 func sort_card_gui_array(array:Array[Card_GUI], property:String, inverse:bool=false) -> Array[Card_GUI]:
+	
 	var re_sorted_positions : Array[Card_GUI] = array.duplicate()
 	var final_array : Array[Card_GUI] = []
 	while re_sorted_positions.size() > 0:
 		var get_lowest : int = get_min(re_sorted_positions, property, inverse)
 		final_array.append(re_sorted_positions[get_lowest])
 		re_sorted_positions.remove_at(get_lowest)
+	#print("We sorted a card_gui array, here are the %s values (in order)" % property)
+	for elem in final_array:
+		print(str(elem.get(property)))
 	return final_array
 
 ## Returns the index of the lowest in the array - Note: Property must be an int
@@ -724,7 +730,8 @@ func _input(event: InputEvent) -> void:
 			if rect.has_point(get_global_mouse_position()):
 				hovered_cards.append(card)
 		## Highest z_index card is [0] - may be non-deterministic for same z_indexes
-		var sorted_hovered_cards : Array[Card_GUI] = sort_card_gui_array(hovered_cards, "z_index", true)
+		var sorted_hovered_cards : Array[Card_GUI] = sort_card_gui_array(hovered_cards, "priority", true)
+		print("sorted array of valid card targets: ", sorted_hovered_cards)
 		if not menu_open and event.is_action_pressed("card_interact"):
 			for card in sorted_hovered_cards:
 				if card.input_metadata != "":
@@ -735,6 +742,7 @@ func _input(event: InputEvent) -> void:
 			## Start with the highest z_index card, then work down list to find a valid selection target
 			for card in sorted_hovered_cards:
 				if valid_cards.has(card):
+					print("valid card found, name: ", card.name)
 					var already_selected = selected_cards.find(card)
 					if already_selected > -1:
 						selected_cards[already_selected].set_selection(false)
@@ -807,6 +815,8 @@ func update_target_display() -> void:
 func reset_card_indexes() -> void:
 	for card in cards:
 		card.z_index = 0 + card.manager.z_index
+		if card.input_metadata == "empty":
+			card.z_index -= 3
 
 
 ##
@@ -855,9 +865,11 @@ func trigger_ability_client(ability:int, card:int, burst_amnt:int, targets:Array
 	var target_guis : Array[Card_GUI] = id_to_card_array(targets)
 	
 	
-	if card_as_gui == null: ## If the card dies, and the card sync update (that deletes the card) arrives late, this will cause a null error
+	if card_as_gui == null: 
 		return
 	for target in target_guis:
+		if not is_instance_valid(target):
+			continue
 		var apply_vfx : Node2D = card_as_gui.attributes[ability].VFX_target.instantiate()
 		apply_vfx.finished.connect(apply_vfx.queue_free)
 		target.add_child(apply_vfx)
@@ -909,6 +921,9 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 	for card in cards:
 		## For the sake of readability and debugging, these are nested if statements.
 		if not valid_metadata.has(card.input_metadata):
+			continue
+		## So far, the "empty" metadata is only used for the Move targeting, and generally any other use cases I can think of will want to NOT target empty if there's something above it
+		if card.input_metadata == "empty" and not card.manager.check_if_position_is_valid(card.manager_position):
 			continue
 		if card.player_id == user.player_id:
 			if card.manager.identifier == "saferoom" and ability.target_type & 0b01000:

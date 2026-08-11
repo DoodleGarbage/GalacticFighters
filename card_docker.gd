@@ -36,6 +36,12 @@ func get_unused_position() -> int:
 	print(occupied_positions)
 	return -1
 
+func check_if_position_is_valid(pos:int) -> bool:
+	for card in assigned_cards:
+		if card.manager_position == pos:
+			return false
+	return true
+
 func card_assignment_changed(_before, _after) -> void:
 	pass
 

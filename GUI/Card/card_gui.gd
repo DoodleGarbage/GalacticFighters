@@ -9,6 +9,9 @@ var input_metadata : String = ""
 @export
 var dont_sync : bool = false
 
+## Used to determine input-selection priority
+@export var priority : int = 0
+
 ## Used to prevent killing a card multiple times
 var flagged_for_death : bool = false
 

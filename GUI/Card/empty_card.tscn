@@ -48,7 +48,7 @@ radial_accel_curve = SubResource("CurveTexture_c4qn5")
 alpha_curve = SubResource("CurveTexture_vxewq")
 
 [node name="EmptyCard" type="Panel" unique_id=2057930762]
-z_index = -1
+z_index = -3
 custom_minimum_size = Vector2(300, 500)
 offset_right = 300.0
 offset_bottom = 500.0
@@ -56,6 +56,7 @@ mouse_filter = 2
 script = ExtResource("1_6dmt0")
 input_metadata = "empty"
 dont_sync = true
+priority = -1
 
 [node name="Card" type="Control" parent="." unique_id=1328208938]
 anchors_preset = 0

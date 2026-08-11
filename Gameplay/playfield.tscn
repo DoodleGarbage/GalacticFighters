@@ -99,57 +99,6 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_cqp8x")
 
-[node name="SwitchFields" type="Control" parent="Unscalables" unique_id=168102080]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="LeftUpper" type="Button" parent="Unscalables/SwitchFields" unique_id=345983795]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.14
-anchor_bottom = 0.14
-offset_right = 110.0
-offset_bottom = 74.0
-text = "<-- View Field"
-
-[node name="LeftLower" type="Button" parent="Unscalables/SwitchFields" unique_id=281401722]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.715
-anchor_bottom = 0.715
-offset_right = 110.0
-offset_bottom = 74.0
-text = "<-- View Field"
-
-[node name="RightUpper" type="Button" parent="Unscalables/SwitchFields" unique_id=2141173398]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 1.0
-anchor_top = 0.155
-anchor_right = 1.0
-anchor_bottom = 0.155
-offset_left = -110.0
-offset_bottom = 74.0
-grow_horizontal = 0
-text = "View Field -->"
-
-[node name="RightLower" type="Button" parent="Unscalables/SwitchFields" unique_id=1879539156]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 1.0
-anchor_top = 0.74
-anchor_right = 1.0
-anchor_bottom = 0.74
-offset_left = -110.0
-offset_bottom = 74.0
-grow_horizontal = 0
-text = "View Field -->"
-
 [node name="Mulligan" type="Control" parent="." unique_id=2055465363]
 z_index = 4
 layout_mode = 1
@@ -193,6 +142,58 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="SwitchFields" type="Control" parent="." unique_id=168102080]
+z_index = 20
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LeftUpper" type="Button" parent="SwitchFields" unique_id=345983795]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.14
+anchor_bottom = 0.14
+offset_right = 110.0
+offset_bottom = 74.0
+text = "<-- View Field"
+
+[node name="LeftLower" type="Button" parent="SwitchFields" unique_id=281401722]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.715
+anchor_bottom = 0.715
+offset_right = 110.0
+offset_bottom = 74.0
+text = "<-- View Field"
+
+[node name="RightUpper" type="Button" parent="SwitchFields" unique_id=2141173398]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 0.155
+anchor_right = 1.0
+anchor_bottom = 0.155
+offset_left = -110.0
+offset_bottom = 74.0
+grow_horizontal = 0
+text = "View Field -->"
+
+[node name="RightLower" type="Button" parent="SwitchFields" unique_id=1879539156]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 0.74
+anchor_right = 1.0
+anchor_bottom = 0.74
+offset_left = -110.0
+offset_bottom = 74.0
+grow_horizontal = 0
+text = "View Field -->"
 
 [node name="TargetingGUI" type="Control" parent="." unique_id=353388836]
 visible = false
@@ -286,6 +287,7 @@ mouse_filter = 2
 
 [node name="LowerDockers" type="Control" parent="." unique_id=2089497597]
 layout_mode = 1
+anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
 mouse_filter = 2
@@ -341,11 +343,11 @@ text = "Return to Home"
 
 [connection signal="selection_complete" from="." to="." method="selection_confirmation"]
 [connection signal="turn_ended" from="Unscalables/TurnTools" to="." method="signal_turn_end"]
-[connection signal="pressed" from="Unscalables/SwitchFields/LeftUpper" to="." method="move_field" binds= [true, true]]
-[connection signal="pressed" from="Unscalables/SwitchFields/LeftLower" to="." method="move_field" binds= [false, true]]
-[connection signal="pressed" from="Unscalables/SwitchFields/RightUpper" to="." method="move_field" binds= [true, false]]
-[connection signal="pressed" from="Unscalables/SwitchFields/RightLower" to="." method="move_field" binds= [false, false]]
 [connection signal="pressed" from="Mulligan/ConfirmMulligan" to="." method="submit_mulligan"]
+[connection signal="pressed" from="SwitchFields/LeftUpper" to="." method="move_field" binds= [true, true]]
+[connection signal="pressed" from="SwitchFields/LeftLower" to="." method="move_field" binds= [false, true]]
+[connection signal="pressed" from="SwitchFields/RightUpper" to="." method="move_field" binds= [true, false]]
+[connection signal="pressed" from="SwitchFields/RightLower" to="." method="move_field" binds= [false, false]]
 [connection signal="pressed" from="TargetingGUI/Options/Target/TarConfirm" to="." method="target_confirmation"]
 [connection signal="pressed" from="TargetingGUI/Options/Target/TarCancel" to="." method="cancel_targeting"]
 [connection signal="pressed" from="EndScreen/List/Ex/Exit" to="." method="_on_exit_pressed"]
