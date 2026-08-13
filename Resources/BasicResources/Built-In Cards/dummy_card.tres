@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="Card" format=3 uid="uid://cf8v7c1yu5h2t"]
 
 [ext_resource type="Script" uid="uid://ctwnnecb20vou" path="res://Resources/attribute.gd" id="1_471o1"]
-[ext_resource type="Texture2D" uid="uid://clk4jjsq7lt27" path="res://Data/Image/dummy.png" id="2_pivuh"]
+[ext_resource type="Texture2D" uid="uid://clk4jjsq7lt27" path="res://Data/Vanilla/Images/dummy.png" id="2_pivuh"]
 [ext_resource type="Script" uid="uid://lcqwq2nuflj6" path="res://Resources/card.gd" id="2_v4itf"]
-[ext_resource type="Texture2D" uid="uid://bgk5lnfsdram6" path="res://Data/Image/dummy_headshot.png" id="3_bqmaq"]
+[ext_resource type="Texture2D" uid="uid://bgk5lnfsdram6" path="res://Data/Vanilla/Images/dummy_headshot.png" id="3_bqmaq"]
 
 [resource]
 script = ExtResource("2_v4itf")

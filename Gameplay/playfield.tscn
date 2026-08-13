@@ -1,13 +1,11 @@
 [gd_scene format=3 uid="uid://dhrx3hltyg7fb"]
 
-[ext_resource type="PackedScene" uid="uid://d1gwxg7gtq2bl" path="res://GUI/sword_ui.tscn" id="1_fri3p"]
 [ext_resource type="Script" uid="uid://dhkj26diy8chc" path="res://Gameplay/game_manager.gd" id="1_uswiv"]
+[ext_resource type="Texture2D" uid="uid://biwsp5712j1ij" path="res://Art/BattlefieldPlaceholder.png" id="2_uswiv"]
 [ext_resource type="PackedScene" uid="uid://d28oetjwilyx8" path="res://GUI/turn_tools.tscn" id="4_n0ks1"]
 [ext_resource type="Script" uid="uid://bd4aetlrhf3tt" path="res://Gameplay/mulligan.gd" id="6_cqp8x"]
 [ext_resource type="PackedScene" uid="uid://ddjs67y7hfeh" path="res://GUI/spin_box_modified.tscn" id="8_g3rnx"]
 [ext_resource type="Theme" uid="uid://ccfw6xnp2jubf" path="res://Themes/game_endscreen_theme.tres" id="9_cqp8x"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6k7cj"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cqp8x"]
 
@@ -43,7 +41,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="BG" type="Panel" parent="Unscalables" unique_id=695730054]
+[node name="BG" type="TextureRect" parent="Unscalables" unique_id=1094959868]
 z_index = -10
 layout_mode = 1
 anchors_preset = 15
@@ -52,30 +50,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_6k7cj")
-
-[node name="SwordUI" parent="Unscalables" unique_id=825052792 instance=ExtResource("1_fri3p")]
-layout_mode = 1
-anchor_left = 0.055
-anchor_top = 0.904
-anchor_right = 0.055
-anchor_bottom = 0.904
-offset_left = -68.6
-offset_top = -69.32001
-offset_right = 67.4
-offset_bottom = 66.67999
-grow_vertical = 0
-
-[node name="SwordUI2" parent="Unscalables" unique_id=1759115573 instance=ExtResource("1_fri3p")]
-layout_mode = 1
-anchor_left = 0.073
-anchor_top = 0.116
-anchor_right = 0.073
-anchor_bottom = 0.116
-offset_left = -75.16
-offset_top = -85.28
-offset_right = 60.839996
-offset_bottom = 50.72
+texture = ExtResource("2_uswiv")
 
 [node name="TurnTools" parent="Unscalables" unique_id=2030337139 instance=ExtResource("4_n0ks1")]
 layout_mode = 1
@@ -290,6 +265,7 @@ layout_mode = 1
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
+grow_vertical = 2
 mouse_filter = 2
 
 [node name="EndScreen" type="MarginContainer" parent="." unique_id=1116536599]

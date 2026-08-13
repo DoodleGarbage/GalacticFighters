@@ -1,66 +1,11 @@
-extends Control
+extends DockerChild
 
 class_name Card_GUI
 
-## Used by the _input code to allow selecting empty positions (with the right targeting flags)
-@export
-var input_metadata : String = ""
-## Skips this card when syncing across clients
-@export
-var dont_sync : bool = false
 
-## Used to determine input-selection priority
-@export var priority : int = 0
 
 ## Used to prevent killing a card multiple times
 var flagged_for_death : bool = false
-
-## Whether or not this card belongs to the current client/is controllable (aka, could be switched off under the "controlled" status effect)
-var controlled : bool = false
-
-var manager : Docker
-var manager_position : int = -1
-
-func assign_manager(new_manager:Docker, pos:int=-1, force:bool=false) -> void:
-	if new_manager == null or (new_manager == manager and pos == manager_position):
-		return
-	var check : int = get_true_manager_position()
-	if check > -1:
-		manager.assigned_cards.pop_at(check)
-	z_index += new_manager.z_index - manager.z_index if manager != null else new_manager.z_index
-	manager = new_manager
-	var occupied_positions : Array[int] = []
-	for card in manager.assigned_cards:
-		occupied_positions.append(card.manager_position)
-	#print("Assigning Manager; Name: ", manager.identifier, " Team: ", manager.player)
-	if pos > -1 and (not occupied_positions.has(pos) or force):
-		manager_position = pos
-		#print("assigned pos: ", pos)
-	else:
-		#manager.get_unused_position()
-		var smallest_unoccupied : int = 0
-		while occupied_positions.has(smallest_unoccupied):
-			smallest_unoccupied += 1
-		manager_position = smallest_unoccupied
-		#print("unoccupied pos: ", smallest_unoccupied)
-	manager.assigned_cards.append(self)
-
-
-## Returns our actual index in the manager's assigned card array
-## -1 means it either wasn't assigned as a card (which should not be happening) or no manager exists
-func get_true_manager_position() -> int:
-	return manager.assigned_cards.find(self) if manager != null else -1
-
-func remove_manager() -> void:
-	var us : int = get_true_manager_position()
-	if us > -1:
-		manager.assigned_cards.pop_at(us)
-		manager_position = -1
-
-
-## These values are set when the card is generated on the playfield
-var unique_id : int = 0 # a unique identifier for synchronization/communication
-var player_id : int = 0 # who is the 'owner' of this card
 
 @export
 var stored_card : Card
@@ -169,7 +114,7 @@ func init_script(attribute:Attribute) -> GDScript:
 
 ## Card interaction functions
 
-const dmg_effect := preload("res://Data/VFX/damage_effect.tscn")
+const dmg_effect := preload("res://Data/Vanilla/VFX/damage_effect.tscn")
 signal dead()
 
 func damage(trigger : Attribute, amnt:int) -> void:
@@ -212,7 +157,7 @@ func _ready() -> void:
 	target_position = position
 	
 	## We set the 'Screen constant' - used for dragging - to be 100% of the screen per second
-	SCREEN_CONST = DisplayServer.screen_get_size().length() * 1.0
+	#SCREEN_CONST = DisplayServer.screen_get_size().length() * 1.0
 
 const abi_gui = preload("res://GUI/Card/ability_display.tscn")
 #var default_move = preload("res://Resources/BasicResources/default_move.tres")
@@ -410,7 +355,7 @@ var MOUSE_DEADZONE : float = 10.0
 # When we start dragging a card, we drag it around the point we 'pulled it'
 var move_offset : Vector2 = Vector2(0,0)
 # See Ready() for the details of screen constant; it's how much of the screen we travel per second
-var SCREEN_CONST : float = 0.0
+#var SCREEN_CONST : float = 0.0
 #func _process(_delta: float) -> void:
 	#_drag()
 	#position = target_position

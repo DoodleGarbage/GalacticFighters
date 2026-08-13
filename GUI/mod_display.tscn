@@ -1,0 +1,69 @@
+[gd_scene format=3 uid="uid://cvc4xsp6kuqdq"]
+
+[ext_resource type="Texture2D" uid="uid://emt6pvakjn1r" path="res://icon.svg" id="1_waesa"]
+[ext_resource type="Script" uid="uid://d3ioi2swgi15e" path="res://GUI/mod_display.gd" id="1_yijx7"]
+
+[sub_resource type="DPITexture" id="DPITexture_waesa"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"16\"><rect width=\"30\" height=\"14\" x=\"1\" y=\"1\" fill=\"#fff\" fill-opacity=\".75\" rx=\"7\"/><circle cx=\"24\" cy=\"8\" r=\"5\" fill=\"#1a1a1a\"/></svg>
+"
+base_scale = 4.23
+
+[sub_resource type="DPITexture" id="DPITexture_yijx7"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"16\"><g fill-opacity=\".5\"><rect width=\"30\" height=\"14\" x=\"1\" y=\"1\" fill=\"#1a1a1a\" rx=\"7\"/><circle cx=\"8\" cy=\"8\" r=\"5\" fill=\"#fff\"/></g></svg>
+"
+base_scale = 4.23
+
+[node name="ModDisplay" type="HBoxContainer" unique_id=380295319]
+offset_right = 128.0
+offset_bottom = 128.0
+script = ExtResource("1_yijx7")
+
+[node name="Icon" type="TextureRect" parent="." unique_id=1449630592]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+texture = ExtResource("1_waesa")
+expand_mode = 3
+
+[node name="BG" type="PanelContainer" parent="." unique_id=1918711709]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Width" type="MarginContainer" parent="BG" unique_id=365840778]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="BG/Width" unique_id=1049304938]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="BG/Width/VBoxContainer" unique_id=898259334]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "ModNameThatisinfinitylong"
+clip_text = true
+
+[node name="hashholder" type="HBoxContainer" parent="BG/Width/VBoxContainer" unique_id=1440054225]
+layout_mode = 2
+
+[node name="Version" type="Label" parent="BG/Width/VBoxContainer/hashholder" unique_id=2096381879]
+layout_mode = 2
+text = "Version: "
+
+[node name="VerVal" type="Label" parent="BG/Width/VBoxContainer/hashholder" unique_id=808683177]
+layout_mode = 2
+text = "1.x.x"
+
+[node name="Hash" type="Label" parent="BG/Width/VBoxContainer/hashholder" unique_id=937263772]
+layout_mode = 2
+text = "Hash: "
+
+[node name="HashVal" type="Label" parent="BG/Width/VBoxContainer/hashholder" unique_id=1888923973]
+layout_mode = 2
+text = "129x41823eb@73"
+
+[node name="Enabled" type="CheckButton" parent="." unique_id=320667233]
+layout_mode = 2
+theme_override_icons/checked = SubResource("DPITexture_waesa")
+theme_override_icons/unchecked = SubResource("DPITexture_yijx7")
+
+[connection signal="pressed" from="Enabled" to="." method="_on_enabled_pressed"]

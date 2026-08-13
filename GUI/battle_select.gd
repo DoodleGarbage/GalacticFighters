@@ -5,11 +5,10 @@ var deck_list : Array[Deck] = [] :
 	get():
 		return Resources.decks
 
-func _ready() -> void:
-	load_decks()
-
 const deck_gui := preload("res://GUI/mini_deck.tscn")
 func load_decks() -> void:
+	for child in $List/DeckLister.get_children():
+		child.queue_free()
 	for deck in deck_list:
 		var non_spec_char : int = 0
 		for chars in deck.characters:

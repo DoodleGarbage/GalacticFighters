@@ -1,8 +1,7 @@
 extends Node
 
-const major_version : int = 0
-const minor_version : int = 1
-const revision : int = 0
+@export var base_hash : String = ""
+@export var version : String = "0.1.0a"
 
 
 
@@ -17,7 +16,12 @@ var current_lobby_players : Array = []
 
 var host_id : int
 
+const mod_display_scene := preload("res://GUI/mod_display.tscn")
+
 func _ready() -> void:
+	
+	## Load Mod List Display
+	load_mod_list()
 	
 	## Networking
 	multiplayer.connected_to_server.connect(join_connected)
@@ -25,7 +29,6 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_server_disconnect)
 	multiplayer.peer_disconnected.connect(_disconnect)
 	
-	generate_version_hash()
 
 ## Host a lobby
 func _attempt_host() -> void:
@@ -38,7 +41,7 @@ func _attempt_host() -> void:
 	peer.create_server(port,32)
 	multiplayer.multiplayer_peer = peer
 	
-	current_lobby_players.append([our_name, peer.get_unique_id(), deck_to_string(prepared_deck), false])
+	current_lobby_players.append([our_name, peer.get_unique_id(), Deck.to_str(prepared_deck), false])
 	
 	hide_all()
 	$MainMenu/Lobby.show()
@@ -56,7 +59,6 @@ func _attempt_host() -> void:
 
 ## Join a lobby
 func _attempt_join() -> void:
-	joining_lobby = true
 	our_name = $MainMenu/Waiting/VBoxContainer/Name/PlayerName.text
 	var IP_address : String = $MainMenu/Waiting/VBoxContainer/Join/JoinInput.text
 	if IP_address == "":
@@ -99,10 +101,8 @@ func get_lobby_label(player:Array) -> String:
 
 # Called when we join a server
 func join_connected(_id:int=0) -> void:
-	$MainMenu/Waiting.hide()
-	$MainMenu/Lobby.show()
 	## Going to Server
-	lobby_joined.rpc(our_name, peer.get_unique_id(), deck_to_string(prepared_deck))
+	lobby_joined.rpc(our_name, peer.get_unique_id(), Resources.loaded_hash, Deck.to_str(prepared_deck))
 
 # Sent from Server to update everyone when someone joins the lobby
 @rpc("authority", "call_remote", "reliable", 0)
@@ -114,14 +114,30 @@ func join_lobby(lobby:Array, host:int) -> void:
 
 ## Called from Client to Server
 @rpc("any_peer", "call_remote", "reliable", 0)
-func lobby_joined(player_name:String, p_ID:int, deck:Array[String]) -> void:
+func lobby_joined(player_name:String, p_ID:int, p_hash:PackedByteArray, deck:Array[String]) -> void:
 	print("Player wants to join")
+	if p_hash != Resources.loaded_hash:
+		incorrect_hash.rpc_id(p_ID, Resources.loaded_hash)
+		peer.disconnect_peer(p_ID, false)
+		print("Player refuted for bad hash, here's the lobby: ", current_lobby_players)
+		return
 	current_lobby_players.append([player_name, p_ID, deck, false])
 	reset_lobby()
 	## Going from Server to Client
+	push_warning("Our peer ID is: ", peer.get_unique_id())
+	join_confirmed.rpc_id(p_ID)
 	join_lobby.rpc(current_lobby_players, host_id)
 
-## ADD SYNC CODE / COMMUNICATE GAMEPLAY
+@rpc("authority", "call_remote", "reliable", 0)
+func join_confirmed() -> void:
+	print("We are verified and joined the lobby!")
+	$MainMenu/Waiting.hide()
+	$MainMenu/Lobby.show()
+
+@rpc("authority", "call_remote", "reliable", 0)
+func incorrect_hash(lob_hash:PackedByteArray) -> void:
+	push_error("Tried to join a lobby, but had a mismatching hash! Correct Hash: %s" % lob_hash.hex_encode())
+	_quit_lobby()
 
 ## Called when anyone joins the lobby
 func peer_connected(_id:int=0) -> void:
@@ -129,20 +145,22 @@ func peer_connected(_id:int=0) -> void:
 		user[3] = false
 
 ## Triggers when someone disconnects from us
-var joining_lobby : bool = false
+var joining_lobby : bool :
+	get():
+		return peer.get_connection_status() == 1
 func _disconnect(_whoid:int=0) -> void:
 	if (joining_lobby and _whoid == peer.get_unique_id()) or current_lobby_players.size() < 1:
 		return_to_menu()
-		return # ^ Not sure if this code needs to be here. - may only be used in the server disconnect code
-	var player = get_player(_whoid)
-	if current_lobby_players[player][1] == host_id: # If host disconnects, everyone should return to menu.
-		return_to_menu()
 		return
-	current_lobby_players.remove_at(player) # When someone leaves or joins, reset everybody's ready status
+	if joining_lobby:
+		return
+	var player = get_player(_whoid)
+	if player > -1:
+		current_lobby_players.remove_at(player) 
+	# When someone leaves or joins, reset everybody's ready status
 	for user in current_lobby_players:
 		user[3] = false
 	$MainMenu/Lobby/corner/ready.show()
-	joining_lobby = false
 	reset_lobby()
 
 ## Triggers when we disconnect from the server
@@ -151,7 +169,10 @@ func _server_disconnect(_whoid:int=0) -> void:
 
 func _quit_lobby() -> void:
 	current_lobby_players = []
-	peer.close()
+	if peer != null:
+		peer.close()
+		multiplayer.multiplayer_peer = null
+		peer = null
 	return_to_menu()
 
 ## Clears and resets the lobby
@@ -230,13 +251,27 @@ func switch_to_game() -> void:
 
 ## ^ MULTIPLAYER & NETWORKING
 
-func generate_version_hash() -> void:
-	#var hash_array : Array = []
-	#hash_array.append(Resources.attributes.hash())
-	#hash_array.append(Resources.characters.hash())
-	#var final_hash : int = hash_array.hash()
-	$MainMenu/Version.text = "Version: " + str(major_version) + "." + str(minor_version) + "." + str(revision)# + " (checksum: " + str(final_hash) + ")"
-	## Note: using Array.hash() can generate completely different hashes for identical data
+const HASH_MISMATCH_COLOR := Color(0.471, 0.451, 0.039, 1.0)
+const HASH_CORRECT_COLOR := Color(0.0, 0.0, 0.0, 1.0)
+
+func load_version_hash() -> void:
+	#$MainMenu/CornerInfo/Version.text = "Version: " + str(major_version) + "." + str(minor_version) + "." + str(revision) + " (checksum: " + str(Resources.loaded_hash.hex_encode()) + ")"
+	var hash_shrinker : PackedByteArray = [0,0]
+	for i in Resources.loaded_hash.size():
+		if i%2 == 0:
+			hash_shrinker[0] += Resources.loaded_hash[i]
+		else:
+			hash_shrinker[1] += Resources.loaded_hash[i]
+	$MainMenu/CornerInfo/VerCheck/Num.text = version
+	$MainMenu/CornerInfo/VerCheck/Hash.text = hash_shrinker.hex_encode()
+	$MainMenu/CornerInfo/VerCheck/Hash/Copy.tooltip_text = "Checksum: " + Resources.loaded_hash.hex_encode() + " (Click to Copy)"
+	
+	if Resources.loaded_hash.hex_encode() != base_hash:
+		#$MainMenu/CornerInfo/VerCheck/Hash.add_theme_color_override("font_color", HASH_MISMATCH_COLOR)
+		$MainMenu/CornerInfo/VerCheck.theme.set_color("font_color", "Label", HASH_MISMATCH_COLOR)
+	else:
+		#$MainMenu/CornerInfo/VerCheck/Hash.add_theme_color_override("font_color", HASH_CORRECT_COLOR)
+		$MainMenu/CornerInfo/VerCheck.theme.set_color("font_color", "Label", HASH_CORRECT_COLOR)
 
 func _start_pressed() -> void:
 	$MainMenu/Menu/VBoxContainer/Start.hide()
@@ -244,6 +279,7 @@ func _start_pressed() -> void:
 	$MainMenu/Menu/VBoxContainer/AccessedMenu.show()
 
 func hide_all() -> void:
+	$ModList.hide()
 	$MainMenu/Menu.hide()
 	$MainMenu/Deck.hide()
 	$MainMenu/BattleSelect.hide()
@@ -260,19 +296,19 @@ func return_to_menu() -> void:
 	hide_all()
 	$MainMenu/Menu.show()
 
+## Called by Signal
 func prepare_battle() -> void:
 	hide_all()
 	$MainMenu/BattleSelect.show()
 
-var prepared_deck : Deck
+## Called by signal
 func ready_for_battle(deck:Deck) -> void:
 	hide_all()
-	# Show "Waiting on other player. Your Deck: DECK"
-	# Multiplayer stuff
 	prepared_deck = deck
-	#local_peer_send "I am ready" message
 	$MainMenu/Waiting/VBoxContainer/MiniDeck.load_deck(deck)
 	$MainMenu/Waiting.show()
+
+var prepared_deck : Deck
 
 func string_to_deck(deck:Array[String]) -> Deck:
 	var zombie : Deck = Deck.new()
@@ -285,16 +321,29 @@ func string_to_deck(deck:Array[String]) -> Deck:
 					zombie.characters.append(chara)
 	return zombie
 
-func deck_to_string(deck:Deck) -> Array[String]:
-	var string : Array[String] = []
-	for chara in deck.characters:
-		string.append("Character:" + chara.name)
-	for gadg in deck.gadgets:
-		string.append("Gadget:" + gadg.name)
-	for item in deck.items:
-		string.append("Item:"+item.name)
-	if deck.sword != null:
-		string.append("Sword:"+deck.sword.name)
-	return string
 
-## RESOURCE MANAGEMENT
+
+
+
+func _on_mods_pressed() -> void:
+	$ModList.show()
+
+
+func _on_reload_scene() -> void:
+	load_mod_list()
+	_quit_lobby()
+
+func load_mod_list() -> void:
+	for child in $ModList/BG/List/Scroll/ModList.get_children():
+		child.queue_free()
+	for mod in Resources.loaded_mods:
+		var new_mod_disp := mod_display_scene.instantiate()
+		$ModList/BG/List/Scroll/ModList.add_child(new_mod_disp)
+		new_mod_disp.mod = mod
+		new_mod_disp.mod_toggled.connect($ModList._on_mod_toggled)
+	$MainMenu/BattleSelect.load_decks()
+	load_version_hash()
+
+
+func _on_hash_checksum_copy_pressed() -> void:
+	DisplayServer.clipboard_set(Resources.loaded_hash.hex_encode())

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dfigbub4rfoyp" path="res://Resources/deck.gd" id="1_itf32"]
 [ext_resource type="Script" uid="uid://lcqwq2nuflj6" path="res://Resources/card.gd" id="2_4p6qv"]
-[ext_resource type="Script" uid="uid://bqesj0y6rvh45" path="res://Resources/Item.gd" id="2_86uhx"]
+[ext_resource type="Script" uid="uid://bqesj0y6rvh45" path="res://Resources/item.gd" id="2_86uhx"]
 [ext_resource type="Resource" uid="uid://cnjm4gevrnut6" path="res://Resources/BasicResources/Built-In Cards/demo_card.tres" id="2_fkmpc"]
 [ext_resource type="Resource" uid="uid://bc6oyw6aepcho" path="res://Resources/BasicResources/Built-In Cards/soldier_card.tres" id="3_kat7l"]
 [ext_resource type="Resource" uid="uid://cf8v7c1yu5h2t" path="res://Resources/BasicResources/Built-In Cards/dummy_card.tres" id="4_p2w7l"]

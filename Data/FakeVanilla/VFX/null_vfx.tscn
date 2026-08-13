@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://0qioqcoq4gbk"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_8s5l4"]
+particle_flag_disable_z = true
+gravity = Vector3(0, 98, 0)
+
+[node name="Null" type="GPUParticles2D" unique_id=1027074287]
+emitting = false
+lifetime = 0.1
+one_shot = true
+process_material = SubResource("ParticleProcessMaterial_8s5l4")

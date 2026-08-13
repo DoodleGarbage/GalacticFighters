@@ -1,20 +1,39 @@
 [gd_scene format=3 uid="uid://0opjsjdo61jd"]
 
 [ext_resource type="Texture2D" uid="uid://emt6pvakjn1r" path="res://icon.svg" id="1_gme5c"]
+[ext_resource type="Script" uid="uid://co8haqmf6opc5" path="res://GUI/player_display.gd" id="1_m4nqb"]
+[ext_resource type="PackedScene" uid="uid://d1gwxg7gtq2bl" path="res://GUI/sword_ui.tscn" id="3_bjo4i"]
 
-[node name="Control" type="HBoxContainer" unique_id=11755673]
+[node name="LeftInfo" type="Control" unique_id=760283643]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="PlayerDisplay" type="HBoxContainer" parent="." unique_id=11755673]
+layout_mode = 0
 offset_right = 5.0
 offset_bottom = 23.0
+script = ExtResource("1_m4nqb")
 
-[node name="TextureRect" type="TextureRect" parent="." unique_id=648997217]
+[node name="PlayerIcon" type="TextureRect" parent="PlayerDisplay" unique_id=648997217]
 layout_mode = 2
 texture = ExtResource("1_gme5c")
 
-[node name="PanelContainer" type="PanelContainer" parent="." unique_id=597994278]
+[node name="Backplate" type="PanelContainer" parent="PlayerDisplay" unique_id=597994278]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="PanelContainer" unique_id=1027730640]
+[node name="PlayerName" type="Label" parent="PlayerDisplay/Backplate" unique_id=1027730640]
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 21
 text = "1234567890123456"
+
+[node name="SwordUI" parent="." unique_id=825052792 instance=ExtResource("3_bjo4i")]
+layout_mode = 0
+anchors_preset = 0
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = 86.0
+offset_top = 152.0
+offset_right = 214.0
+offset_bottom = 280.0

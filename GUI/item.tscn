@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://div00ixmb7eev"]
+
+[ext_resource type="Theme" uid="uid://bahw6jj5wr8bv" path="res://Themes/item_theme.tres" id="1_oxfmy"]
+[ext_resource type="Script" uid="uid://s77gjv4dd82l" path="res://GUI/item_gui.gd" id="2_108ks"]
+[ext_resource type="Texture2D" uid="uid://fn76f4xtne4x" path="res://Art/burst.png" id="2_gdc10"]
+
+[node name="Item" type="PanelContainer" unique_id=146965513]
+offset_right = 300.0
+offset_bottom = 250.0
+theme = ExtResource("1_oxfmy")
+script = ExtResource("2_108ks")
+
+[node name="List" type="VBoxContainer" parent="." unique_id=1045967559]
+layout_mode = 2
+
+[node name="Name" type="Label" parent="List" unique_id=577591936]
+layout_mode = 2
+text = "Item Name"
+horizontal_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="List" unique_id=526272635]
+layout_mode = 2
+size_flags_vertical = 3
+texture = ExtResource("2_gdc10")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="PanelContainer" type="PanelContainer" parent="List" unique_id=370786042]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Desc" type="Label" parent="List/PanelContainer" unique_id=976259122]
+custom_minimum_size = Vector2(276, 0)
+layout_mode = 2
+text = "Hi this is an item that does xyz thing"
+horizontal_alignment = 1
+autowrap_mode = 2

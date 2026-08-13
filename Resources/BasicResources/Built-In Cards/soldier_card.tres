@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://ctwnnecb20vou" path="res://Resources/attribute.gd" id="1_r8n2y"]
 [ext_resource type="Script" uid="uid://lcqwq2nuflj6" path="res://Resources/card.gd" id="2_bysok"]
-[ext_resource type="Texture2D" uid="uid://cviybi3kbsr51" path="res://Data/Image/SoldierFullProfile.png" id="2_kc4dq"]
-[ext_resource type="Texture2D" uid="uid://dlrg80hms2xac" path="res://Data/Image/SoldierMiniProfile.png" id="3_2up4o"]
+[ext_resource type="Texture2D" uid="uid://cviybi3kbsr51" path="res://Data/Vanilla/Images/SoldierFullProfile.png" id="2_kc4dq"]
+[ext_resource type="Texture2D" uid="uid://dlrg80hms2xac" path="res://Data/Vanilla/Images/SoldierMiniProfile.png" id="3_2up4o"]
 
 [resource]
 script = ExtResource("2_bysok")

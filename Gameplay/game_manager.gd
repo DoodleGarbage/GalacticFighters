@@ -63,6 +63,8 @@ func reset_playfield() -> void:
 @onready var saferoom_docker_scene := preload("res://GUI/saferoom_docker.tscn")
 @onready var item_docker_scene := preload("res://GUI/item_docker.tscn")
 
+@onready var player_display_scene := preload("res://GUI/player_display.tscn")
+
 # Scale to apply to things
 const FIELD_DOCKER_GUI_SCALE := Vector2(0.4,0.4)
 const SAFEROOM_DOCKER_GUI_SCALE := Vector2(0.4,0.4)
@@ -76,6 +78,15 @@ const FIELD_DOCKER_GUI_POSITION := Vector2(540,230)
 const SAFEROOM_DOCKER_GUI_POSITION := Vector2(835, -190)
 # (Relative to the field docker)
 const ITEM_DOCKER_GUI_POSITION := Vector2(0,-220)
+
+const PLAYER_DISPLAY_GUI_POSITION := Vector2(30,30)
+
+# Used for the bottom half dockers
+const BOT_FIELD_DOCKER_GUI_POSITION := Vector2(540,30)
+const BOT_SAFEROOM_DOCKER_GUI_POSITION := Vector2(835,10)
+const BOT_ITEM_DOCKER_GUI_POSITION := Vector2(0,310)
+# Temporarily the same as Top player display GUI until the UI is updated
+const BOT_PLAYER_DISPLAY_GUI_POSITION := Vector2(30,30) #Vector2(30,450)
 
 ## Where to position stuff if it's on the bottom half
 #const BOT_FIELD_DOCKER_GUI_POSITION := Vector2(540,550)
@@ -147,12 +158,25 @@ func initalize_dockers() -> void:
 				else:
 					used_lower_placements_right += 1
 		
+		if player == us:
+			upper_if_true = false
+			left_if_true = true
+		
 		## Final determined position
-		var origin : Vector2 = FIELD_DOCKER_GUI_POSITION
-		#if upper_if_true:
-			#origin = TOP_FIELD_DOCKER_GUI_POSITION
-		#else:
-			#origin = BOT_FIELD_DOCKER_GUI_POSITION
+		var docker_origin : Vector2
+		var saferoom_offset : Vector2
+		var item_offset : Vector2
+		var display_origin : Vector2
+		if upper_if_true:
+			docker_origin = FIELD_DOCKER_GUI_POSITION
+			saferoom_offset = SAFEROOM_DOCKER_GUI_POSITION
+			item_offset = ITEM_DOCKER_GUI_POSITION
+			display_origin = PLAYER_DISPLAY_GUI_POSITION
+		else:
+			docker_origin = BOT_FIELD_DOCKER_GUI_POSITION
+			saferoom_offset = BOT_SAFEROOM_DOCKER_GUI_POSITION
+			item_offset = BOT_ITEM_DOCKER_GUI_POSITION
+			display_origin = BOT_PLAYER_DISPLAY_GUI_POSITION
 		## Horizontal offset
 		var offset : float = 0
 		if upper_if_true:
@@ -161,17 +185,17 @@ func initalize_dockers() -> void:
 			offset = -(used_lower_placements_left-1) if left_if_true else used_lower_placements_right
 		offset *= DOCKER_GUI_SEPERATION
 		
-		## Feels bad to place this after doing all the processing but gotta bypass it somewhere
 		if player == us:
-			upper_if_true = false
-			left_if_true = true
-			#origin = BOT_FIELD_DOCKER_GUI_POSITION
 			offset = 0
 		
 		
 		var new_field_docker := field_docker_scene.instantiate()
 		var new_saferoom_docker := saferoom_docker_scene.instantiate()
 		var new_item_docker := item_docker_scene.instantiate()
+		
+		var new_player_display := player_display_scene.instantiate()
+		
+		new_player_display.get_node("PlayerDisplay").player_name = player[0]
 		
 		new_field_docker.player = player[1]
 		## Unique IDs are only useful if this gets synced with the server
@@ -194,18 +218,22 @@ func initalize_dockers() -> void:
 			$UpperDockers.add_child(new_field_docker, true)
 			$UpperDockers.add_child(new_saferoom_docker)
 			$UpperDockers.add_child(new_item_docker)
+			$UpperDockers.add_child(new_player_display)
 		else:
 			$LowerDockers.add_child(new_field_docker, true)
 			$LowerDockers.add_child(new_saferoom_docker)
 			$LowerDockers.add_child(new_item_docker)
+			$LowerDockers.add_child(new_player_display)
 		
 		
-		new_field_docker.position = origin
+		new_field_docker.position = docker_origin
 		new_field_docker.position.x += offset
-		new_saferoom_docker.position = origin + SAFEROOM_DOCKER_GUI_POSITION
+		new_saferoom_docker.position = docker_origin + saferoom_offset
 		new_saferoom_docker.position.x += offset
-		new_item_docker.position = origin + ITEM_DOCKER_GUI_POSITION
+		new_item_docker.position = docker_origin + item_offset
 		new_item_docker.position.x += offset
+		
+		new_player_display.position = display_origin
 		
 		new_field_docker.scale = FIELD_DOCKER_GUI_SCALE
 		new_saferoom_docker.scale = SAFEROOM_DOCKER_GUI_SCALE
@@ -215,8 +243,6 @@ func initalize_dockers() -> void:
 	total_upper_placements = used_upper_placements_left-1 + used_upper_placements_right
 	current_lower_field = used_lower_placements_left-1
 	current_upper_field = used_upper_placements_left-1
-	print("total placements: ", total_upper_placements, " current pos: ", current_upper_field)
-	
 	
 	update_field_buttons_gui()
 	return
@@ -271,13 +297,13 @@ func assign_teams() -> void:
 
 func initalize_cards() -> void:
 	for player in current_players:
-		print(player)
 		var deck : Deck = player[2]
 		var shadow_docker : Docker = get_docker("field", player[1])
 		for i in shadow_docker.max_cards:
 			add_shadow_card(shadow_docker, i, player[1])
 		for card in deck.characters:
-			var new_card : Card_GUI = add_card(card, get_docker("saferoom", player[1]), player[1])
+			#var new_card : Card_GUI = 
+			add_card(card, get_docker("saferoom", player[1]), player[1])
 			#sync_card(new_card, true)
 	sync_all_cards(true)
 
@@ -302,6 +328,8 @@ func start_mulligan() -> void:
 			card.assign_manager(get_docker("mulligan", card.player_id))
 			#if peer.get_unique_id() == host_id:
 				#sync_card(card, true)
+		else:
+			card.hide()
 	update_dockers()
 	selecting_cards = true
 	selecting_mulligan = true
@@ -348,6 +376,7 @@ func send_mulligan_selection(selections:Array[int], player_id:int) -> void:
 func end_mulligan(player_mulligans:Array) -> void:
 	$Mulligan.hide()
 	for card in cards:
+		card.show()
 		if card.input_metadata != "":
 			continue
 		card.set_selection(false)
@@ -565,6 +594,10 @@ func dead_card(card:Card_GUI) -> void:
 	if peer.get_unique_id() == host_id:
 		dead_server_card.rpc(card.unique_id)
 
+## Prevents us from killing (removing card from the card array) before an ability can be simulated on the client
+#var displaying_ability_effects : bool = false
+
+var dead_cards : Array[Card_GUI] = []
 
 @rpc("authority", "call_local", "reliable", 0)
 func dead_server_card(card:int) -> void:
@@ -572,17 +605,26 @@ func dead_server_card(card:int) -> void:
 	if gui_card == null or gui_card.flagged_for_death:
 		return
 	gui_card.flagged_for_death = true
-	var index : int = cards.find(gui_card)
-	cards.remove_at(index) # This makes the card officially not a part of the game, from the perspective of the game
 	gui_card.remove_manager()
-	# ^ We can now safely queue_free the card at any time.
+
+func kill_card(card:Card_GUI) -> void:
+	var index : int = cards.find(card)
+	cards.remove_at(index) # This makes the card officially not a part of the game, from the perspective of the game
+	# We can now safely queue_free the card at any time.
 	# Display death vfx and then delete once the effect expires
-	var new_fx : Node2D = gui_card.stored_card.VFX_death.instantiate()
-	new_fx.finished.connect(gui_card.queue_free)
-	gui_card.add_child(new_fx)
+	var new_fx : Node2D = card.stored_card.VFX_death.instantiate()
+	new_fx.finished.connect(card.queue_free)
+	card.add_child(new_fx)
 	new_fx.position = Vector2(150, 250)
 	new_fx.emitting = true
-	
+
+## Only call this function when you are certain that nothing relies on the dead cards (such as displaying the effects of abilities
+func clear_dead_cards() -> void:
+	for card in cards:
+		if not card.flagged_for_death:
+			continue
+		kill_card(card)
+
 	if host_id != peer.get_unique_id():
 		return
 	
@@ -642,8 +684,6 @@ func sort_card_gui_array(array:Array[Card_GUI], property:String, inverse:bool=fa
 		final_array.append(re_sorted_positions[get_lowest])
 		re_sorted_positions.remove_at(get_lowest)
 	#print("We sorted a card_gui array, here are the %s values (in order)" % property)
-	for elem in final_array:
-		print(str(elem.get(property)))
 	return final_array
 
 ## Returns the index of the lowest in the array - Note: Property must be an int
@@ -726,6 +766,8 @@ func _input(event: InputEvent) -> void:
 		var hovered_cards : Array[Card_GUI] = []
 		# Reminder that the card shadows are inside the cards array
 		for card in cards:
+			if card.flagged_for_death:
+				continue
 			var rect : Rect2 = Rect2(card.global_position, card.size * card.scale)
 			if rect.has_point(get_global_mouse_position()):
 				hovered_cards.append(card)
@@ -833,7 +875,7 @@ func trigger_ability(ability:int, card:Card_GUI) -> void:
 		return
 	close_interaction_menu() # Abilities are often triggered when this is open
 	allow_drag = false # Prevent dragging during the ability trigger
-	var targeting : Array[Card_GUI] = await get_targets(card, card.attributes[ability])
+	var targeting : Array[Card_GUI] = await get_targets(card, card.attributes[ability].targeting)
 	if targeting == []:
 		print("Targeting cancelled or failed")
 		allow_drag = true
@@ -842,7 +884,7 @@ func trigger_ability(ability:int, card:Card_GUI) -> void:
 	print("We selected cards to target!: ", targeting)
 	
 	var burst_amnt : int = 0
-	if card.attributes[ability].allow_burst:
+	if card.attributes[ability].targeting.allow_burst:
 		burst_amnt = $TargetingGUI/Options/Burst/BurstSelect.value
 	var targets_to_id : Array[int] = card_to_id_array(targeting)
 	print("Triggering an ability. Our ID: ", get_player_array_by_id(peer.get_unique_id())[1])
@@ -850,7 +892,8 @@ func trigger_ability(ability:int, card:Card_GUI) -> void:
 	
 
 ## card [int] is the unique ID of the Card_GUI that is the source
-@rpc("any_peer", "call_remote", "reliable", 0)
+# NOTE: the 'call_local' is required to rpc_id call this function on yourself (aka host -> host)
+@rpc("any_peer", "call_local", "reliable", 0)
 func trigger_ability_client(peer_id:int, ability:int, card:int, burst_amnt:int, targets:Array[int]) -> void:
 	print("Ability Triggered on client: ", get_player_array_by_id(peer.get_unique_id())[1])
 	var who : int = get_player_by_id(current_turn_id)
@@ -875,7 +918,7 @@ func trigger_ability_client(peer_id:int, ability:int, card:int, burst_amnt:int, 
 	ability_trigger_server_notif.rpc(ability, card, burst_amnt, targets, who)
 	return
 
-@rpc("authority", "call_remote", "reliable", 1)
+@rpc("authority", "call_local", "reliable", 1)
 func update_turn_counter(moves:int) -> void:
 	$Unscalables/TurnTools.moves = moves
 
@@ -885,17 +928,22 @@ func ability_trigger_server_notif(ability:int, card:int, burst_amnt:int, targets
 	var card_as_gui : Card_GUI = id_to_card(card)
 	var target_guis : Array[Card_GUI] = id_to_card_array(targets)
 	
+	#displaying_ability_effects = true
 	
 	if card_as_gui == null: 
 		return
 	for target in target_guis:
 		if not is_instance_valid(target):
 			continue
-		var apply_vfx : Node2D = card_as_gui.attributes[ability].VFX_target.instantiate()
+		var apply_vfx : Node2D = card_as_gui.attributes[ability].targeting.VFX_target.instantiate()
 		apply_vfx.finished.connect(apply_vfx.queue_free)
 		target.add_child(apply_vfx)
 		apply_vfx.position = Vector2(150, 250)
 		apply_vfx.emitting = true
+	
+	#displaying_ability_effects = false
+	clear_dead_cards()
+	
 	return
 
 
@@ -909,59 +957,58 @@ var valid_cards : Array[Card_GUI] = []
 ## Currently just used for allowing targeting empty positions on the field
 var valid_metadata : Array[String] = []
 
-func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
-	print("tar type: ", ability.target_type, " amnt: ", ability.targets, " ability name: ", ability.name)
-	if ability.targets <= 0 or ability.target_type == 0b0:
+func get_targets(user:Card_GUI, target_data:TargetData) -> Array[Card_GUI]:
+	if target_data.targets <= 0 or target_data.target_type == 0b0:
 		return []
 	selected_cards = []
 	valid_metadata = [""]
 	valid_cards = []
-	if ability.allowed_metadata & 0b1:
+	if target_data.allowed_metadata & 0b1:
 		valid_metadata.append("empty")
 	$TargetingGUI/Options/Burst/BurstSelect.value = 0
-	if ability.allow_burst and user.burst > 0:
+	if target_data.allow_burst and user.burst > 0:
 		$TargetingGUI/Options/Burst.show()
 		$TargetingGUI/Options/Burst/BurstSelect.max_value = user.burst
 		$TargetingGUI/Options/Burst/BurstAvailable.text = str(user.burst)
 	# Target Validation Logic
 	for card in cards:
 		## For the sake of readability and debugging, these are nested if statements.
-		if not valid_metadata.has(card.input_metadata):
+		if not valid_metadata.has(card.input_metadata) or card.flagged_for_death:
 			continue
 		## So far, the "empty" metadata is only used for the Move targeting, and generally any other use cases I can think of will want to NOT target empty if there's something above it
 		if card.input_metadata == "empty" and not card.manager.check_if_position_is_valid(card.manager_position):
 			continue
 		if card.player_id == user.player_id:
-			if card.manager.identifier == "saferoom" and ability.target_type & 0b01000:
+			if card.manager.identifier == "saferoom" and target_data.target_type & 0b01000:
 				valid_cards.append(card)
-			elif card.manager.identifier != "saferoom" and ability.target_type & 0b00010:
+			elif card.manager.identifier != "saferoom" and target_data.target_type & 0b00010:
 				valid_cards.append(card)
 		else:
-			if card.manager.identifier == "saferoom" and ability.target_type & 0b10000:
+			if card.manager.identifier == "saferoom" and target_data.target_type & 0b10000:
 				valid_cards.append(card)
-			elif card.manager.identifier != "saferoom" and ability.target_type & 0b00100:
+			elif card.manager.identifier != "saferoom" and target_data.target_type & 0b00100:
 				valid_cards.append(card)
 	if valid_cards == []:
 		print("no valid cards found")
 	
-	if not ability.allowed_metadata & 0b1:
+	if not target_data.allowed_metadata & 0b1:
 		print("metadata (if empty not allowed): ", valid_metadata)
 	
 	## NOTE: Don't auto-trigger if the user has burst available to use
-	if (ability.targets < 0 or valid_cards.size() <= ability.targets) and user.burst < 1:
+	if (target_data.targets < 0 or valid_cards.size() <= target_data.targets) and user.burst < 1:
 		return valid_cards
 	$Dimmer.show()
 	$TargetingGUI.show()
 	update_target_display()
 	selecting_cards = true
 	selecting_ability = true
-	max_selections = ability.targets
+	max_selections = target_data.targets
 	for vc in valid_cards:
 		vc.z_index = 5 + vc.manager.z_index
 	var bypass_selection_requirements : bool = false
-	if valid_cards.size() <= ability.targets and not ability.allow_burst:
+	if valid_cards.size() <= target_data.targets and not target_data.allow_burst:
 		return valid_cards
-	elif valid_cards.size() <= ability.targets and user.burst > 0:
+	elif valid_cards.size() <= target_data.targets and user.burst > 0:
 		selected_cards = valid_cards
 		bypass_selection_requirements = true
 		for card in valid_cards:
@@ -974,9 +1021,9 @@ func get_targets(user:Card_GUI, ability:Attribute) -> Array[Card_GUI]:
 			$TargetingGUI.hide()
 			$Dimmer.hide()
 			return []
-		if selected_cards.size() == ability.targets and confirmation[1] == "selection" and ( (user.burst < 1 and ability.allow_burst) or not ability.allow_burst ):
+		if selected_cards.size() == target_data.targets and confirmation[1] == "selection" and ( (user.burst < 1 and target_data.allow_burst) or not target_data.allow_burst ):
 			break
-		if confirmation[1] == "button" and (selected_cards.size() == ability.targets or bypass_selection_requirements):
+		if confirmation[1] == "button" and (selected_cards.size() == target_data.targets or bypass_selection_requirements):
 			break
 	selecting_cards = false
 	selecting_ability = false

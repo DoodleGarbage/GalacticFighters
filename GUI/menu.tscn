@@ -3,6 +3,8 @@
 [ext_resource type="Theme" uid="uid://xog8n7ab0fc8" path="res://Themes/menu_theme.tres" id="1_12752"]
 [ext_resource type="Texture2D" uid="uid://xcwhomf3qbof" path="res://Art/GalacticFightersCoverNoTitle.png" id="2_ldfg3"]
 [ext_resource type="Script" uid="uid://7jiaxk1i40dv" path="res://GUI/main_menu.gd" id="2_o1bug"]
+[ext_resource type="PackedScene" uid="uid://cvc4xsp6kuqdq" path="res://GUI/mod_display.tscn" id="2_urio0"]
+[ext_resource type="Script" uid="uid://b1oa7py3s7815" path="res://GUI/mod_list_handler.gd" id="2_ygayt"]
 [ext_resource type="Texture2D" uid="uid://cyaw3jgvge3hm" path="res://Art/demoTitle.png" id="3_o1bug"]
 [ext_resource type="Script" uid="uid://bo85pa83hor1" path="res://GUI/battle_select.gd" id="5_ar3vo"]
 [ext_resource type="PackedScene" uid="uid://b7u8fehe1jgc" path="res://GUI/deck_menu.tscn" id="5_o1bug"]
@@ -10,16 +12,91 @@
 [ext_resource type="PackedScene" uid="uid://doaiy2ongcjk4" path="res://GUI/mini_deck.tscn" id="8_urio0"]
 [ext_resource type="Script" uid="uid://cxfuxt7ei4sgj" path="res://GUI/copy_button_text.gd" id="9_ygayt"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ygayt"]
+bg_color = Color(0.28485027, 0.2848503, 0.28485018, 1)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_urio0"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8s5l4"]
 bg_color = Color(0.40784314, 0.003921569, 0.05490196, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c4qn5"]
-bg_color = Color(0.8608791, 0.8608792, 0.86087906, 1)
+bg_color = Color(0.86380994, 0.8623353, 0.8627013, 1)
+
+[sub_resource type="Theme" id="Theme_ygayt"]
+Label/colors/font_color = Color(0.47058824, 0.4509804, 0.039215688, 1)
+Label/font_sizes/font_size = 32
+Label/styles/normal = SubResource("StyleBoxFlat_c4qn5")
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ygayt"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_c13uq"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_c17gv"]
 
 [node name="Root" type="Node" unique_id=595754331]
 script = ExtResource("2_o1bug")
+base_hash = "98edae7b77cfc0529d6c074a23986d81"
+
+[node name="ModList" type="CanvasLayer" parent="." unique_id=936775308]
+layer = 2
+visible = false
+script = ExtResource("2_ygayt")
+
+[node name="InputBlocker" type="Control" parent="ModList" unique_id=1041945340]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BG" type="PanelContainer" parent="ModList" unique_id=2013749698]
+anchors_preset = -1
+anchor_left = 0.2
+anchor_top = 0.05
+anchor_right = 0.8
+anchor_bottom = 0.95
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ygayt")
+
+[node name="List" type="VBoxContainer" parent="ModList/BG" unique_id=445467964]
+layout_mode = 2
+alignment = 2
+
+[node name="Label" type="Label" parent="ModList/BG/List" unique_id=1879181290]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "Mod List"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="ModList/BG/List" unique_id=313612851]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ModList" type="VBoxContainer" parent="ModList/BG/List/Scroll" unique_id=1099369393]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ModDisplay" parent="ModList/BG/List/Scroll/ModList" unique_id=380295319 instance=ExtResource("2_urio0")]
+layout_mode = 2
+
+[node name="AcceptCancel" type="HBoxContainer" parent="ModList/BG/List" unique_id=619849343]
+layout_mode = 2
+
+[node name="Apply" type="Button" parent="ModList/BG/List/AcceptCancel" unique_id=94722389]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 64
+disabled = true
+text = "Apply"
+
+[node name="Cancel" type="Button" parent="ModList/BG/List/AcceptCancel" unique_id=230654592]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 64
+text = "Cancel"
 
 [node name="MainMenu" type="CanvasLayer" parent="." unique_id=997904690]
 
@@ -271,23 +348,85 @@ layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_8s5l4")
 text = "EXIT"
 
-[node name="Version" type="Label" parent="MainMenu" unique_id=1950586489]
+[node name="CornerInfo" type="VBoxContainer" parent="MainMenu" unique_id=824153217]
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_top = -23.0
-offset_right = 97.0
+offset_top = -45.0
+offset_right = 296.0
 grow_vertical = 0
+alignment = 2
+
+[node name="Mods" type="Button" parent="MainMenu/CornerInfo" unique_id=451506500]
+layout_mode = 2
+text = "Mods"
+
+[node name="Version" type="Label" parent="MainMenu/CornerInfo" unique_id=1950586489]
+visible = false
+layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("StyleBoxFlat_c4qn5")
 text = "Version: XXX (hash)"
+
+[node name="VerCheck" type="HBoxContainer" parent="MainMenu/CornerInfo" unique_id=1233495239]
+layout_mode = 2
+theme = SubResource("Theme_ygayt")
+theme_override_constants/separation = 0
+
+[node name="Version" type="Label" parent="MainMenu/CornerInfo/VerCheck" unique_id=959878104]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_c4qn5")
+text = "Version: "
+
+[node name="Num" type="Label" parent="MainMenu/CornerInfo/VerCheck" unique_id=827102029]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_c4qn5")
+text = "X.X.X"
+
+[node name="Checksum" type="Label" parent="MainMenu/CornerInfo/VerCheck" unique_id=204416162]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_c4qn5")
+text = " Checksum: ("
+
+[node name="Hash" type="Label" parent="MainMenu/CornerInfo/VerCheck" unique_id=1640750956]
+layout_mode = 2
+tooltip_text = "Checksum: xx2mxisad9iu9v89ase"
+mouse_filter = 1
+text = "1b2c"
+
+[node name="Copy" type="Button" parent="MainMenu/CornerInfo/VerCheck/Hash" unique_id=1548879357]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/normal = SubResource("StyleBoxEmpty_ygayt")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_c13uq")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_c17gv")
+
+[node name="Close" type="Label" parent="MainMenu/CornerInfo/VerCheck" unique_id=1626145878]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_c4qn5")
+text = ")"
 
 [node name="Gameplay" type="CanvasLayer" parent="." unique_id=1978859045]
 visible = false
 
 [node name="Playfield" parent="Gameplay" unique_id=178232400 instance=ExtResource("6_bi43m")]
 
+[connection signal="reload_scene" from="ModList" to="." method="_on_reload_scene"]
+[connection signal="pressed" from="ModList/BG/List/AcceptCancel/Apply" to="ModList" method="_on_apply_pressed"]
+[connection signal="pressed" from="ModList/BG/List/AcceptCancel/Cancel" to="ModList" method="_on_cancel_pressed"]
 [connection signal="pressed" from="MainMenu/Menu/VBoxContainer/Start" to="." method="_start_pressed"]
 [connection signal="pressed" from="MainMenu/Menu/VBoxContainer/AccessedMenu/Battle" to="." method="prepare_battle"]
 [connection signal="pressed" from="MainMenu/Menu/VBoxContainer/AccessedMenu/Deck" to="." method="_on_deck_pressed"]
@@ -301,4 +440,6 @@ visible = false
 [connection signal="pressed" from="MainMenu/Lobby/corner/ready" to="." method="ready_button_pressed"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/gamestarter" to="." method="button_start_game"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/exit" to="." method="_quit_lobby"]
+[connection signal="pressed" from="MainMenu/CornerInfo/Mods" to="." method="_on_mods_pressed"]
+[connection signal="pressed" from="MainMenu/CornerInfo/VerCheck/Hash/Copy" to="." method="_on_hash_checksum_copy_pressed"]
 [connection signal="return_to_lobby" from="Gameplay/Playfield" to="." method="return_to_menu"]

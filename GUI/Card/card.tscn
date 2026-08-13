@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://bckvxg0glp7ca" path="res://GUI/Card/card_gui.gd" id="2_bi2p1"]
 [ext_resource type="Texture2D" uid="uid://b2y2e8ql0nlfi" path="res://Art/card_bg_ex.png" id="3_u2spw"]
 [ext_resource type="PackedScene" uid="uid://h4krniap83us" path="res://GUI/Card/stat_indicator.tscn" id="4_egv06"]
-[ext_resource type="Texture2D" uid="uid://clk4jjsq7lt27" path="res://Data/Image/dummy.png" id="4_t7cws"]
+[ext_resource type="Texture2D" uid="uid://clk4jjsq7lt27" path="res://Data/Vanilla/Images/dummy.png" id="4_t7cws"]
 [ext_resource type="Texture2D" uid="uid://best5vs0rlm2x" path="res://Art/AttackFinal.png" id="5_at4c8"]
 [ext_resource type="Texture2D" uid="uid://bpbtsbrb3pkqe" path="res://Art/DefenseFinal.png" id="6_vxewq"]
 [ext_resource type="Texture2D" uid="uid://b0oirvmwsh773" path="res://Art/HealthFinal.png" id="7_t7cws"]

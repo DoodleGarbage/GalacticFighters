@@ -2,20 +2,28 @@ extends Node
 
 
 
-
 func _init() -> void:
 	for internal in [true,false]:
-		load_images(internal)
-		load_scene("VFX", internal)
-		load_scene("PowerScript", internal)
-		load_resource("Attribute", internal)
-		load_resource("Character", internal)
-		load_resource("Deck", internal)
+		init_mods(internal)
+	reload_mods()
 
 ## Default Resources
 
-const VFX_character_death : PackedScene = preload("res://Data/VFX/death_vfx.tscn")
-const VFX_null : PackedScene = preload("res://Data/VFX/null_vfx.tscn")
+const VFX_character_death : PackedScene = preload("res://Data/Vanilla/VFX/death_vfx.tscn")
+const VFX_null : PackedScene = preload("res://Data/Vanilla/VFX/null_vfx.tscn")
+
+## Tracks which mods are considered 'loaded' - TODO: read from a saved "Mod List" .txt file, and automatically add newly loaded mods to it
+var loaded_mods : Array[Mod] = []
+var loaded_hash : PackedByteArray = []
+
+## Disabled Resources
+
+#var disabled_attributes : Array[Attribute] = []
+#var disabled_pscripts : Array[GDScript] = []
+#var disabled_characters : Array[Card] = []
+#var disabled_decks : Array[Deck] = []
+#var disabled_vfx : Array[PackedScene] = []
+#var diabled_images : Array[Texture] = []
 
 ## Loaded Resources
 
@@ -26,6 +34,26 @@ var decks : Array[Deck] = []
 var vfx : Array[PackedScene] = [] ## Isn't restricted to particle effect nodes to allow for more creative effects, so long as the root node script has a few properties of GPUParticle2D - namely, 'position',  'amount', 'emitting', and signal 'finished'
 var images : Array[Texture] = []
 
+func reload_mods() -> void:
+	attributes = []
+	pscripts = []
+	characters = []
+	decks = []
+	vfx = []
+	images = []
+	for mod in loaded_mods:
+		if mod.enabled:
+			verify_mod(mod)
+	for mod in loaded_mods:
+		if mod.enabled:
+			load_mod(mod)
+	var total_hash := HashingContext.new()
+	total_hash.start(HashingContext.HASH_MD5)
+	for mod in loaded_mods:
+		if not mod.enabled:
+			continue
+		total_hash.update(mod.hash)
+	loaded_hash = total_hash.finish()
 
 
 ## Resource search functions
@@ -70,11 +98,106 @@ func find_scene(scene_type : String, scenename:String) -> Variant:
 
 ## Resource load functions
 
-func load_images(internal:bool = true) -> void:
-	var dir_path : String = "res://Data/Image/" if internal else "user://Image/"
+func init_mods(internal:bool) -> void:
+	var mod_path : String = "res://Data/" if internal else "user://Image/"
+	var dir = DirAccess.open(mod_path)
+	if !dir:
+		push_warning("No mods were found inside %s!" % mod_path)
+	dir.list_dir_begin()
+	var current_mod : String = dir.get_next()
+	while current_mod != "":
+		if not dir.current_is_dir():
+			pass
+		else:
+			var mod_dir = DirAccess.open(mod_path + current_mod)
+			mod_dir.list_dir_begin()
+			var mod_file : String = mod_dir.get_next()
+			var new_mod : Mod = Mod.new()
+			while mod_file != "":
+				## This block of code searches for a .ini file that has "modname = name_of_mod_here" then sets the 'mod' property for everything to this mod name
+				## NOTE: Add any mod config reads here
+				if not mod_file.ends_with(".ini") or mod_dir.current_is_dir():
+					mod_file = mod_dir.get_next()
+					continue
+				var mod_file_read := FileAccess.open(mod_path + current_mod + "/" + mod_file, FileAccess.READ)
+				while mod_file_read.get_position() < mod_file_read.get_length():
+					var line : String = mod_file_read.get_line()
+					line = line.remove_char(32) # From ASCII table, decimal, 32 is the space character
+					var split : PackedStringArray = line.split("=",false,1)
+					if split.size() >= 2 and split[0].to_lower() == "modname":
+						new_mod.name = split[1]
+					if split.size() >= 2 and split[0].to_lower() == "modversion":
+						for ver:String in split[1].split(".",false):
+							new_mod.version.append(ver.to_int())
+				## EOF mod .ini
+				## NOTE: if there are multiple .ini files, we'll read all of them, any new definitions of modname or modversion overwriting the old one
+				mod_file = mod_dir.get_next()
+			if not new_mod.is_valid_mod():
+				push_warning("A mod (%s) did not have a valid mod config!" % current_mod)
+				current_mod = dir.get_next()
+				continue
+			new_mod.mod_id = get_unique_mod_id()
+			new_mod.mod_path = mod_path + current_mod
+			new_mod.internal = internal
+			loaded_mods.append(new_mod)
+			verify_mod(new_mod)
+		current_mod = dir.get_next()
+
+## Checks if the mod is newer (and disables any older mods), disabled if it is less new than any other mod and ultimately returns if the mod is enabled/disabled.
+func verify_mod(mod:Mod) -> bool:
+	var name_check : Callable = func(element:Mod): return mod.name == element.name and element.enabled and element.mod_id != mod.mod_id # Wowie I used a lambda :)
+	var check : int = loaded_mods.find_custom(name_check)
+	var we_are_newer : bool = false
+	while check > -1 and not we_are_newer:
+		var i : int = 0
+		
+		while ( i < loaded_mods[check].version.size() and i < mod.version.size()):
+			if mod.version[i] > loaded_mods[check].version[i]:
+				we_are_newer = true
+				break
+			i += 1
+		if not we_are_newer and mod.version.size() > loaded_mods[check].version.size():
+			we_are_newer = true
+		if not we_are_newer:
+			mod.enabled = false
+			break
+		else:
+			push_warning("Disabled mod %s (ver %s) as a newer version was loaded (%s)" % [loaded_mods[check].name, loaded_mods[check].version, mod.version])
+			loaded_mods[check].enabled = false
+			check = loaded_mods.find_custom(name_check)
+			continue
+	return mod.enabled
+
+## Returns an ID not shared by all other cards
+func get_unique_mod_id() -> int:
+	var invalid_id : bool = true
+	var new_id : int = 0
+	while invalid_id:
+		new_id = randi()
+		invalid_id = false
+		for mod in loaded_mods:
+			if mod.mod_id == new_id:
+				invalid_id = true
+	return new_id
+
+
+func load_mod(mod:Mod) -> void:
+	mod.hashing_context = HashingContext.new()
+	mod.hashing_context.start(HashingContext.HASH_MD5)
+	load_images(mod.mod_path, mod, mod.internal)
+	load_scene(mod.mod_path, mod, "VFX", mod.internal)
+	load_scene(mod.mod_path, mod, "PowerScript", mod.internal)
+	load_resource(mod.mod_path, mod, "Attribute", mod.internal)
+	load_resource(mod.mod_path, mod, "Character", mod.internal)
+	load_resource(mod.mod_path, mod, "Deck", mod.internal)
+	mod.hash = mod.hashing_context.finish()
+
+
+func load_images(mod_path:String, mod:Mod, internal:bool) -> void:
+	var dir_path : String = mod_path + "/Images"
 	var dir = DirAccess.open(dir_path)
 	if !dir:
-		push_warning("No folders was found for %s!" % dir_path)
+		#push_warning("No folder was found for %s!" % dir_path)
 		return
 	dir.list_dir_begin()
 	var current_file : String = dir.get_next()
@@ -83,7 +206,7 @@ func load_images(internal:bool = true) -> void:
 			pass
 		elif current_file.ends_with(".png") or current_file.ends_with(".jpg") or current_file.ends_with(".jpeg"):
 			if internal: ## We need special loading handling if we're loading in res://, as load_from_file will not work on export.
-				var new_text : Texture = load(dir_path + current_file)
+				var new_text : Texture = load(dir_path + "/" + current_file)
 				new_text.resource_name = current_file.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg")
 				images.append(new_text)
 				current_file = dir.get_next()
@@ -94,16 +217,16 @@ func load_images(internal:bool = true) -> void:
 				current_file = dir.get_next()
 				continue
 			var as_texture = ImageTexture.create_from_image(new_image)
-			as_texture.resource_name = current_file.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg")
+			as_texture.resource_name = mod.name + ":" +  current_file.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg")
 			images.append(as_texture)
 		current_file= dir.get_next()
 	return
 
-func load_scene(resource_type : String, internal:bool=true) -> void:
-	var directory : String = "res://Data/%s/" % resource_type if internal else "user://%s/" % resource_type
+func load_scene(mod_path : String, mod:Mod, resource_type : String, internal:bool=true) -> void:
+	var directory : String = mod_path + ("/%s" % (resource_type + "s"))
 	var dir : DirAccess = DirAccess.open(directory)
 	if !dir:
-		push_warning("No folder was found for %s: %s" % [resource_type, directory])
+		#push_warning("No folder was found for %s: %s" % [resource_type, directory])
 		return
 	dir.list_dir_begin()
 	var next : String = dir.get_next()
@@ -113,23 +236,25 @@ func load_scene(resource_type : String, internal:bool=true) -> void:
 			next = dir.get_next()
 			continue
 		if (resource_type == "PowerScript" and not next.ends_with(".gd")) or (resource_type == "VFX" and not next.ends_with(".tscn")):
-			push_warning("There is an incorrect file type for %s in directory. File: %s" % [resource_type, directory + next])
+			#push_warning("There is an incorrect file type for %s in directory. File: %s" % [resource_type, directory + next])
 			next = dir.get_next()
 			continue
-		var new_scene = load(directory + next)
+		var new_scene = load(directory + "/" + next)
 		new_scene.resource_name = next.trim_suffix(".gd").trim_suffix(".tscn")
 		match(resource_type):
 			"VFX": vfx.append(new_scene)
-			"PowerScript": pscripts.append(new_scene)
+			"PowerScript": 
+				mod.hashing_context.update(FileAccess.get_file_as_bytes(directory + "/" + next))
+				pscripts.append(new_scene)
 		next = dir.get_next()
 	return
 
 
-func load_resource(resource_name:String, internal:bool=true) -> void:
-	var tar_dir : String = "res://Data/" if internal else "user://"
-	var dir : DirAccess = DirAccess.open(tar_dir + resource_name)
+func load_resource(mod_path : String, mod:Mod, resource_name:String, internal:bool=true) -> void:
+	var tar_dir : String = mod_path + "/" + resource_name + "s"
+	var dir : DirAccess = DirAccess.open(tar_dir)
 	if !dir:
-		push_warning("No folder was found for %s%s!" % [tar_dir, resource_name])
+		#push_warning("No folder was found for %s%s!" % [tar_dir, resource_name])
 		return
 	dir.list_dir_begin()
 	var next : String = dir.get_next()
@@ -139,13 +264,14 @@ func load_resource(resource_name:String, internal:bool=true) -> void:
 			next = dir.get_next()
 			continue
 		if next.ends_with(".json"):
-			var current_file : FileAccess = FileAccess.open(tar_dir + resource_name + "/" + next, FileAccess.READ)
-			load_resource_from_file(current_file, resource_name)
+			mod.hashing_context.update(FileAccess.get_file_as_bytes(tar_dir + "/" + next))
+			var current_file : FileAccess = FileAccess.open(tar_dir + "/" + next, FileAccess.READ)
+			load_resource_from_file(current_file, resource_name, mod)
 		next = dir.get_next()
 
 
 
-func load_resource_from_file(file:FileAccess, resource_name:String) -> void:
+func load_resource_from_file(file:FileAccess, resource_name:String, mod:Mod) -> void:
 	var JSONData = JSON.new()
 	var fileJSON : String = file.get_as_text()
 	var error = JSONData.parse(fileJSON)
@@ -160,26 +286,33 @@ func load_resource_from_file(file:FileAccess, resource_name:String) -> void:
 		match(resource_name):
 			"Attribute": ## Must be loaded: Images, Pscripts
 				var new_attr : Attribute = Attribute.new()
+				
+				new_attr.mod = mod
 				new_attr.name = resource["Name"]
 				
 				new_attr.icon = find_image(resource["Icon"])
 				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
 				new_attr.type = resource["Type"]
 				new_attr.desc = resource["Desc"]
-				new_attr.allow_burst = resource["AllowBurst"]
-				new_attr.targets = resource["Targets"]
-				new_attr.target_type = resource["TargetType"]
-				new_attr.allowed_metadata = resource["AllowedMetadata"]
+				
+				var targeting_data : TargetData = TargetData.new()
+				targeting_data.allow_burst = resource["AllowBurst"]
+				targeting_data.targets = resource["Targets"]
+				targeting_data.target_type = resource["TargetType"]
+				targeting_data.allowed_metadata = resource["AllowedMetadata"]
+				
 				new_attr.pscript_sync_data.assign(resource["SyncData"])
 				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
 				new_attr.duration = resource["Duration"]
 				
-				new_attr.VFX_target = find_resource("VFX", resource["VFX_target"])
-				if new_attr.VFX_target == null:
-					new_attr.VFX_target = VFX_null
-				new_attr.VFX_damage = find_resource("VFX", resource["VFX_damage"])
-				if new_attr.VFX_damage == null:
-					new_attr.VFX_target = VFX_null
+				var VFX_target = find_resource("VFX", resource["VFX_target"])
+				if VFX_target == null:
+					targeting_data.VFX_target = VFX_null
+				var VFX_damage = find_resource("VFX", resource["VFX_damage"])
+				if VFX_damage == null:
+					targeting_data.VFX_target = VFX_null
+				
+				new_attr.targeting = targeting_data
 				
 				attributes.append(new_attr)
 			"PowerScript":
@@ -187,6 +320,8 @@ func load_resource_from_file(file:FileAccess, resource_name:String) -> void:
 				pass
 			"Character": ## Must be loaded: Attributes, Images
 				var new_char : Card = Card.new()
+				
+				new_char.mod = mod
 				new_char.type = resource["Type"]
 				new_char.name = resource["Name"]
 				new_char.full_profile = find_image(resource["FullProfile"])
