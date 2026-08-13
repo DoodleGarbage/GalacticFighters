@@ -1,5 +1,7 @@
 extends Node
 
+## TODO: Move decks to be saved to a user-side .json file (coincides with making the Deck Builder)
+## TODO: Save the loaded mods on/off state to a .ini config file on user-side (instead of auto-enabling everything on load)
 
 
 func _init() -> void:

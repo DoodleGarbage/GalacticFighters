@@ -52,10 +52,11 @@ z_index = -3
 custom_minimum_size = Vector2(300, 500)
 offset_right = 300.0
 offset_bottom = 500.0
+scale = Vector2(0.4, 0.4)
 mouse_filter = 2
 script = ExtResource("1_6dmt0")
-input_metadata = "empty"
 dont_sync = true
+input_metadata = "empty"
 priority = -1
 
 [node name="Card" type="Control" parent="." unique_id=1328208938]

@@ -504,13 +504,14 @@ func add_card(card : Card, docker : Docker, player_id:int, unique_id : int = -1)
 	return new_card
 
 ## Adds an Empty card for targeting - used for the fields
-func add_shadow_card(docker : Docker, manager_pos : int, player_id:int, unique_id : int = -1) -> void:
-	var new_shadow := empty_card_scene.instantiate()
-	if unique_id != -1:
+func add_shadow_card(docker : Docker, manager_pos : int, player_id:int, unique_id : int = 0) -> void:
+	var new_shadow : Card_GUI = empty_card_scene.instantiate()
+	if unique_id == 0:
 		new_shadow.unique_id = get_unique_card_id()
 	else:
 		new_shadow.unique_id = unique_id
-	docker.add_child(new_shadow)
+	## If we add the child to the docker, it gets sized to the docker, but the Control Scale is NOT changed, which causes it to have a larger selection area than it visually has
+	docker.get_parent().add_child(new_shadow)
 	cards.append(new_shadow)
 	new_shadow.player_id = player_id
 	new_shadow.manager = docker
@@ -770,14 +771,18 @@ func _input(event: InputEvent) -> void:
 				continue
 			var rect : Rect2 = Rect2(card.global_position, card.size * card.scale)
 			if rect.has_point(get_global_mouse_position()):
+				print("Adding card as possible: ", card.name)
 				hovered_cards.append(card)
 		## Highest z_index card is [0] - may be non-deterministic for same z_indexes
 		var sorted_hovered_cards : Array[Card_GUI] = sort_card_gui_array(hovered_cards, "priority", true)
 		if not menu_open and event.is_action_pressed("card_interact"):
 			for card in sorted_hovered_cards:
+				print("I am a card, name: ", card.name, " metadata: ", card.input_metadata, " my unique ID is: ", card.unique_id)
+			for card in sorted_hovered_cards:
 				if card.input_metadata != "":
 					continue
 				open_interaction_menu(card)
+				break
 			return
 		if selecting_cards and event.is_action_pressed("card_select"):
 			## Start with the highest z_index card, then work down list to find a valid selection target
