@@ -7,8 +7,8 @@ extends Node
 func _init() -> void:
 	for internal in [true,false]:
 		init_mods(internal)
-	reload_mods()
-	load_decks()
+	reload_mods(true)
+	init_decks()
 
 ## Default Resources
 
@@ -42,6 +42,21 @@ func is_deck_valid(deck:Deck) -> bool:
 		return false
 	return true
 
+func can_deck_load(deck:Array[String]) -> bool:
+	var valid : bool = true
+	for item in deck:
+		var split : PackedStringArray = item.split(":",false,2)
+		if split.size() < 3: # Character:mod_name:chara_name <- 3 splits minimum
+			continue
+		var any_match : bool = false
+		for mod in loaded_mods:
+			if mod.enabled and mod.name == split[1]:
+				any_match = true
+		if not any_match:
+			valid = false
+			break
+	print("deck loadability returned: ", valid)
+	return valid
 
 ## Tracks which mods are considered 'loaded' - TODO: read from a saved "Mod List" .txt file, and automatically add newly loaded mods to it
 var loaded_mods : Array[Mod] = []
@@ -54,14 +69,22 @@ var pscripts : Array[GDScript] = [] # PowerScripts, but can't be a typed array
 var characters : Array[Card] = []
 var items : Array[Item] = []
 var decks : Array[Deck] = [] # Holds the user's saved decks
+var temp_disabled_decks : Array = [] # All decks are put here then reloaded when reloading mods
+var disabled_decks : Array = [] # Holds the unloaded decks that are missing mod dependencies
 var vfx : Array[PackedScene] = [] ## Isn't restricted to particle effect nodes to allow for more creative effects, so long as the root node script has a few properties of GPUParticle2D - namely, 'position',  'amount', 'emitting', and signal 'finished'
 var images : Array[Texture] = []
 
-func reload_mods() -> void:
+func reload_mods(initial:bool=false) -> void:
+	temp_disabled_decks = []
+	for deck in decks:
+		temp_disabled_decks.append([deck.name, Deck.to_str(deck)])
+	temp_disabled_decks.append_array(disabled_decks)
 	attributes = []
 	pscripts = []
 	characters = []
+	items = []
 	decks = []
+	disabled_decks = []
 	vfx = []
 	images = []
 	for mod in loaded_mods:
@@ -77,6 +100,8 @@ func reload_mods() -> void:
 			continue
 		total_hash.update(mod.hash)
 	loaded_hash = total_hash.finish()
+	if not initial:
+		load_decks()
 
 
 ## Resource search functions
@@ -105,6 +130,7 @@ func find_resource(resource_type:String, resource_name:String) -> Variant:
 	push_warning("Could not find resource of type %s for name \"%s\"!" % [resource_type, resource_name])
 	return null
 
+
 func find_image(imagename:String) -> Texture:
 	for image : Texture in images:
 		if image.resource_name == imagename:
@@ -127,7 +153,7 @@ func find_scene(scene_type : String, scenename:String) -> Variant:
 ## Resource load functions
 
 func init_mods(internal:bool) -> void:
-	var mod_path : String = "res://Data/" if internal else "user://Image/"
+	var mod_path : String = "res://Data/" if internal else "user://"
 	var dir = DirAccess.open(mod_path)
 	if !dir:
 		push_warning("No mods were found inside %s!" % mod_path)
@@ -208,19 +234,8 @@ func get_unique_mod_id() -> int:
 				invalid_id = true
 	return new_id
 
-func load_mod(mod:Mod) -> void:
-	mod.hashing_context = HashingContext.new()
-	mod.hashing_context.start(HashingContext.HASH_MD5)
-	load_images(mod.mod_path, mod, mod.internal)
-	load_scene(mod.mod_path, mod, "VFX", mod.internal)
-	load_scene(mod.mod_path, mod, "PowerScript", mod.internal)
-	load_resource(mod.mod_path, mod, "Attribute", mod.internal)
-	load_resource(mod.mod_path, mod, "Character", mod.internal)
-	load_resource(mod.mod_path, mod, "Item", mod.internal)
-	load_resource(mod.mod_path, mod, "Deck", mod.internal)
-	mod.hash = mod.hashing_context.finish()
-
-func load_decks() -> void:
+## After loading initial decks, some will be disabled, some will be enabled.
+func init_decks() -> void:
 	var dir_path : String = "user://"
 	var dir = DirAccess.open(dir_path)
 	if !dir:
@@ -242,10 +257,29 @@ func load_decks() -> void:
 			load_resource_from_file(access, "Deck", null, mod_file)
 			current_file = dir.get_next()
 
+func load_mod(mod:Mod) -> void:
+	mod.hashing_context = HashingContext.new()
+	mod.hashing_context.start(HashingContext.HASH_MD5)
+	load_images(mod.mod_path, mod, mod.internal)
+	load_scene(mod.mod_path, mod, "VFX", mod.internal)
+	load_scene(mod.mod_path, mod, "PowerScript", mod.internal)
+	load_resource(mod.mod_path, mod, "Attribute", mod.internal)
+	load_resource(mod.mod_path, mod, "Character", mod.internal)
+	load_resource(mod.mod_path, mod, "Item", mod.internal)
+	#load_resource(mod.mod_path, mod, "Deck", mod.internal)
+	mod.hash = mod.hashing_context.finish()
+
+func load_decks() -> void:
+	for deck in temp_disabled_decks:
+		load_resource_data({"Name":deck[0],"Deck":deck[1]}, "Deck")
+	temp_disabled_decks = []
+
 func save_decks() -> void:
 	var deck_dicts : Array[Dictionary] = []
 	for deck in decks:
 		deck_dicts.append(Deck.to_dict(deck))
+	for dis_deck in disabled_decks:
+		deck_dicts.append({"Name":dis_deck[0],"Deck":dis_deck[1]})
 	var file : String = "SavedUserDecks\n" + JSON.stringify(deck_dicts)
 	var fl_ac := FileAccess.open("user://user_decks.json", FileAccess.WRITE)
 	fl_ac.store_string(file)
@@ -341,102 +375,113 @@ func load_resource_from_file(file:FileAccess, resource_name:String, mod:Mod, mod
 		push_error("Json file for resource type: ", resource_name, " does not contain an Array! File name: ", file)
 		return
 	for resource in data:
-		match(resource_name):
-			"Attribute": ## Must be loaded: Images, Pscripts
-				var new_attr : Attribute = Attribute.new()
-				
-				new_attr.mod = mod
-				new_attr.name = resource["Name"]
-				new_attr.desc = resource["Desc"]
-				
-				new_attr.icon = find_image(resource["Icon"])
-				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
-				new_attr.type = resource["Type"]
-				
-				
-				var targeting_data : TargetData = TargetData.new()
-				targeting_data.allow_burst = resource["AllowBurst"]
-				targeting_data.targets = resource["Targets"]
-				targeting_data.target_type = resource["TargetType"]
-				targeting_data.allowed_metadata = resource["AllowedMetadata"]
-				
-				new_attr.pscript_sync_data.assign(resource["SyncData"])
-				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
-				new_attr.duration = resource["Duration"]
-				
-				var VFX_target = find_resource("VFX", resource["VFX_target"])
-				if VFX_target == null:
-					new_attr.VFX_target = VFX_null
-				var VFX_damage = find_resource("VFX", resource["VFX_damage"])
-				if VFX_damage == null:
-					new_attr.VFX_target = VFX_null
-				
-				new_attr.targeting = targeting_data
-				
-				attributes.append(new_attr)
-			"Character": ## Must be loaded: Attributes, Images
-				var new_char : Card = Card.new()
-				
-				new_char.mod = mod
-				new_char.type = resource["Type"]
-				new_char.name = resource["Name"]
-				new_char.full_profile = find_image(resource["FullProfile"])
-				new_char.mini_profile = find_image(resource["MiniProfile"])
-				new_char.max_health = resource["Health"]
-				new_char.defense = resource["Defense"]
-				new_char.attack = resource["Attack"]
-				new_char.burst = resource["Burst"]
-				new_char.heal = resource["Heal"]
-				new_char.armor_pierce = resource["ArmorPierce"]
-				for atrru in resource["Attributes"]:
-					var atri = find_resource("Attribute", atrru)
-					if atri != null:
-						new_char.attributes.append(atri)
-				
-				var new_vfx_death = find_resource("VFX", resource["VFX_death"])
-				if new_vfx_death == null:
-					new_vfx_death = VFX_character_death
-				new_char.VFX_death = new_vfx_death
-				
-				characters.append(new_char)
-			"Deck": ## Must be loaded: Everything else
-				var new_deck : Deck = Deck.new()
-				new_deck.name = resource["Name"]
-				var deck_strings : Array[String] = []
-				deck_strings.assign(resource["Deck"])
-				for component in deck_strings:
-					var split := component.split(":", true, 1)
-					match(split[0]):
-						"Character":
-							var chara : Card = find_resource("Character", split[1])
-							if chara != null:
-								new_deck.characters.append(chara)
-						"Item":
-							var itm : Item = find_resource("Item", split[1])
-							if itm != null:
-								new_deck.items.append(itm)
-						"Gadget":
-							var gdg : Item = find_resource("Item", split[1])
-							if gdg != null:
-								new_deck.gadgets.append(gdg)
-						"Sword":
-							var swrd : Item = find_resource("Item", split[1])
-							if swrd != null:
-								new_deck.sword = swrd
-				if not (new_deck.characters and new_deck.items and new_deck.gadgets and new_deck.sword):
-					continue
-				decks.append(new_deck)
-			"Item": ## Must be loaded: Attributes, Images
-				var new_item : Item = Item.new()
-				new_item.mod = mod
-				new_item.name = resource["Name"]
-				new_item.desc = resource["Desc"]
-				new_item.icon = find_image(resource["Icon"])
-				
-				new_item.type = resource["Type"]
-				new_item.effect = find_resource("Attribute", resource["Effect"])
-				
-				new_item.uses = resource["Uses"]
-				new_item.cost = resource["Cost"]
-				
-				items.append(new_item)
+		load_resource_data(resource, resource_name, mod)
+
+func load_resource_data(resource:Dictionary, resource_name:String, mod:Mod=null) -> void:
+	match(resource_name):
+		"Attribute": ## Must be loaded: Images, Pscripts
+			var new_attr : Attribute = Attribute.new()
+			new_attr.mod = mod
+			new_attr.name = resource["Name"]
+			new_attr.desc = resource["Desc"]
+			
+			new_attr.icon = find_image(resource["Icon"])
+			new_attr.pscript = find_resource("Pscript", resource["Pscript"])
+			new_attr.type = resource["Type"]
+			
+			
+			var targeting_data : TargetData = TargetData.new()
+			targeting_data.allow_burst = resource["AllowBurst"]
+			targeting_data.targets = resource["Targets"]
+			targeting_data.target_type = resource["TargetType"]
+			targeting_data.allowed_metadata = resource["AllowedMetadata"]
+			
+			new_attr.pscript_sync_data.assign(resource["SyncData"])
+			new_attr.pscript = find_resource("Pscript", resource["Pscript"])
+			new_attr.duration = resource["Duration"]
+			
+			var VFX_target = find_resource("VFX", resource["VFX_target"])
+			if VFX_target == null:
+				new_attr.VFX_target = VFX_null
+			var VFX_damage = find_resource("VFX", resource["VFX_damage"])
+			if VFX_damage == null:
+				new_attr.VFX_target = VFX_null
+			
+			new_attr.targeting = targeting_data
+			
+			attributes.append(new_attr)
+		"Character": ## Must be loaded: Attributes, Images
+			var new_char : Card = Card.new()
+			
+			new_char.mod = mod
+			new_char.type = resource["Type"]
+			new_char.name = resource["Name"]
+			new_char.full_profile = find_image(resource["FullProfile"])
+			new_char.mini_profile = find_image(resource["MiniProfile"])
+			new_char.max_health = resource["Health"]
+			new_char.defense = resource["Defense"]
+			new_char.attack = resource["Attack"]
+			new_char.burst = resource["Burst"]
+			new_char.heal = resource["Heal"]
+			new_char.armor_pierce = resource["ArmorPierce"]
+			for atrru in resource["Attributes"]:
+				var atri = find_resource("Attribute", atrru)
+				if atri != null:
+					new_char.attributes.append(atri)
+			
+			var new_vfx_death = find_resource("VFX", resource["VFX_death"])
+			if new_vfx_death == null:
+				new_vfx_death = VFX_character_death
+			new_char.VFX_death = new_vfx_death
+			
+			characters.append(new_char)
+		"Deck": ## Must be loaded: Everything else
+			for deck in decks:
+				if deck.name == resource["Name"]:
+					push_warning("Deck naming conflict, skipping. (Name: %s)" % deck.name)
+					return
+			var new_deck : Deck = Deck.new()
+			new_deck.name = resource["Name"]
+			var deck_strings : Array[String] = []
+			deck_strings.assign(resource["Deck"])
+			var continue_loading : bool = can_deck_load(deck_strings)
+			if not continue_loading: # A mod that this deck depends on isn't loaded, so we can't load this deck
+				print("Deck failed the mod loading check")
+				disabled_decks.append([resource["Name"], deck_strings]) # We stow it away since we don't want to delete the deck when we save over the saved decks file.
+				return
+			for component in deck_strings:
+				var split := component.split(":", true, 1)
+				match(split[0]):
+					"Character":
+						var chara : Card = find_resource("Character", split[1])
+						if chara != null:
+							new_deck.characters.append(chara)
+					"Item":
+						var itm : Item = find_resource("Item", split[1])
+						if itm != null:
+							new_deck.items.append(itm)
+					"Gadget":
+						var gdg : Item = find_resource("Item", split[1])
+						if gdg != null:
+							new_deck.gadgets.append(gdg)
+					"Sword":
+						var swrd : Item = find_resource("Item", split[1])
+						if swrd != null:
+							new_deck.sword = swrd
+			if new_deck.is_empty(): # skip over empty decks
+				return
+			decks.append(new_deck)
+		"Item": ## Must be loaded: Attributes, Images
+			var new_item : Item = Item.new()
+			new_item.mod = mod
+			new_item.name = resource["Name"]
+			new_item.desc = resource["Desc"]
+			new_item.icon = find_image(resource["Icon"])
+			
+			new_item.type = resource["Type"]
+			new_item.effect = find_resource("Attribute", resource["Effect"])
+			
+			new_item.uses = resource["Uses"]
+			new_item.cost = resource["Cost"]
+			
+			items.append(new_item)

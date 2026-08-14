@@ -130,6 +130,8 @@ func add_card_to_deck(card) -> void:
 
 func _on_save_deck_pressed() -> void:
 	var deck_name : String = $Div/Scroll/CurrentDeck/PanelContainer/HBoxContainer/DeckName.text
+	if deck_name == "" or deck_components.size() < 1:
+		return
 	$Div/Scroll/CurrentDeck/PanelContainer/HBoxContainer/SaveDeck.text = "Save"
 	var found_identical : bool = false
 	var new_deck : Deck = deck_components_to_deck()
@@ -330,6 +332,6 @@ func _on_delete_pressed() -> void:
 	var deck_indice : int = $Div/Scroll/CurrentDeck/LdDlt/LoadDeck.selected
 	if $Div/Scroll/CurrentDeck/LdDlt/LoadDeck.selected < 1:
 		return
-	Resources.decks.remove_at(deck_indice)
+	Resources.decks.remove_at(deck_indice-1)
 	clear_current_deck()
 	load_deck_options()

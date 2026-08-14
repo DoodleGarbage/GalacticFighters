@@ -1,11 +1,11 @@
 [gd_scene format=3 uid="uid://dpt64c3xv2lsh"]
 
 [ext_resource type="Theme" uid="uid://xog8n7ab0fc8" path="res://Themes/menu_theme.tres" id="1_12752"]
-[ext_resource type="Texture2D" uid="uid://xcwhomf3qbof" path="res://Art/GalacticFightersCoverNoTitle.png" id="2_ldfg3"]
 [ext_resource type="Script" uid="uid://7jiaxk1i40dv" path="res://GUI/main_menu.gd" id="2_o1bug"]
 [ext_resource type="PackedScene" uid="uid://cvc4xsp6kuqdq" path="res://GUI/mod_display.tscn" id="2_urio0"]
 [ext_resource type="Script" uid="uid://b1oa7py3s7815" path="res://GUI/mod_list_handler.gd" id="2_ygayt"]
 [ext_resource type="Texture2D" uid="uid://cyaw3jgvge3hm" path="res://Art/demoTitle.png" id="3_o1bug"]
+[ext_resource type="Texture2D" uid="uid://dhp5negrkn0c1" path="res://Art/GalacticFightersCoverNoTitle1920x1080res.png" id="4_ygayt"]
 [ext_resource type="Script" uid="uid://bo85pa83hor1" path="res://GUI/battle_select.gd" id="5_ar3vo"]
 [ext_resource type="PackedScene" uid="uid://b7u8fehe1jgc" path="res://GUI/deck_menu.tscn" id="5_o1bug"]
 [ext_resource type="PackedScene" uid="uid://dhrx3hltyg7fb" path="res://Gameplay/playfield.tscn" id="6_bi43m"]
@@ -110,7 +110,7 @@ offset_bottom = 420.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("2_ldfg3")
+texture = ExtResource("4_ygayt")
 expand_mode = 5
 stretch_mode = 5
 

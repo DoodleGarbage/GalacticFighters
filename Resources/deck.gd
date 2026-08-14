@@ -12,6 +12,9 @@ var mod : String = ""
 @export var gadgets : Array[Item] = []
 @export var sword : Item
 
+func is_empty() -> bool:
+	return not characters == [] and items == [] and gadgets == []
+
 static func to_str(dk:Deck) -> Array[String]:
 	var string : Array[String] = []
 	for chara in dk.characters:
