@@ -58,3 +58,9 @@ func remove_manager() -> void:
 
 func set_selection(mode:bool) -> void:
 	return
+
+func open_interaction_menu() -> void:
+	return
+
+func close_interaction_menu() -> void:
+	return

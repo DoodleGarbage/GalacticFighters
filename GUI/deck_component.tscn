@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://gyr5dbi1rpny"]
+
+[ext_resource type="Texture2D" uid="uid://emt6pvakjn1r" path="res://icon.svg" id="1_ikrio"]
+[ext_resource type="Script" uid="uid://da4xq477lfqlu" path="res://GUI/deck_component.gd" id="1_pfwkp"]
+
+[node name="DeckComponent" type="PanelContainer" unique_id=534036616]
+offset_right = 368.0
+offset_bottom = 64.0
+size_flags_horizontal = 3
+size_flags_vertical = 0
+script = ExtResource("1_pfwkp")
+
+[node name="VBoxContainer" type="HBoxContainer" parent="." unique_id=939678659]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="Icon" type="TextureRect" parent="VBoxContainer" unique_id=8592862]
+layout_mode = 2
+texture = ExtResource("1_ikrio")
+expand_mode = 3
+
+[node name="Type" type="Label" parent="VBoxContainer" unique_id=432548872]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6691116, 0.66911167, 0.6691115, 1)
+theme_override_font_sizes/font_size = 20
+text = "Sword:"
+
+[node name="Name" type="Label" parent="VBoxContainer" unique_id=1293046609]
+layout_mode = 2
+theme_override_font_sizes/font_size = 34
+text = "BASIC SWORD"
+horizontal_alignment = 1

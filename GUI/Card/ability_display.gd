@@ -12,6 +12,7 @@ var duration : int :
 		$Liner/IandD/Duration.show()
 		$Liner/IandD/Duration.text = str(value)
 
+
 func load_ability(ability:Attribute) -> void:
 	
 	loaded_ability = ability

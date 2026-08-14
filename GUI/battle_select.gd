@@ -10,12 +10,8 @@ func load_decks() -> void:
 	for child in $List/DeckLister.get_children():
 		child.queue_free()
 	for deck in deck_list:
-		var non_spec_char : int = 0
-		for chars in deck.characters:
-			if chars.type == 1:
-				non_spec_char += 1
-		if non_spec_char < 3:
-			print("A deck with less than 3 units tried to load! Name: ", deck.name)
+		var valid : bool = Resources.is_deck_valid(deck)
+		if not valid:
 			continue
 		var new_dgui = deck_gui.instantiate()
 		new_dgui.load_deck(deck)

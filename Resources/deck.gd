@@ -46,3 +46,9 @@ static func from_str(deck:Array[String]) -> Deck:
 				if swrd != null:
 					zombie.sword = swrd
 	return zombie
+
+static func to_dict(deck:Deck) -> Dictionary:
+	var dict : Dictionary = {}
+	dict.get_or_add("Name", deck.name)
+	dict.get_or_add("Deck", Deck.to_str(deck))
+	return dict

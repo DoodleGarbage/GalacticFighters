@@ -2,8 +2,12 @@
 
 [ext_resource type="Script" uid="uid://dth5oh0lqysfb" path="res://GUI/deck_menu.gd" id="1_66vqr"]
 [ext_resource type="PackedScene" uid="uid://4seey34xccc7" path="res://GUI/Card/empty_card.tscn" id="1_j3g7e"]
+[ext_resource type="Theme" uid="uid://debmqr0l2uql1" path="res://Themes/deckbuilder_theme.tres" id="1_nq642"]
+[ext_resource type="PackedScene" uid="uid://bqyxnrjohbjb6" path="res://GUI/Card/card.tscn" id="3_66vqr"]
+[ext_resource type="PackedScene" uid="uid://div00ixmb7eev" path="res://GUI/item.tscn" id="4_ycgaa"]
+[ext_resource type="PackedScene" uid="uid://k8ojiv7o1mqj" path="res://GUI/gadget.tscn" id="5_fiwxw"]
 
-[node name="Deck" type="Control" unique_id=1021093203]
+[node name="Deck" type="Control" unique_id=1021093203 node_paths=PackedStringArray("interact_viewer_card_gui", "interact_viewer_item", "interact_viewer_gadget", "interact_viewer_sword")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +15,12 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme = ExtResource("1_nq642")
 script = ExtResource("1_66vqr")
+interact_viewer_card_gui = NodePath("CardViewer")
+interact_viewer_item = NodePath("ItemViewer")
+interact_viewer_gadget = NodePath("GadgetViewer")
+interact_viewer_sword = NodePath("ItemViewer")
 
 [node name="Div" type="HBoxContainer" parent="." unique_id=1321460222]
 layout_mode = 1
@@ -22,52 +31,221 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="CurrentDeck" type="VBoxContainer" parent="Div" unique_id=1111782964]
+[node name="Scroll" type="ScrollContainer" parent="Div" unique_id=1878986206]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_scroll_mode = 0
+
+[node name="CurrentDeck" type="VBoxContainer" parent="Div/Scroll" unique_id=1111782964]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Exit" type="PanelContainer" parent="Div/CurrentDeck" unique_id=667054693]
+[node name="PanelContainer" type="PanelContainer" parent="Div/Scroll/CurrentDeck" unique_id=813466086]
 layout_mode = 2
 
-[node name="Exit" type="Button" parent="Div/CurrentDeck/Exit" unique_id=922956708]
+[node name="HBoxContainer" type="HBoxContainer" parent="Div/Scroll/CurrentDeck/PanelContainer" unique_id=83668707]
 layout_mode = 2
-text = "BACK"
+
+[node name="SaveDeck" type="Button" parent="Div/Scroll/CurrentDeck/PanelContainer/HBoxContainer" unique_id=1170683296]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Save"
+
+[node name="DeckName" type="LineEdit" parent="Div/Scroll/CurrentDeck/PanelContainer/HBoxContainer" unique_id=103022275]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Deck Name"
+
+[node name="Clear" type="Button" parent="Div/Scroll/CurrentDeck/PanelContainer/HBoxContainer" unique_id=354905927]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "Clear"
+
+[node name="LdDlt" type="HBoxContainer" parent="Div/Scroll/CurrentDeck" unique_id=177710238]
+layout_mode = 2
+
+[node name="LoadDeck" type="OptionButton" parent="Div/Scroll/CurrentDeck/LdDlt" unique_id=1346508055]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+selected = 0
+allow_reselect = true
+search_bar_enabled = true
+search_bar_min_item_count = 4
+item_count = 1
+popup/item_0/text = "Load Deck"
+popup/item_0/id = 0
+
+[node name="Delete" type="Button" parent="Div/Scroll/CurrentDeck/LdDlt" unique_id=1664372014]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.64862955, 0.111615606, 0.014606624, 1)
+text = "Delete Deck"
 
 [node name="Sep" type="VBoxContainer" parent="Div" unique_id=621303928]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Div/Sep" unique_id=803379416]
+[node name="PanelContainer" type="Panel" parent="Div/Sep" unique_id=1163813908]
+custom_minimum_size = Vector2(64, 40)
 layout_mode = 2
-mouse_filter = 2
 
-[node name="Search" type="Button" parent="Div/Sep/HBoxContainer" unique_id=1957997348]
-layout_mode = 2
-text = "SEARCH"
-
-[node name="TextEdit" type="TextEdit" parent="Div/Sep/HBoxContainer" unique_id=434491069]
+[node name="SearchBox" type="TextEdit" parent="Div/Sep/PanelContainer" unique_id=434491069]
 custom_minimum_size = Vector2(300, 40)
-layout_mode = 2
+layout_mode = 0
+offset_right = 510.0
+offset_bottom = 40.0
 placeholder_text = "SEARCH"
 context_menu_enabled = false
 emoji_menu_enabled = false
 tab_input_mode = false
 
-[node name="DeckDisplay" type="GridContainer" parent="Div/Sep" unique_id=1669697938]
+[node name="Exit" type="PanelContainer" parent="Div/Sep/PanelContainer" unique_id=667054693]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -221.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Exit" type="Button" parent="Div/Sep/PanelContainer/Exit" unique_id=922956708]
+layout_mode = 2
+text = "EXIT"
+
+[node name="TabContainer" type="TabContainer" parent="Div/Sep" unique_id=2085690757]
+custom_minimum_size = Vector2(1212, 0)
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="Special Characters" type="ScrollContainer" parent="Div/Sep/TabContainer" unique_id=1949078870]
+layout_mode = 2
+horizontal_scroll_mode = 0
+metadata/_tab_index = 0
+
+[node name="Special Characters" type="GridContainer" parent="Div/Sep/TabContainer/Special Characters" unique_id=1669697938]
 layout_mode = 2
 columns = 4
 
-[node name="EmptyCard" parent="Div/Sep/DeckDisplay" unique_id=1147434604 instance=ExtResource("1_j3g7e")]
+[node name="EmptyCard" parent="Div/Sep/TabContainer/Special Characters/Special Characters" unique_id=1147434604 instance=ExtResource("1_j3g7e")]
 layout_mode = 2
 
-[node name="EmptyCard2" parent="Div/Sep/DeckDisplay" unique_id=51090868 instance=ExtResource("1_j3g7e")]
+[node name="EmptyCard2" parent="Div/Sep/TabContainer/Special Characters/Special Characters" unique_id=51090868 instance=ExtResource("1_j3g7e")]
 layout_mode = 2
 
-[node name="EmptyCard3" parent="Div/Sep/DeckDisplay" unique_id=69557395 instance=ExtResource("1_j3g7e")]
+[node name="EmptyCard3" parent="Div/Sep/TabContainer/Special Characters/Special Characters" unique_id=69557395 instance=ExtResource("1_j3g7e")]
 layout_mode = 2
 
-[node name="EmptyCard4" parent="Div/Sep/DeckDisplay" unique_id=737868888 instance=ExtResource("1_j3g7e")]
+[node name="EmptyCard4" parent="Div/Sep/TabContainer/Special Characters/Special Characters" unique_id=737868888 instance=ExtResource("1_j3g7e")]
 layout_mode = 2
 
-[connection signal="pressed" from="Div/CurrentDeck/Exit/Exit" to="." method="_exit_pressed"]
+[node name="Characters" type="ScrollContainer" parent="Div/Sep/TabContainer" unique_id=1587311361]
+visible = false
+layout_mode = 2
+horizontal_scroll_mode = 0
+metadata/_tab_index = 1
+
+[node name="Characters" type="GridContainer" parent="Div/Sep/TabContainer/Characters" unique_id=1419468291]
+layout_mode = 2
+columns = 4
+
+[node name="EmptyCard" parent="Div/Sep/TabContainer/Characters/Characters" unique_id=2057930762 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard2" parent="Div/Sep/TabContainer/Characters/Characters" unique_id=2107927639 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard3" parent="Div/Sep/TabContainer/Characters/Characters" unique_id=878639324 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard4" parent="Div/Sep/TabContainer/Characters/Characters" unique_id=532873826 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="Item and Gadgets" type="ScrollContainer" parent="Div/Sep/TabContainer" unique_id=128179227]
+visible = false
+layout_mode = 2
+horizontal_scroll_mode = 0
+metadata/_tab_index = 2
+
+[node name="Items & Gadgets" type="GridContainer" parent="Div/Sep/TabContainer/Item and Gadgets" unique_id=125809210]
+layout_mode = 2
+columns = 4
+
+[node name="EmptyCard" parent="Div/Sep/TabContainer/Item and Gadgets/Items & Gadgets" unique_id=1342940113 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard2" parent="Div/Sep/TabContainer/Item and Gadgets/Items & Gadgets" unique_id=1215332700 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard3" parent="Div/Sep/TabContainer/Item and Gadgets/Items & Gadgets" unique_id=1876455811 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard4" parent="Div/Sep/TabContainer/Item and Gadgets/Items & Gadgets" unique_id=545306281 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="Swords" type="ScrollContainer" parent="Div/Sep/TabContainer" unique_id=2045727772]
+visible = false
+layout_mode = 2
+horizontal_scroll_mode = 0
+metadata/_tab_index = 3
+
+[node name="Swords" type="GridContainer" parent="Div/Sep/TabContainer/Swords" unique_id=480367572]
+layout_mode = 2
+columns = 4
+
+[node name="EmptyCard" parent="Div/Sep/TabContainer/Swords/Swords" unique_id=1068197799 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard2" parent="Div/Sep/TabContainer/Swords/Swords" unique_id=1155507566 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard3" parent="Div/Sep/TabContainer/Swords/Swords" unique_id=1187607053 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="EmptyCard4" parent="Div/Sep/TabContainer/Swords/Swords" unique_id=1186882962 instance=ExtResource("1_j3g7e")]
+layout_mode = 2
+
+[node name="Dimmer" type="Panel" parent="." unique_id=753038133]
+visible = false
+z_index = 3
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CardViewer" parent="." unique_id=1414793991 instance=ExtResource("3_66vqr")]
+visible = false
+z_index = 5
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 300.0
+offset_bottom = 500.0
+scale = Vector2(1.3, 1.3)
+
+[node name="ItemViewer" parent="." unique_id=146965513 instance=ExtResource("4_ycgaa")]
+visible = false
+z_index = 5
+layout_mode = 0
+scale = Vector2(1.3, 1.3)
+
+[node name="GadgetViewer" parent="." unique_id=698491253 instance=ExtResource("5_fiwxw")]
+visible = false
+z_index = 5
+layout_mode = 0
+scale = Vector2(1.3, 1.3)
+
+[connection signal="pressed" from="Div/Scroll/CurrentDeck/PanelContainer/HBoxContainer/SaveDeck" to="." method="_on_save_deck_pressed"]
+[connection signal="pressed" from="Div/Scroll/CurrentDeck/PanelContainer/HBoxContainer/Clear" to="." method="_on_clear_pressed"]
+[connection signal="item_selected" from="Div/Scroll/CurrentDeck/LdDlt/LoadDeck" to="." method="_on_load_deck_item_selected"]
+[connection signal="pressed" from="Div/Scroll/CurrentDeck/LdDlt/Delete" to="." method="_on_delete_pressed"]
+[connection signal="text_changed" from="Div/Sep/PanelContainer/SearchBox" to="." method="_on_search_box_text_changed"]
+[connection signal="pressed" from="Div/Sep/PanelContainer/Exit/Exit" to="." method="_exit_pressed"]

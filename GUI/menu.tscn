@@ -39,7 +39,7 @@ script = ExtResource("2_o1bug")
 base_hash = "98edae7b77cfc0529d6c074a23986d81"
 
 [node name="ModList" type="CanvasLayer" parent="." unique_id=936775308]
-layer = 2
+layer = 3
 visible = false
 script = ExtResource("2_ygayt")
 
@@ -182,9 +182,6 @@ text = "OPTIONS"
 [node name="MenuSpacer" type="Control" parent="MainMenu/Menu/VBoxContainer" unique_id=555766994]
 layout_mode = 2
 size_flags_vertical = 3
-
-[node name="Deck" parent="MainMenu" unique_id=1021093203 instance=ExtResource("5_o1bug")]
-visible = false
 
 [node name="BattleSelect" type="Control" parent="MainMenu" unique_id=918417344]
 visible = false
@@ -419,6 +416,12 @@ theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("StyleBoxFlat_c4qn5")
 text = ")"
 
+[node name="DeckBuilder" type="CanvasLayer" parent="." unique_id=1721936206]
+layer = 2
+visible = false
+
+[node name="Deck" parent="DeckBuilder" unique_id=1021093203 instance=ExtResource("5_o1bug")]
+
 [node name="Gameplay" type="CanvasLayer" parent="." unique_id=1978859045]
 visible = false
 
@@ -430,7 +433,6 @@ visible = false
 [connection signal="pressed" from="MainMenu/Menu/VBoxContainer/Start" to="." method="_start_pressed"]
 [connection signal="pressed" from="MainMenu/Menu/VBoxContainer/AccessedMenu/Battle" to="." method="prepare_battle"]
 [connection signal="pressed" from="MainMenu/Menu/VBoxContainer/AccessedMenu/Deck" to="." method="_on_deck_pressed"]
-[connection signal="exit" from="MainMenu/Deck" to="." method="return_to_menu"]
 [connection signal="battle_deck" from="MainMenu/BattleSelect" to="." method="ready_for_battle"]
 [connection signal="pressed" from="MainMenu/BattleSelect/List/Back" to="." method="return_to_menu"]
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Join/JoinButton" to="." method="_attempt_join"]
@@ -442,4 +444,5 @@ visible = false
 [connection signal="pressed" from="MainMenu/Lobby/corner/exit" to="." method="_quit_lobby"]
 [connection signal="pressed" from="MainMenu/CornerInfo/Mods" to="." method="_on_mods_pressed"]
 [connection signal="pressed" from="MainMenu/CornerInfo/VerCheck/Hash/Copy" to="." method="_on_hash_checksum_copy_pressed"]
+[connection signal="exit" from="DeckBuilder/Deck" to="." method="return_to_menu"]
 [connection signal="return_to_lobby" from="Gameplay/Playfield" to="." method="return_to_menu"]

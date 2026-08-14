@@ -829,11 +829,13 @@ func card_to_id_array(input:Array) -> Array[int]:
 # -- Select (selecting_cards, awaiting_mulligan) (if valid card, hovered, prioritizing the highest z_index)
 
 var menu_open : bool = false
-var active_interact_card : Card_GUI
+var active_interact_card : DockerChild
 #var allow_drag : bool = true
 
 ## Input handling for cards - manages selecting cards and opening/closing interaction menu
 func _input(event: InputEvent) -> void:
+	if not get_parent().visible:
+		return
 	if event is InputEventMouseButton:
 		if menu_open and event.is_action_pressed("card_interact"):
 			close_interaction_menu()
@@ -910,7 +912,7 @@ func async_item_execution(item : Item_GUI) -> void:
 signal selection_complete() ## Emitted when the maximum (1) number of cards seeking selection are picked
 
 ## Open the interaction menu! Displays information about a card and allows using its abilities
-func open_interaction_menu(card:Card_GUI) -> void:
+func open_interaction_menu(card:DockerChild) -> void:
 	if card == null:
 		push_warning("Tried to open the interaction menu for a null card!")
 		return

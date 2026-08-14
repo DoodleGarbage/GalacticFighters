@@ -8,11 +8,40 @@ func _init() -> void:
 	for internal in [true,false]:
 		init_mods(internal)
 	reload_mods()
+	load_decks()
 
 ## Default Resources
 
 const VFX_character_death : PackedScene = preload("res://Data/Vanilla/VFX/death_vfx.tscn")
 const VFX_null : PackedScene = preload("res://Data/Vanilla/VFX/null_vfx.tscn")
+
+## Deck Limitations - used to check if a deck should be selectable at battle time or not.
+
+var max_special_characters : int = 1
+var max_characters : int = 5
+var min_characters : int = 3
+var max_gadgets : int = 4
+var max_items : int = 10
+var min_items : int = 5
+var max_swords : int = 1 # not currently functional
+
+func is_deck_valid(deck:Deck) -> bool:
+	var special_charas : int = 0
+	var charas : int = 0
+	for chars in deck.characters:
+		if chars.type == 0:
+			special_charas += 1
+		if chars.type == 1:
+			charas += 1
+	if (max_special_characters < special_charas 
+		or Resources.min_characters > charas 
+		or Resources.max_characters < charas
+		or Resources.max_gadgets < deck.gadgets.size() 
+		or Resources.max_items < deck.items.size() 
+		or Resources.min_items > deck.items.size()):
+		return false
+	return true
+
 
 ## Tracks which mods are considered 'loaded' - TODO: read from a saved "Mod List" .txt file, and automatically add newly loaded mods to it
 var loaded_mods : Array[Mod] = []
@@ -24,7 +53,7 @@ var attributes : Array[Attribute] = []
 var pscripts : Array[GDScript] = [] # PowerScripts, but can't be a typed array
 var characters : Array[Card] = []
 var items : Array[Item] = []
-var decks : Array[Deck] = []
+var decks : Array[Deck] = [] # Holds the user's saved decks
 var vfx : Array[PackedScene] = [] ## Isn't restricted to particle effect nodes to allow for more creative effects, so long as the root node script has a few properties of GPUParticle2D - namely, 'position',  'amount', 'emitting', and signal 'finished'
 var images : Array[Texture] = []
 
@@ -179,7 +208,6 @@ func get_unique_mod_id() -> int:
 				invalid_id = true
 	return new_id
 
-
 func load_mod(mod:Mod) -> void:
 	mod.hashing_context = HashingContext.new()
 	mod.hashing_context.start(HashingContext.HASH_MD5)
@@ -192,6 +220,35 @@ func load_mod(mod:Mod) -> void:
 	load_resource(mod.mod_path, mod, "Deck", mod.internal)
 	mod.hash = mod.hashing_context.finish()
 
+func load_decks() -> void:
+	var dir_path : String = "user://"
+	var dir = DirAccess.open(dir_path)
+	if !dir:
+		push_warning("User has no directiory! How!?")
+		return
+	dir.list_dir_begin()
+	var current_file : String = dir.get_next()
+	while current_file != "":
+		if dir.current_is_dir():
+			current_file = dir.get_next()
+			continue
+		if current_file.ends_with(".json"):
+			var access := FileAccess.open(dir_path + current_file,FileAccess.READ)
+			var data_string :String = access.get_line()
+			if data_string != "SavedUserDecks":
+				current_file = dir.get_next()
+				continue
+			var mod_file : String = access.get_as_text().trim_prefix(data_string)
+			load_resource_from_file(access, "Deck", null, mod_file)
+			current_file = dir.get_next()
+
+func save_decks() -> void:
+	var deck_dicts : Array[Dictionary] = []
+	for deck in decks:
+		deck_dicts.append(Deck.to_dict(deck))
+	var file : String = "SavedUserDecks\n" + JSON.stringify(deck_dicts)
+	var fl_ac := FileAccess.open("user://user_decks.json", FileAccess.WRITE)
+	fl_ac.store_string(file)
 
 func load_images(mod_path:String, mod:Mod, internal:bool) -> void:
 	var dir_path : String = mod_path + "/Images"
@@ -203,8 +260,9 @@ func load_images(mod_path:String, mod:Mod, internal:bool) -> void:
 	var current_file : String = dir.get_next()
 	while current_file != "":
 		if dir.current_is_dir():
-			pass
-		elif current_file.ends_with(".png") or current_file.ends_with(".jpg") or current_file.ends_with(".jpeg"):
+			current_file = dir.get_next()
+			continue
+		if current_file.ends_with(".png") or current_file.ends_with(".jpg") or current_file.ends_with(".jpeg"):
 			if internal: ## We need special loading handling if we're loading in res://, as load_from_file will not work on export.
 				var new_text : Texture = load(dir_path + "/" + current_file)
 				new_text.resource_name = mod.name + ":" + current_file.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg")
@@ -271,9 +329,9 @@ func load_resource(mod_path : String, mod:Mod, resource_name:String, internal:bo
 
 
 
-func load_resource_from_file(file:FileAccess, resource_name:String, mod:Mod) -> void:
+func load_resource_from_file(file:FileAccess, resource_name:String, mod:Mod, modified_file:String="") -> void:
 	var JSONData = JSON.new()
-	var fileJSON : String = file.get_as_text()
+	var fileJSON : String = file.get_as_text() if modified_file == "" else modified_file
 	var error = JSONData.parse(fileJSON)
 	if error:
 		push_error("JSON Parsing Error in file %s: " % file, JSONData.get_error_message(), " at line ", JSONData.get_error_line(), "\nWhile loading resource %s." % resource_name)
@@ -365,6 +423,8 @@ func load_resource_from_file(file:FileAccess, resource_name:String, mod:Mod) -> 
 							var swrd : Item = find_resource("Item", split[1])
 							if swrd != null:
 								new_deck.sword = swrd
+				if not (new_deck.characters and new_deck.items and new_deck.gadgets and new_deck.sword):
+					continue
 				decks.append(new_deck)
 			"Item": ## Must be loaded: Attributes, Images
 				var new_item : Item = Item.new()

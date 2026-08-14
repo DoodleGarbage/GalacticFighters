@@ -252,14 +252,25 @@ const special_character_background := preload("res://Art/SpecialCharacterCardBac
 const character_background := preload("res://Art/NormalCharacterCardBack.png")
 const empty_script := preload("res://Resources/BasicResources/empty_script.gd")
 
-func load_card(card:Card) -> void:
+func load_card(card:Card, deck_loaded:bool=false) -> void:
+	
+	attributes = []
+	attribute_scripts = []
+	
+	for child in $AttachPoint1/Abilities.get_children():
+		child.queue_free()
+	for child in $AttachPoint2/Statuses.get_children():
+		child.queue_free()
+	for child in $AttachPoint3/Interactions.get_children():
+		child.queue_free()
 	
 	stored_card = card
 	$Card/Name.text = card.name
 	$Card/Character.texture = card.full_profile
 	$Card/CardIdent/Special.hide()
 	
-	initilize_interactions()
+	if not deck_loaded:
+		initilize_interactions()
 	
 	var txttype : String = ""
 	match(card.type):
@@ -284,10 +295,11 @@ func load_card(card:Card) -> void:
 	burst = card.burst
 	heal_stat = card.heal
 	
-	## Initialize scripts for the first time
-	for attr in stored_card.attributes:
-		attributes.append(attr)
-		attribute_scripts.append(init_script(attr))
+	if not deck_loaded:
+		## Initialize scripts for the first time
+		for attr in stored_card.attributes:
+			attributes.append(attr)
+			attribute_scripts.append(init_script(attr))
 	
 	if armor_pierce <= 0:
 		$Card/BStats/Mid/ArmorPierce.hide()
@@ -299,6 +311,7 @@ func load_card(card:Card) -> void:
 		$Card/BStats/Center/Heal.hide()
 	
 	update_ability_buttons()
+
 
 var menu_open : bool = false
 const abil_gui := preload("res://GUI/Card/ability_display.tscn")
@@ -318,13 +331,13 @@ const abil_gui := preload("res://GUI/Card/ability_display.tscn")
 
 # Opens/Closes the actions menu (move, attack, use ability)
 func open_interaction_menu() -> void:
-	z_index = 5 + manager.z_index
+	z_index = 5 + manager.z_index if manager != null else 5
 	$AttachPoint1.show()
 	$AttachPoint2.show()
 	if controlled: ## Only show the move/attack/etc for player cards
 		$AttachPoint3.show()
 func close_interaction_menu() -> void:
-	z_index = 0 + manager.z_index
+	z_index = 0 + manager.z_index if manager != null else 0
 	$AttachPoint1.hide()
 	$AttachPoint2.hide()
 	$AttachPoint3.hide()

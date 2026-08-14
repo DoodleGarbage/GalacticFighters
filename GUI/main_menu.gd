@@ -283,7 +283,7 @@ func _start_pressed() -> void:
 func hide_all() -> void:
 	$ModList.hide()
 	$MainMenu/Menu.hide()
-	$MainMenu/Deck.hide()
+	$DeckBuilder.hide()
 	$MainMenu/BattleSelect.hide()
 	$MainMenu/Waiting.hide()
 	$MainMenu/Lobby.hide()
@@ -292,10 +292,13 @@ func hide_all() -> void:
 
 func _on_deck_pressed() -> void:
 	hide_all()
-	$MainMenu/Deck.show()
+	$MainMenu.hide()
+	$DeckBuilder/Deck.load_cards()
+	$DeckBuilder.show()
 
 func return_to_menu() -> void:
 	hide_all()
+	$MainMenu.show()
 	$MainMenu/Menu.show()
 
 ## Called by Signal

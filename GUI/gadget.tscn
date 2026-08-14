@@ -31,7 +31,7 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 texture = ExtResource("3_0yuur")
-expand_mode = 3
+expand_mode = 5
 stretch_mode = 5
 
 [node name="PanelContainer" type="PanelContainer" parent="List" unique_id=370786042]
