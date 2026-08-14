@@ -38,7 +38,10 @@ func _attempt_host() -> void:
 	var port : int = int($MainMenu/Waiting/VBoxContainer/Host/HostIP.text)
 	if port < 1024 or port > 65535: # Checks the validity of the port. Below 1024 is privileged (not doable) stuff
 		port = 7777 ## TODO: Make this error instead of defaulting to this port
-	peer.create_server(port,32)
+	var err = peer.create_server(port,32)
+	if err != 0:
+		push_error("Failed to create an ENet host - canceling server hosting")
+		return
 	multiplayer.multiplayer_peer = peer
 	
 	current_lobby_players.append([our_name, peer.get_unique_id(), Deck.to_str(prepared_deck), false])
@@ -87,7 +90,7 @@ func load_lobby_gui() -> void:
 		var new_play := plgui.instantiate()
 		
 		new_play.player = get_lobby_label(player)
-		var their_deck = string_to_deck(player[2])
+		var their_deck = Deck.from_str(player[2])
 		new_play.load_deck(their_deck)
 		$MainMenu/Lobby/PlayerList.add_child(new_play)
 
@@ -240,7 +243,7 @@ func switch_to_game() -> void:
 	$Gameplay/Playfield.host_id = host_id
 	var lobby_with_proper_resources : Array = []
 	for player in current_lobby_players:
-		var get_deck : Deck = string_to_deck(player[2])
+		var get_deck : Deck = Deck.from_str(player[2])
 		var fixed_player : Array = []
 		fixed_player.assign(player)
 		fixed_player.pop_back() # Remove the 'Ready' entry from the lobby
@@ -251,11 +254,10 @@ func switch_to_game() -> void:
 
 ## ^ MULTIPLAYER & NETWORKING
 
-const HASH_MISMATCH_COLOR := Color(0.471, 0.451, 0.039, 1.0)
+const HASH_MISMATCH_COLOR := Color(0.951, 0.633, 0.0, 1.0)
 const HASH_CORRECT_COLOR := Color(0.0, 0.0, 0.0, 1.0)
 
 func load_version_hash() -> void:
-	#$MainMenu/CornerInfo/Version.text = "Version: " + str(major_version) + "." + str(minor_version) + "." + str(revision) + " (checksum: " + str(Resources.loaded_hash.hex_encode()) + ")"
 	var hash_shrinker : PackedByteArray = [0,0]
 	for i in Resources.loaded_hash.size():
 		if i%2 == 0:
@@ -310,16 +312,7 @@ func ready_for_battle(deck:Deck) -> void:
 
 var prepared_deck : Deck
 
-func string_to_deck(deck:Array[String]) -> Deck:
-	var zombie : Deck = Deck.new()
-	for card in deck:
-		var split := card.split(":", 1)
-		match(split[0]):
-			"Character":
-				var chara = Resources.find_resource(split[0], split[1])
-				if chara != null:
-					zombie.characters.append(chara)
-	return zombie
+
 
 
 

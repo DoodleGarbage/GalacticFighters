@@ -6,12 +6,11 @@ var peer : ENetMultiplayerPeer
 var game_active : bool = false
 
 var host_id : int
-## [name (string), ID (int), deck (Deck), team (int), moves (int)]
-const default_deck := preload("res://Resources/BasicResources/demo_deck.tres")
+## [name (string), ID (int), deck (Deck), team (int), moves (int), items (Array[string])]
 var current_players : Array = []
 
 # A pointer reference to every single card on the board
-var cards : Array[Card_GUI] = [] :
+var cards : Array[DockerChild] = [] :
 	get():
 		return cards
 
@@ -38,17 +37,19 @@ func initalize_game() -> void:
 	reset_playfield()
 	
 	initalize_dockers.rpc()
+	initalize_gadgets.rpc()
 	
 	if peer.get_unique_id() != host_id:
 		return
+	
+	for pl in current_players:
+		pl.append([]) # This is an empty array that will be used to store the items that all players have
 	
 	initalize_cards()
 	
 	#load_items(decks)
 	#load_gadgets(decks)
 	#load_sword(decks)
-	
-	$Unscalables/TurnTools.end_turn() ## reset display of TurnTools
 	
 	start_mulligan.rpc()
 
@@ -62,13 +63,15 @@ func reset_playfield() -> void:
 @onready var field_docker_scene := preload("res://GUI/field_docker.tscn")
 @onready var saferoom_docker_scene := preload("res://GUI/saferoom_docker.tscn")
 @onready var item_docker_scene := preload("res://GUI/item_docker.tscn")
+@onready var gadget_docker_scene := preload("res://GUI/gadget_docker.tscn")
 
 @onready var player_display_scene := preload("res://GUI/player_display.tscn")
 
 # Scale to apply to things
 const FIELD_DOCKER_GUI_SCALE := Vector2(0.4,0.4)
 const SAFEROOM_DOCKER_GUI_SCALE := Vector2(0.4,0.4)
-const ITEM_DOCKER_GUI_SCALE := Vector2(1,1)
+const ITEM_DOCKER_GUI_SCALE := Vector2(0.4,0.4)
+const GADGET_DOCKER_GUI_SCALE := Vector2(0.4,0.4)
 # Seperates each GUI by this much left/right
 const DOCKER_GUI_SEPERATION : float = 1920
 
@@ -78,6 +81,7 @@ const FIELD_DOCKER_GUI_POSITION := Vector2(540,230)
 const SAFEROOM_DOCKER_GUI_POSITION := Vector2(835, -190)
 # (Relative to the field docker)
 const ITEM_DOCKER_GUI_POSITION := Vector2(0,-220)
+const GADGET_DOCKER_GUI_POSITION := Vector2(407, -220)
 
 const PLAYER_DISPLAY_GUI_POSITION := Vector2(30,30)
 
@@ -85,6 +89,7 @@ const PLAYER_DISPLAY_GUI_POSITION := Vector2(30,30)
 const BOT_FIELD_DOCKER_GUI_POSITION := Vector2(540,30)
 const BOT_SAFEROOM_DOCKER_GUI_POSITION := Vector2(835,10)
 const BOT_ITEM_DOCKER_GUI_POSITION := Vector2(0,310)
+const BOT_GADGET_DOCKER_GUI_POSITION := Vector2(407,310)
 # Temporarily the same as Top player display GUI until the UI is updated
 const BOT_PLAYER_DISPLAY_GUI_POSITION := Vector2(30,30) #Vector2(30,450)
 
@@ -166,16 +171,19 @@ func initalize_dockers() -> void:
 		var docker_origin : Vector2
 		var saferoom_offset : Vector2
 		var item_offset : Vector2
+		var gadget_offset : Vector2
 		var display_origin : Vector2
 		if upper_if_true:
 			docker_origin = FIELD_DOCKER_GUI_POSITION
 			saferoom_offset = SAFEROOM_DOCKER_GUI_POSITION
 			item_offset = ITEM_DOCKER_GUI_POSITION
+			gadget_offset = GADGET_DOCKER_GUI_POSITION
 			display_origin = PLAYER_DISPLAY_GUI_POSITION
 		else:
 			docker_origin = BOT_FIELD_DOCKER_GUI_POSITION
 			saferoom_offset = BOT_SAFEROOM_DOCKER_GUI_POSITION
 			item_offset = BOT_ITEM_DOCKER_GUI_POSITION
+			gadget_offset = BOT_GADGET_DOCKER_GUI_POSITION
 			display_origin = BOT_PLAYER_DISPLAY_GUI_POSITION
 		## Horizontal offset
 		var offset : float = 0
@@ -192,10 +200,17 @@ func initalize_dockers() -> void:
 		var new_field_docker := field_docker_scene.instantiate()
 		var new_saferoom_docker := saferoom_docker_scene.instantiate()
 		var new_item_docker := item_docker_scene.instantiate()
+		var new_gadget_docker := gadget_docker_scene.instantiate()
 		
 		var new_player_display := player_display_scene.instantiate()
 		
 		new_player_display.get_node("PlayerDisplay").player_name = player[0]
+		if player[2].sword != null:
+			new_player_display.get_node("Sword").loaded_sword = player[2].sword
+			if player[1] == peer.get_unique_id():
+				new_player_display.get_node("Sword/SwordUI").pressed.connect(sword_triggered.bind(player[2].sword))
+		else:
+			new_player_display.get_node("Sword").hide()
 		
 		new_field_docker.player = player[1]
 		## Unique IDs are only useful if this gets synced with the server
@@ -204,10 +219,12 @@ func initalize_dockers() -> void:
 		#new_saferoom_docker.id = get_unique_docker_id()
 		new_item_docker.player = player[1]
 		#new_item_docker.id = get_unique_docker_id()
+		new_gadget_docker.player = player[1]
 		
 		docker_list.append(new_field_docker)
 		docker_list.append(new_saferoom_docker)
 		docker_list.append(new_item_docker)
+		docker_list.append(new_gadget_docker)
 		
 		if player == us:
 			new_field_docker.player_controlled = true
@@ -218,11 +235,13 @@ func initalize_dockers() -> void:
 			$UpperDockers.add_child(new_field_docker, true)
 			$UpperDockers.add_child(new_saferoom_docker)
 			$UpperDockers.add_child(new_item_docker)
+			$UpperDockers.add_child(new_gadget_docker)
 			$UpperDockers.add_child(new_player_display)
 		else:
 			$LowerDockers.add_child(new_field_docker, true)
 			$LowerDockers.add_child(new_saferoom_docker)
 			$LowerDockers.add_child(new_item_docker)
+			$LowerDockers.add_child(new_gadget_docker)
 			$LowerDockers.add_child(new_player_display)
 		
 		
@@ -232,6 +251,8 @@ func initalize_dockers() -> void:
 		new_saferoom_docker.position.x += offset
 		new_item_docker.position = docker_origin + item_offset
 		new_item_docker.position.x += offset
+		new_gadget_docker.position = docker_origin + gadget_offset
+		new_gadget_docker.position.x += offset
 		
 		new_player_display.position = display_origin
 		
@@ -247,6 +268,21 @@ func initalize_dockers() -> void:
 	update_field_buttons_gui()
 	return
 
+@onready var gadget_scene = preload("res://GUI/gadget.tscn")
+
+@rpc("authority", "call_local", "reliable", 0)
+func initalize_gadgets() -> void:
+	print("Creating gadgets")
+	for player in current_players:
+		var gadget_docker = get_docker("gadget", player[1])
+		print("Gadgets to be had: ", player[2].gadgets)
+		for gadget in player[2].gadgets:
+			print("Creating gadget %s" % gadget.name)
+			var new_gadget : Item_GUI = gadget_scene.instantiate()
+			add_child(new_gadget)
+			new_gadget.assign_manager(gadget_docker)
+			cards.append(new_gadget)
+			new_gadget.load_item(gadget)
 
 ## Used to add interaction to buttons
 func move_field(upper:bool, left:bool) -> void:
@@ -322,7 +358,7 @@ func start_mulligan() -> void:
 	for card in cards:
 		if card.input_metadata != "":
 			continue
-		if card.player_id == peer.get_unique_id() and card.stored_card.type == 1: # note: 0 is Special Character, 1 is units (per the rules, can only start with units)
+		if card is Card_GUI and card.player_id == peer.get_unique_id() and card.stored_card.type == 1: # note: 0 is Special Character, 1 is units (per the rules, can only start with units)
 			valid_cards.append(card)
 			## ID 5 is the mulligan docker
 			card.assign_manager(get_docker("mulligan", card.player_id))
@@ -344,7 +380,7 @@ func submit_mulligan() -> void:
 	selecting_mulligan = false
 	$Mulligan/ConfirmMulligan.hide()
 	for card in cards:
-		if card.input_metadata != "":
+		if card.input_metadata != "" or card is Item_GUI:
 			continue
 		card.assign_manager(get_docker("saferoom", peer.get_unique_id()))
 	for card in selected_cards:
@@ -377,7 +413,7 @@ func end_mulligan(player_mulligans:Array) -> void:
 	$Mulligan.hide()
 	for card in cards:
 		card.show()
-		if card.input_metadata != "":
+		if card.input_metadata != "" or card is Item_GUI:
 			continue
 		card.set_selection(false)
 		card.assign_manager(get_docker("saferoom", get_player_array_by_id(card.player_id)[1]))
@@ -386,7 +422,7 @@ func end_mulligan(player_mulligans:Array) -> void:
 		dupe.assign(player)
 		var player_data : Array = get_player_array_by_id(dupe[0])
 		dupe.pop_front()
-		var as_card : Array[Card_GUI] = id_to_card_array(dupe)
+		var as_card : Array = id_to_card_array(dupe)
 		
 		var tar_docker : Docker = get_docker("field", player_data[1])
 		for card in as_card.size():
@@ -394,6 +430,11 @@ func end_mulligan(player_mulligans:Array) -> void:
 	if host_id == peer.get_unique_id():
 		print("We're ready to start the game!!!")
 		for card in cards:
+			if card is Item_GUI and card.loaded_item.type == 1:
+				sync_gadget(card, true)
+				continue
+			elif card is Item_GUI:
+				continue
 			sync_card(card, true)
 		start_game()
 
@@ -407,35 +448,15 @@ func start_game() -> void:
 
 var current_turn_id : int = -1
 
-@rpc("authority", "call_local", "reliable", 0)
-func update_turn(player_id:int) -> void:
-	_end_turn() # Note: only ends for the player we're switching away from
-	current_turn_id = player_id
-	_start_turn() # Note: only triggers for the player we're switching to
-	
-	if peer.get_unique_id() == host_id:
-		for pl in current_players:
-			pl[4] = 0
-		var player : Array = get_player_array_by_id(player_id)
-		player[4] = 2
-		sync_all_cards(true)
-	
-	## Display some visual thing to notify of a turn change
-	if peer.get_unique_id() != player_id:
-		$Unscalables/TurnTools.moves = 0
-		return
-	$Unscalables/TurnTools.moves = 2
-	
-
-
 ## Called when the turn tools button is pressed
 func signal_turn_end() -> void:
 	if current_turn_id == peer.get_unique_id():
-		send_end_turn_notice.rpc(peer.get_unique_id())
+		send_end_turn_notice.rpc_id(host_id, peer.get_unique_id())
 
+## Sent by any client (whom can end their turn)
 @rpc("any_peer", "call_local", "reliable", 0)
 func send_end_turn_notice(player_id:int) -> void:
-	if peer.get_unique_id() != host_id or player_id != current_turn_id:
+	if peer.get_unique_id() != host_id:
 		return
 	# TODO: Apply a status to all characters w/ duration 1 turn that adds 1 defense for each unused move
 	var next_player : int = get_player_by_id(current_turn_id) + 1
@@ -443,8 +464,54 @@ func send_end_turn_notice(player_id:int) -> void:
 		next_player -= current_players.size()
 	update_turn.rpc(current_players[next_player][1])
 
+@rpc("authority", "call_local", "reliable", 0)
+func update_turn(player_id:int) -> void:
+	_end_turn() # Note: only ends for the player we're switching away from
+	current_turn_id = player_id
+	_start_turn() # Note: only triggers for the player we're switching to
+	
+	## Display some visual thing to notify of a turn change
+	$Unscalables/TurnTools.moves = 0
+	#if peer.get_unique_id() != player_id:
+		#$Unscalables/TurnTools.moves = 0
+		#return
+	#$Unscalables/TurnTools.moves = 2
+	
+	if peer.get_unique_id() == host_id:
+		for pl in current_players:
+			pl[4] = 0
+		var player : Array = get_player_array_by_id(player_id)
+		player[4] = 2
+		sync_all_cards(true)
+		turn_start_notif.rpc_id(player_id)
+		## Draw the random item for the player at the start of their turn
+		var pl_dat : Array = current_players[get_player_by_id(player_id)]
+		var deck : Deck = pl_dat[2]
+		if deck.items.size() < 1:
+			return
+		var rand_item : String = deck.items.pick_random().mod_name()
+		pl_dat[5].append(rand_item)
+		recieve_item.rpc_id(player_id, rand_item)
+
+@rpc("authority", "call_local", "reliable", 0)
+func turn_start_notif() -> void:
+	$Unscalables/TurnTools.moves = 2
+
+@onready var item_scene := preload("res://GUI/item.tscn")
+@rpc("authority", "call_local", "reliable", 0)
+func recieve_item(item_name:String) -> void:
+	var item : Item = Resources.find_resource("Item", item_name)
+	if item == null:
+		push_error("We recieved item: %s, but couldn't find it in Resources!" % item_name)
+		return
+	var new_item : DockerChild = item_scene.instantiate()
+	add_child(new_item)
+	new_item.load_item(item)
+	new_item.assign_manager(get_docker("item",peer.get_unique_id()))
+	cards.append(new_item)
+	update_dockers()
+
 ## Trigger all start_turn effects in powerscripts & decrement the duration of any statuses
-## Only triggers on an individual person's turn, rather than the round.
 func _start_turn() -> void:
 	if peer.get_unique_id() == current_turn_id:
 		$Unscalables/TurnTools.begin_turn() # Turn vfx
@@ -452,11 +519,9 @@ func _start_turn() -> void:
 		if card.player_id == current_turn_id:
 			for script in card.attribute_scripts:
 				script._turnstart()
-	
 	return
 
 ## Trigger all end_turn effects in powerscripts
-## Only triggers on an individual person's turn, rather than the round.
 @rpc("authority", "call_local", "reliable", 0)
 func _end_turn() -> void:
 	print("calling turn end for player: ", current_turn_id)
@@ -493,7 +558,7 @@ func add_card(card : Card, docker : Docker, player_id:int, unique_id : int = -1)
 	new_card.player_id = player_id
 	new_card.unique_id = get_unique_card_id() if unique_id == -1 else unique_id
 	new_card.controlled = player_id == peer.get_unique_id()
-	new_card.ability_triggered.connect(trigger_ability)
+	new_card.ability_triggered.connect(card_gui_trigger_ability)
 	add_child(new_card)
 	new_card.load_card(card)
 	new_card.dead.connect(dead_card.bind(new_card))
@@ -557,7 +622,7 @@ func sync_card(card:Card_GUI, upd_docker : bool = true) -> void:
 		return
 	var stats : Array = card.get_stats()
 	# Resource names
-	var card_resource : String = card.stored_card.name
+	var card_resource : String = card.stored_card.mod_name()
 	var card_ids : Array = [card.unique_id, card.player_id]
 	var manager_identifier : String = card.manager.identifier
 	var script_data : Array = card.get_script_data()
@@ -569,6 +634,8 @@ func sync_card(card:Card_GUI, upd_docker : bool = true) -> void:
 
 func sync_all_cards(upd_docker:bool = true) -> void:
 	for card in cards:
+		if card is Item_GUI:
+			continue
 		sync_card(card, upd_docker)
 
 @rpc("authority", "call_remote", "reliable", 1)
@@ -589,6 +656,26 @@ func recieved_card_sync(stats:Array, card_name:String, card_ids:Array, manager_i
 	if do_docker_update:
 		_update_individual_docker(card_instance.manager, true)
 
+func sync_gadget(gadget:Item_GUI, upd_docker:bool = true) -> void:
+	if gadget.dont_sync:
+		return
+	var used_times : int = gadget.times_used
+	## Any other info needed to sync the gadgets
+	recieved_gadget_sync.rpc(gadget.unique_id, used_times, upd_docker)
+
+@rpc("authority", "call_remote", "reliable", 0)
+func recieved_gadget_sync(id:int, used:int, upd_dock:bool) -> void:
+	var gadget_instance : Item_GUI
+	for card in cards:
+		if card.unique_id == id:
+			gadget_instance = card
+	if gadget_instance == null:
+		#add_gadget
+		push_error("Tried to sync a gadget that I (pid: %s) don't have!" % peer.get_unique_id())
+		return
+	
+	if upd_dock:
+		_update_individual_docker(gadget_instance.manager, false)
 
 func dead_card(card:Card_GUI) -> void:
 	# Only do something if we're the host, so clients don't get prematurely trigger happy
@@ -622,7 +709,7 @@ func kill_card(card:Card_GUI) -> void:
 ## Only call this function when you are certain that nothing relies on the dead cards (such as displaying the effects of abilities
 func clear_dead_cards() -> void:
 	for card in cards:
-		if not card.flagged_for_death:
+		if card is Item_GUI or not card.flagged_for_death:
 			continue
 		kill_card(card)
 
@@ -675,11 +762,11 @@ func _update_individual_docker(docker:Docker, update_interact:bool=true) -> void
 		open_interaction_menu(active_interact_card)
 	return
 
-## Sorts an array of Card_GUI, by variable property. (The property must be an int)
-func sort_card_gui_array(array:Array[Card_GUI], property:String, inverse:bool=false) -> Array[Card_GUI]:
+## Sorts an array of DockerChild, by variable property. (The property must be an int)
+func sort_child_docker_array(array:Array[DockerChild], property:String, inverse:bool=false) -> Array[DockerChild]:
 	
-	var re_sorted_positions : Array[Card_GUI] = array.duplicate()
-	var final_array : Array[Card_GUI] = []
+	var re_sorted_positions : Array[DockerChild] = array.duplicate()
+	var final_array : Array[DockerChild] = []
 	while re_sorted_positions.size() > 0:
 		var get_lowest : int = get_min(re_sorted_positions, property, inverse)
 		final_array.append(re_sorted_positions[get_lowest])
@@ -688,7 +775,7 @@ func sort_card_gui_array(array:Array[Card_GUI], property:String, inverse:bool=fa
 	return final_array
 
 ## Returns the index of the lowest in the array - Note: Property must be an int
-func get_min(array:Array[Card_GUI], property:String, inverse:bool=false) -> int:
+func get_min(array:Array, property:String, inverse:bool=false) -> int:
 	var lowest : int = 0
 	var farthest_value : int = array[0].get(property)
 	for i in array.size():
@@ -700,12 +787,6 @@ func get_min(array:Array[Card_GUI], property:String, inverse:bool=false) -> int:
 ## Gets every docker in the scene
 func get_dockers() -> Array[Docker]:
 	return docker_list
-	
-	#var retr : Array[Docker] = []
-	#for child in get_children():
-		#if child is Docker:
-			#retr.append(child)
-	#return retr
 
 func get_docker(which:String, player:int) -> Docker:
 	for docker in docker_list:
@@ -713,30 +794,24 @@ func get_docker(which:String, player:int) -> Docker:
 			return docker
 	return
 
-#func id_to_docker(id:int) -> Docker:
-	#for docker in get_dockers():
-		#if docker.id == id:
-			#return docker
-	#return
-
 
 ## To get the ID of a card, just grab it's .unique_id property
 ## This retrives a card's node reference from ID
-func id_to_card(id:int) -> Card_GUI:
+func id_to_card(id:int) -> DockerChild:
 	for card in cards:
 		if card.unique_id == id:
 			return card
 	return
 
 ## This retrieves all card node references from an array of IDs
-func id_to_card_array(ids:Array[int]) -> Array[Card_GUI]:
-	var ret_arr : Array[Card_GUI] = []
+func id_to_card_array(ids:Array[int]) -> Array[DockerChild]:
+	var ret_arr : Array[DockerChild] = []
 	for id in ids:
 		ret_arr.append(id_to_card(id))
 	return ret_arr
 
 ## This converts an array of card node references to an array of IDs
-func card_to_id_array(input:Array[Card_GUI]) -> Array[int]:
+func card_to_id_array(input:Array) -> Array[int]:
 	var ret_arr : Array[int] = []
 	for card in input:
 		ret_arr.append(card.unique_id)
@@ -755,7 +830,7 @@ func card_to_id_array(input:Array[Card_GUI]) -> Array[int]:
 
 var menu_open : bool = false
 var active_interact_card : Card_GUI
-var allow_drag : bool = true
+#var allow_drag : bool = true
 
 ## Input handling for cards - manages selecting cards and opening/closing interaction menu
 func _input(event: InputEvent) -> void:
@@ -764,22 +839,30 @@ func _input(event: InputEvent) -> void:
 			close_interaction_menu()
 			return
 		## Get all cards being hovered during this button click:
-		var hovered_cards : Array[Card_GUI] = []
+		var hovered_cards : Array[DockerChild] = []
 		# Reminder that the card shadows are inside the cards array
 		for card in cards:
-			if card.flagged_for_death:
+			if (not card is Item_GUI and card.flagged_for_death):
 				continue
 			var rect : Rect2 = Rect2(card.global_position, card.size * card.scale)
 			if rect.has_point(get_global_mouse_position()):
 				print("Adding card as possible: ", card.name)
 				hovered_cards.append(card)
 		## Highest z_index card is [0] - may be non-deterministic for same z_indexes
-		var sorted_hovered_cards : Array[Card_GUI] = sort_card_gui_array(hovered_cards, "priority", true)
+		var sorted_hovered_cards : Array[DockerChild] = sort_child_docker_array(hovered_cards, "priority", true)
+		
+		if $Unscalables/TurnTools.moves > 0 and event.is_action_pressed("card_select") and sorted_hovered_cards.any(func(element): return element is Item_GUI):
+			for card in sorted_hovered_cards:
+				if not card is Item_GUI:
+					continue
+				call_deferred("async_item_execution",card)
+				break
+			return
 		if not menu_open and event.is_action_pressed("card_interact"):
 			for card in sorted_hovered_cards:
 				print("I am a card, name: ", card.name, " metadata: ", card.input_metadata, " my unique ID is: ", card.unique_id)
 			for card in sorted_hovered_cards:
-				if card.input_metadata != "":
+				if card.input_metadata != "" or card is Item_GUI:
 					continue
 				open_interaction_menu(card)
 				break
@@ -805,6 +888,25 @@ func _input(event: InputEvent) -> void:
 			update_input_displays()
 			return
 
+func async_item_execution(item : Item_GUI) -> void:
+	print("async execution for items called")
+	if item.loaded_item.uses > -1 and item.times_used >= item.loaded_item.uses:
+		cards.remove_at(cards.find(item))
+		item.remove_manager()
+		item.queue_free()
+		update_dockers()
+		return
+	var success : bool = await trigger_ability(item.loaded_item.effect, peer.get_unique_id())
+	if success:
+		item.times_used += 1
+		if item.loaded_item.uses > -1 and item.times_used >= item.loaded_item.uses:
+			cards.remove_at(cards.find(item))
+			item.remove_manager()
+			item.queue_free()
+			update_dockers()
+	return
+
+
 signal selection_complete() ## Emitted when the maximum (1) number of cards seeking selection are picked
 
 ## Open the interaction menu! Displays information about a card and allows using its abilities
@@ -814,7 +916,7 @@ func open_interaction_menu(card:Card_GUI) -> void:
 		return
 	active_interact_card = card
 	menu_open = true
-	allow_drag = false
+	#allow_drag = false
 	card.scale = Vector2(1.0,1.0)
 	card.position = get_viewport_rect().size * 0.5 - card.size * 0.5
 	card.target_position = get_viewport_rect().size * 0.5 - card.size * 0.5
@@ -827,7 +929,7 @@ func close_interaction_menu() -> void:
 		active_interact_card.close_interaction_menu()
 	active_interact_card = null
 	menu_open = false
-	allow_drag = true
+	#allow_drag = true
 	update_dockers()
 	$Dimmer.hide()
 	reset_card_indexes()
@@ -860,7 +962,7 @@ func update_target_display() -> void:
 
 func reset_card_indexes() -> void:
 	for card in cards:
-		card.z_index = 0 + card.manager.z_index
+		card.z_index = 0 + card.manager.z_index if card.manager != null else 0
 		if card.input_metadata == "empty":
 			card.z_index -= 3
 
@@ -869,58 +971,110 @@ func reset_card_indexes() -> void:
 ## ABILITY TARGETING & TRIGGERS ##
 ##
 
+func card_gui_trigger_ability(ability:int, card:Card_GUI) -> void:
+	trigger_ability(card.attributes[ability], card.player_id, card, ability)
+
+## Used to hold onto an ability trigger while we wait for the server to confirm we have enough moves
+var queued_ability : Array = []
+
 ## The ability int refers to the position of the array in the Card_GUI's attributes. 
-func trigger_ability(ability:int, card:Card_GUI) -> void:
+func trigger_ability(ability:Attribute, player:int, card:Card_GUI=null, abil_id:int=-1) -> bool:
 	print("An ability was triggered!")
 	if $Unscalables/TurnTools.moves < 1:
 		print("not enough moves! Cancelling!")
-		return
+		return false
 	if current_turn_id != peer.get_unique_id():
 		print("Tried to perform an action while it isn't our turn!")
-		return
+		return false
 	close_interaction_menu() # Abilities are often triggered when this is open
-	allow_drag = false # Prevent dragging during the ability trigger
-	var targeting : Array[Card_GUI] = await get_targets(card, card.attributes[ability].targeting)
+	#allow_drag = false # Prevent dragging during the ability trigger
+	var targeting : Array[DockerChild]
+	if card == null or abil_id == -1:
+		targeting = await get_targets(player, ability.targeting)
+	else:
+		targeting = await get_targets(player, card.attributes[abil_id].targeting)
+		
 	if targeting == []:
 		print("Targeting cancelled or failed")
-		allow_drag = true
-		return
-	allow_drag = true # Restore drag
+		#allow_drag = true
+		return false
+	#allow_drag = true # Restore drag
 	print("We selected cards to target!: ", targeting)
 	
 	var burst_amnt : int = 0
-	if card.attributes[ability].targeting.allow_burst:
+	if ability.targeting.allow_burst:
 		burst_amnt = $TargetingGUI/Options/Burst/BurstSelect.value
 	var targets_to_id : Array[int] = card_to_id_array(targeting)
 	print("Triggering an ability. Our ID: ", get_player_array_by_id(peer.get_unique_id())[1])
-	trigger_ability_client.rpc_id(host_id,peer.get_unique_id(),ability, card.unique_id, burst_amnt, targets_to_id)
-	
+	queued_ability = [peer.get_unique_id(),ability.mod_name(), player, burst_amnt, targets_to_id, card.unique_id if card != null else -1, abil_id]
+	request_moves_remaining.rpc_id(host_id, peer.get_unique_id())
+	#trigger_ability_client.rpc_id(host_id,peer.get_unique_id(),ability.mod_name(), player, burst_amnt, targets_to_id, card.unique_id if card != null else -1, abil_id)
+	return true
 
-## card [int] is the unique ID of the Card_GUI that is the source
+@rpc("any_peer", "call_local", "reliable", 0)
+func request_moves_remaining(client_id:int) -> void:
+	print("A moves request was made")
+	#print("moves were requested by client: ", client_id)
+	var who : Array = get_player_array_by_id(client_id)
+	if peer.get_unique_id() != host_id:
+		return
+	server_moves_remaining.rpc_id(client_id, who[4])
+
+@rpc("authority", "call_local", "reliable", 0)
+func server_moves_remaining(moves:int) -> void:
+	#print("sent the moves backs, queued currently: ", queued_ability)
+	$Unscalables/TurnTools.moves = moves
+	if moves < 1:
+		#print("failed")
+		queued_ability = []
+		return
+	if moves >= 1 and queued_ability:
+		#print("triggering")
+		trigger_ability_client.rpc(queued_ability[0],queued_ability[1],queued_ability[2],queued_ability[3],queued_ability[4],queued_ability[5],queued_ability[6])
+		queued_ability = []
+
+## card_id [int] is the unique ID of the Card_GUI that is the source
 # NOTE: the 'call_local' is required to rpc_id call this function on yourself (aka host -> host)
 @rpc("any_peer", "call_local", "reliable", 0)
-func trigger_ability_client(peer_id:int, ability:int, card:int, burst_amnt:int, targets:Array[int]) -> void:
-	print("Ability Triggered on client: ", get_player_array_by_id(peer.get_unique_id())[1])
-	var who : int = get_player_by_id(current_turn_id)
+func trigger_ability_client(peer_id:int, ability_name:String, player:int, burst_amnt:int, targets:Array[int], card_id:int=-1, ability_id:int=-1) -> void:
+	print("Ability Triggered by client: ", get_player_array_by_id(peer.get_unique_id())[1])
+	var who : Array = get_player_array_by_id(current_turn_id)
 	if peer.get_unique_id() == host_id:
-		if current_players[who][4] < 1:
+		if who[4] < 1:
 			print("A client tried to take an action when they shouldn't be able to (Not enough moves remaining)!")
+			sync_all_cards(true)
 			return
 	
 	# Runs the pscript's interaction effect
-	var card_as_gui : Card_GUI = id_to_card(card)
-	var target_guis : Array[Card_GUI] = id_to_card_array(targets)
+	var ability : Attribute 
+	var p_script : PowerScript
+	var target_guis_load : Array = id_to_card_array(targets)
+	var target_guis : Array[Card_GUI]
+	target_guis.assign(target_guis_load)
+	if card_id == -1 or ability_id == -1:
+		ability = Resources.find_resource("Attribute", ability_name)
+	else:
+		var card_as_gui : Card_GUI = id_to_card(card_id)
+		ability = card_as_gui.attributes[ability_id]
+		p_script = card_as_gui.attribute_scripts[ability_id]
+	
+	if p_script == null:
+		# NOTE: Can only run scripts that don't rely on 'source'
+		p_script = ability.pscript.new([])
 	
 	for i in range(0, 1+burst_amnt):
-		card_as_gui.attribute_scripts[ability]._interaction(target_guis)
+		p_script._interaction(target_guis)
 	update_dockers()
 	
+	if peer.get_unique_id() != host_id:
+		return
+	
 	# Change the move counter, etc.
-	current_players[who][4] -= 1
+	who[4] -= 1
 	sync_all_cards(true)
 	
-	update_turn_counter.rpc_id(peer_id,current_players[who][4])
-	ability_trigger_server_notif.rpc(ability, card, burst_amnt, targets, who)
+	update_turn_counter.rpc_id(peer_id,who[4])
+	ability_trigger_server_notif.rpc(ability_name, player, burst_amnt, targets)
 	return
 
 @rpc("authority", "call_local", "reliable", 1)
@@ -928,25 +1082,21 @@ func update_turn_counter(moves:int) -> void:
 	$Unscalables/TurnTools.moves = moves
 
 @rpc("authority", "call_local", "reliable", 0)
-func ability_trigger_server_notif(ability:int, card:int, burst_amnt:int, targets:Array[int], turn_used:int) -> void:
+func ability_trigger_server_notif(ability_name:String, player:int, burst_amnt:int, targets:Array[int]) -> void:
 	# Runs the pscript's interaction visuals
-	var card_as_gui : Card_GUI = id_to_card(card)
-	var target_guis : Array[Card_GUI] = id_to_card_array(targets)
+	var ability : Attribute = Resources.find_resource("Attribute", ability_name)
+	#var card_as_gui : Card_GUI = id_to_card(card)
+	var target_guis : Array = id_to_card_array(targets)
 	
-	#displaying_ability_effects = true
-	
-	if card_as_gui == null: 
-		return
 	for target in target_guis:
 		if not is_instance_valid(target):
 			continue
-		var apply_vfx : Node2D = card_as_gui.attributes[ability].targeting.VFX_target.instantiate()
+		var apply_vfx : Node2D = ability.VFX_target.instantiate()
 		apply_vfx.finished.connect(apply_vfx.queue_free)
 		target.add_child(apply_vfx)
 		apply_vfx.position = Vector2(150, 250)
 		apply_vfx.emitting = true
 	
-	#displaying_ability_effects = false
 	clear_dead_cards()
 	
 	return
@@ -957,12 +1107,12 @@ var selecting_mulligan : bool = false ## Used to check if we need to show/hide t
 
 var selecting_cards : bool = false
 var max_selections : int = 0
-var selected_cards : Array[Card_GUI] = []
-var valid_cards : Array[Card_GUI] = []
+var selected_cards : Array[DockerChild] = []
+var valid_cards : Array[DockerChild] = []
 ## Currently just used for allowing targeting empty positions on the field
 var valid_metadata : Array[String] = []
 
-func get_targets(user:Card_GUI, target_data:TargetData) -> Array[Card_GUI]:
+func get_targets(user:int, target_data:TargetData, burst:int = 0) -> Array[DockerChild]:
 	if target_data.targets <= 0 or target_data.target_type == 0b0:
 		return []
 	selected_cards = []
@@ -971,19 +1121,19 @@ func get_targets(user:Card_GUI, target_data:TargetData) -> Array[Card_GUI]:
 	if target_data.allowed_metadata & 0b1:
 		valid_metadata.append("empty")
 	$TargetingGUI/Options/Burst/BurstSelect.value = 0
-	if target_data.allow_burst and user.burst > 0:
+	if target_data.allow_burst and burst > 0:
 		$TargetingGUI/Options/Burst.show()
-		$TargetingGUI/Options/Burst/BurstSelect.max_value = user.burst
-		$TargetingGUI/Options/Burst/BurstAvailable.text = str(user.burst)
+		$TargetingGUI/Options/Burst/BurstSelect.max_value = burst
+		$TargetingGUI/Options/Burst/BurstAvailable.text = str(burst)
 	# Target Validation Logic
 	for card in cards:
 		## For the sake of readability and debugging, these are nested if statements.
-		if not valid_metadata.has(card.input_metadata) or card.flagged_for_death:
+		if card is Item_GUI or not valid_metadata.has(card.input_metadata) or card.flagged_for_death:
 			continue
 		## So far, the "empty" metadata is only used for the Move targeting, and generally any other use cases I can think of will want to NOT target empty if there's something above it
 		if card.input_metadata == "empty" and not card.manager.check_if_position_is_valid(card.manager_position):
 			continue
-		if card.player_id == user.player_id:
+		if card.player_id == user:
 			if card.manager.identifier == "saferoom" and target_data.target_type & 0b01000:
 				valid_cards.append(card)
 			elif card.manager.identifier != "saferoom" and target_data.target_type & 0b00010:
@@ -1000,20 +1150,20 @@ func get_targets(user:Card_GUI, target_data:TargetData) -> Array[Card_GUI]:
 		print("metadata (if empty not allowed): ", valid_metadata)
 	
 	## NOTE: Don't auto-trigger if the user has burst available to use
-	if (target_data.targets < 0 or valid_cards.size() <= target_data.targets) and user.burst < 1:
+	if (target_data.targets < 0 or valid_cards.size() <= target_data.targets) and burst < 1:
 		return valid_cards
 	$Dimmer.show()
-	$TargetingGUI.show()
-	update_target_display()
 	selecting_cards = true
 	selecting_ability = true
 	max_selections = target_data.targets
+	$TargetingGUI.show()
+	update_target_display()
 	for vc in valid_cards:
 		vc.z_index = 5 + vc.manager.z_index
 	var bypass_selection_requirements : bool = false
 	if valid_cards.size() <= target_data.targets and not target_data.allow_burst:
 		return valid_cards
-	elif valid_cards.size() <= target_data.targets and user.burst > 0:
+	elif valid_cards.size() <= target_data.targets and burst > 0:
 		selected_cards = valid_cards
 		bypass_selection_requirements = true
 		for card in valid_cards:
@@ -1023,10 +1173,10 @@ func get_targets(user:Card_GUI, target_data:TargetData) -> Array[Card_GUI]:
 		if not confirmation[0] and confirmation[1] == "button":
 			selecting_cards = false
 			reset_card_indexes()
-			$TargetingGUI.hide()
 			$Dimmer.hide()
+			$TargetingGUI.hide()
 			return []
-		if selected_cards.size() == target_data.targets and confirmation[1] == "selection" and ( (user.burst < 1 and target_data.allow_burst) or not target_data.allow_burst ):
+		if selected_cards.size() == target_data.targets and confirmation[1] == "selection" and ( (burst < 1 and target_data.allow_burst) or not target_data.allow_burst ):
 			break
 		if confirmation[1] == "button" and (selected_cards.size() == target_data.targets or bypass_selection_requirements):
 			break
@@ -1036,7 +1186,7 @@ func get_targets(user:Card_GUI, target_data:TargetData) -> Array[Card_GUI]:
 	$Dimmer.hide()
 	$TargetingGUI.hide()
 	$TargetingGUI/Options/Burst.hide()
-	var ret_value : Array[Card_GUI] = []
+	var ret_value : Array[DockerChild] = []
 	ret_value.assign(selected_cards)
 	for card in ret_value:
 		card.set_selection(false)
@@ -1058,3 +1208,10 @@ func target_confirmation() -> void:
 
 func cancel_targeting() -> void:
 	tar_conf.emit(false, "button")
+
+func sword_triggered(sword : Item) -> void:
+	## Add the cost check here
+	var success : int = await trigger_ability(sword.effect, peer.get_unique_id())
+	if success:
+		# Pay cost
+		return

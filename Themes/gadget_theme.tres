@@ -1,4 +1,4 @@
-[gd_resource type="Theme" format=3 uid="uid://bahw6jj5wr8bv"]
+[gd_resource type="Theme" format=3 uid="uid://uiqisuxusgwl"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8s5l4"]
 
@@ -16,7 +16,7 @@ border_width_left = 6
 border_width_top = 6
 border_width_right = 6
 border_width_bottom = 6
-border_color = Color(0.85215324, 0.81640023, 0.099545635, 1)
+border_color = Color(0.8352941, 0.41568628, 0.09411765, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8

@@ -7,12 +7,10 @@ extends Docker
 ## A small step that is applied to cards as they move left->rightt to better distinguish them
 @export var step : float = 0.0
 
-## Assume the cards are full-sized when node is full-sized, and then adjust them to this node's scale
 func get_placements() -> Array[Vector2]:
 	var placements : Array[Vector2] = []
 	for card in assigned_cards:
-		var new_placement := get_one_placement(card.manager_position)
-		placements.append(new_placement)
+		placements.append(get_one_placement(card.manager_position))
 	return placements
 
 func get_one_placement(pos:int) -> Vector2:

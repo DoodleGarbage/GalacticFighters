@@ -1,5 +1,7 @@
 [
-	{"name":"bloshy", "deck":["Character:Bloshy Blu","Character:Bloshy Blu","Character:Ray Blaster","Character:Dummy","Character:Dummy","Character:Dummy"]},
-	{"name":"dummy", "deck":["Character:Bloshy Blu","Character:Zunie","Character:Summoner","Character:Dummy","Character:Dummy","Character:Dummy"]},
-	{"name":"way too many characters", "deck":["Character:Bloshy Blu","Character:Zunie","Character:Dummy","Character:Dummy","Character:Dummy","Character:Dummy","Character:Dummy","Character:Dummy","Character:Dummy","Character:Zunie","Character:Zunie", "Character:Bloshy Blu"]},
+	{"Name":"bloshy", "Deck":["Character:vanilla:Bloshy Blu","Character:vanilla:Bloshy Blu","Character:vanilla:Ray Blaster","Character:vanilla:Dummy","Character:vanilla:Dummy","Character:vanilla:Dummy","Item:vanilla:Apple","Gadget:vanilla:Band_of_Strength","Sword:vanilla:basicsword"]},
+	
+	{"Name":"dummy", "Deck":["Character:vanilla:Bloshy Blu","Character:vanilla:Zunie","Character:vanilla:Summoner","Character:vanilla:Dummy","Character:vanilla:Dummy","Character:vanilla:Dummy","Item:vanilla:Apple","Gadget:vanilla:Band_of_Strength","Sword:vanilla:basicsword"]},
+	
+	{"Name":"way too many characters", "Deck":["Character:vanilla:Bloshy Blu","Character:vanilla:Zunie","Character:vanilla:Dummy","Character:vanilla:Dummy","Character:vanilla:Dummy","Character:vanilla:Dummy","Character:vanilla:Dummy","Character:vanilla:Dummy","Character:vanilla:Dummy","Character:vanilla:Zunie","Character:vanilla:Zunie", "Character:vanilla:Bloshy Blu"]},
 ]

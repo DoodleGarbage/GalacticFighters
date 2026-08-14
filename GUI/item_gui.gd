@@ -3,6 +3,8 @@ class_name Item_GUI
 
 var loaded_item : Item
 
+var times_used : int = 0
+
 func load_item(item:Item) -> void:
 	
 	loaded_item = item

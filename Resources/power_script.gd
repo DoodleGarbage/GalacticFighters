@@ -24,11 +24,14 @@ func set_data(data:Array) -> void:
 		set(datum[0], datum[1])
 
 func _init(input:Array) -> void:
+	if input.size() < 1: # we don't always need to know our Source
+		return
 	source = input[0]
 
 # Virtual Functions - Override in extensions
 
 ## Called when the card this script/ability is attached to is first created.
+# Not currently implemented
 func _initialized() -> void:
 	pass
 

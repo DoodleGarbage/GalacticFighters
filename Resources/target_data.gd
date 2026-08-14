@@ -23,10 +23,7 @@ var allowed_metadata : int = 0
 ## Flags based, as opposed to an array of strings currently. TODO: The cards should be updated to use int metadata or use an array of strings
 
 
-## The effect that is displayed when an ability is used on a character
-var VFX_target : PackedScene
 
-var VFX_damage : PackedScene
 
 ## The sound effect that is displayed when an ability is used
 #var sound_effect_trigger : AudioEffect

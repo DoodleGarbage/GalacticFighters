@@ -21,8 +21,14 @@ var type : int = 0
 
 @export var targeting : TargetData
 
+## The effect that is displayed when an ability is used on a character
+var VFX_target : PackedScene
 
+var VFX_damage : PackedScene
 
 ## Duration
 ## The length of the ability - decreases by 1 at the end of each turn, deleted at 0. If less than 0, infinite duration.
 var duration : int = -1
+
+func mod_name() -> String:
+	return mod.name + ":" + name

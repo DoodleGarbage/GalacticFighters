@@ -24,7 +24,7 @@ var ordering_matters : bool = false
 ## Maximum number of cards that can be assigned to this docker - not enforced
 @export
 var max_cards : int = -1
-var assigned_cards : Array[Card_GUI] = [] :
+var assigned_cards : Array[DockerChild] = [] :
 	set(value):
 		card_assignment_changed(assigned_cards, value)
 		assigned_cards = value
@@ -45,6 +45,9 @@ func check_if_position_is_valid(pos:int) -> bool:
 func card_assignment_changed(_before, _after) -> void:
 	pass
 
-## When -1 or less, default to getting the placements for the currently assigned cards.
+
 func get_placements() -> Array[Vector2]:
 	return []
+
+func get_one_placement(pos:int) -> Vector2:
+	return Vector2()

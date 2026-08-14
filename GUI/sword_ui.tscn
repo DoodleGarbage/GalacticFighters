@@ -1,12 +1,22 @@
 [gd_scene format=3 uid="uid://d1gwxg7gtq2bl"]
 
 [ext_resource type="Texture2D" uid="uid://bq26w2kd6tauu" path="res://Data/Vanilla/Images/basicsword.png" id="1_n1acy"]
+[ext_resource type="Script" uid="uid://br85f2q3vw1y6" path="res://GUI/sword_ui.gd" id="2_8wxfg"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8wxfg"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_n1acy"]
 
-[node name="SwordUI" type="Button" unique_id=825052792]
+[node name="Sword" type="Control" unique_id=866166414]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+script = ExtResource("2_8wxfg")
+
+[node name="SwordUI" type="Button" parent="." unique_id=825052792]
+layout_mode = 0
 offset_right = 136.0
 offset_bottom = 136.0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_8wxfg")

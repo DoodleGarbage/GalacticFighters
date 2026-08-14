@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://d3cymyfnyct1s"]
+
+[ext_resource type="Script" uid="uid://cwwf261oir5re" path="res://GUI/saferoom_docker.gd" id="1_6o13r"]
+
+[node name="GadgetDocker" type="Panel" unique_id=12157030]
+offset_right = 1017.5
+offset_bottom = 522.5
+scale = Vector2(0.4, 0.4)
+mouse_filter = 2
+script = ExtResource("1_6o13r")
+identifier = "gadget"

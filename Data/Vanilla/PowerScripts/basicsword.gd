@@ -1,11 +1,13 @@
 extends PowerScript
 
-@export var status : String = "vanilla:Fire"
+@export var dmg : int = 8
 
 ## Triggered when the associated ability or move triggers a targeting request.
 func _interaction(_targets:Array[Card_GUI]) -> void:
 	for target in _targets:
-		target.apply_status(status)
+		if not is_instance_valid(target):
+			continue
+		target.damage(ability, dmg)
 
 ## Called at the start of the game turn
 func _turnstart() -> void:

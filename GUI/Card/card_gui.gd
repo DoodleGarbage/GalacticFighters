@@ -19,8 +19,9 @@ var health : int = 0 :
 	set(value):
 		if value > max_health:
 			health = max_health
-		health = value
-		$Card/BStats/Left/Health.stat = value
+		else:
+			health = value
+		$Card/BStats/Left/Health.stat = health
 var defense : int = 0 :
 	set(value):
 		defense = value
@@ -34,9 +35,9 @@ var burst : int = 0 :
 	set(value):
 		burst = value
 		$Card/BStats/Mid/Burst.stat = value
-var heal : int = 0 :
+var heal_stat : int = 0 :
 	set(value):
-		heal = value
+		heal_stat = value
 		$Card/BStats/Center/Heal.stat = value
 var armor_pierce : int = 0 :
 	set(value):
@@ -52,7 +53,7 @@ var attribute_scripts : Array = []
 
 ## Returns information of this card for the purposes of internet sync code
 func get_stats() -> Array:
-	var stat : Array = [max_health, health, defense, attack, burst, heal, armor_pierce]
+	var stat : Array = [max_health, health, defense, attack, burst, heal_stat, armor_pierce]
 	return stat
 func get_script_data() -> Array:
 	var return_data : Array = []
@@ -62,7 +63,7 @@ func get_script_data() -> Array:
 func get_attributes() -> Array[String]:
 	var return_data : Array[String] = []
 	for attr in attributes:
-		return_data.append(attr.name)
+		return_data.append(attr.mod_name())
 	return return_data
 
 
@@ -75,7 +76,7 @@ func apply_stats(stats:Array) -> void:
 	defense = stats[2]
 	attack = stats[3]
 	burst = stats[4]
-	heal = stats[5]
+	heal_stat = stats[5]
 	armor_pierce = stats[6]
 
 
@@ -118,8 +119,10 @@ const dmg_effect := preload("res://Data/Vanilla/VFX/damage_effect.tscn")
 signal dead()
 
 func damage(trigger : Attribute, amnt:int) -> void:
+	if amnt < 0:
+		heal(trigger, amnt)
 	var dmg_vfx = dmg_effect
-	if trigger != null and trigger.VFX_damage != null:
+	if trigger != null and trigger.VFX_damage != null and trigger.VFX_damage != Resources.VFX_null:
 		dmg_vfx = trigger.VFX_damage
 	## Trigger any attached passives, play visual effects, etc.
 	var dmg : int = max(amnt - defense, 0)
@@ -130,10 +133,23 @@ func damage(trigger : Attribute, amnt:int) -> void:
 	if dmg > 0:
 		var new_particle = dmg_vfx.instantiate()
 		new_particle.finished.connect(new_particle.queue_free)
-		new_particle.amount = amnt - defense
+		new_particle.amount = dmg
 		new_particle.emitting = true
 		new_particle.position = Vector2(150, 250)
 		add_child(new_particle)
+
+func heal(trigger : Attribute, amnt:int) -> void:
+	var heal_vfx = dmg_effect
+	if trigger != null and trigger.VFX_damage != null and trigger.VFX_damage != Resources.VFX_null:
+		heal_vfx = trigger.VFX_damage
+	print("Healing! Amount: ", amnt)
+	health += amnt
+	var new_particle = heal_vfx.instantiate()
+	new_particle.finished.connect(new_particle.queue_free)
+	new_particle.amount = amnt
+	new_particle.emitting = true
+	new_particle.position = Vector2(150, 250)
+	add_child(new_particle)
 
 func apply_status(status:String) -> void:
 	var status_effect : Attribute = Resources.find_resource("Attribute", status)
@@ -167,12 +183,12 @@ const abi_gui = preload("res://GUI/Card/ability_display.tscn")
 func initilize_interactions() -> void:
 	var abg : Control
 	
-	var move : Attribute = Resources.find_resource("Attribute", "MOVE")
+	var move : Attribute = Resources.find_resource("Attribute", "vanilla:MOVE")
 	attributes.append(move)
 	var m_script = move.pscript.new([self])
 	m_script.ability = move
 	attribute_scripts.append(m_script)
-	var aattack : Attribute = Resources.find_resource("Attribute", "ATTACK")
+	var aattack : Attribute = Resources.find_resource("Attribute", "vanilla:ATTACK")
 	attributes.append(aattack)
 	var a_script = aattack.pscript.new([self])
 	attribute_scripts.append(a_script)
@@ -266,7 +282,7 @@ func load_card(card:Card) -> void:
 	
 	armor_pierce = card.armor_pierce
 	burst = card.burst
-	heal = card.heal
+	heal_stat = card.heal
 	
 	## Initialize scripts for the first time
 	for attr in stored_card.attributes:
@@ -279,7 +295,7 @@ func load_card(card:Card) -> void:
 	if burst <= 0:
 		$Card/BStats/Mid/Burst.hide()
 		$Card/BStats/Mid/Empty.size_flags_stretch_ratio += 1.0
-	if heal <= 0:
+	if heal_stat <= 0:
 		$Card/BStats/Center/Heal.hide()
 	
 	update_ability_buttons()

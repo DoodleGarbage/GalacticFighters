@@ -55,3 +55,6 @@ func remove_manager() -> void:
 	if us > -1:
 		manager.assigned_cards.pop_at(us)
 		manager_position = -1
+
+func set_selection(mode:bool) -> void:
+	return

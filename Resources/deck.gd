@@ -15,11 +15,34 @@ var mod : String = ""
 static func to_str(dk:Deck) -> Array[String]:
 	var string : Array[String] = []
 	for chara in dk.characters:
-		string.append("Character:" + chara.name)
+		string.append("Character:" + chara.mod_name())
 	for gadg in dk.gadgets:
-		string.append("Gadget:" + gadg.name)
+		string.append("Gadget:" + gadg.mod_name())
 	for item in dk.items:
-		string.append("Item:"+item.name)
+		string.append("Item:"+item.mod_name())
 	if dk.sword != null:
-		string.append("Sword:"+ dk.sword.name)
+		string.append("Sword:"+dk.sword.mod_name())
 	return string
+
+static func from_str(deck:Array[String]) -> Deck:
+	var zombie : Deck = Deck.new()
+	for card in deck:
+		var split := card.split(":",false,1)
+		match(split[0]):
+			"Character":
+				var chara = Resources.find_resource(split[0], split[1])
+				if chara != null:
+					zombie.characters.append(chara)
+			"Item":
+				var item = Resources.find_resource(split[0], split[1])
+				if item != null:
+					zombie.items.append(item)
+			"Gadget":
+				var gadget = Resources.find_resource("Item", split[1])
+				if gadget != null:
+					zombie.gadgets.append(gadget)
+			"Sword":
+				var swrd = Resources.find_resource("Item", split[1])
+				if swrd != null:
+					zombie.sword = swrd
+	return zombie

@@ -30,3 +30,6 @@ var type : int = 0
 var attributes : Array[Attribute] = []
 
 var VFX_death : PackedScene
+
+func mod_name() -> String:
+	return mod.name + ":" + name

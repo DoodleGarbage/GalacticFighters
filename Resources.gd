@@ -18,20 +18,12 @@ const VFX_null : PackedScene = preload("res://Data/Vanilla/VFX/null_vfx.tscn")
 var loaded_mods : Array[Mod] = []
 var loaded_hash : PackedByteArray = []
 
-## Disabled Resources
-
-#var disabled_attributes : Array[Attribute] = []
-#var disabled_pscripts : Array[GDScript] = []
-#var disabled_characters : Array[Card] = []
-#var disabled_decks : Array[Deck] = []
-#var disabled_vfx : Array[PackedScene] = []
-#var diabled_images : Array[Texture] = []
-
 ## Loaded Resources
 
 var attributes : Array[Attribute] = []
 var pscripts : Array[GDScript] = [] # PowerScripts, but can't be a typed array
 var characters : Array[Card] = []
+var items : Array[Item] = []
 var decks : Array[Deck] = []
 var vfx : Array[PackedScene] = [] ## Isn't restricted to particle effect nodes to allow for more creative effects, so long as the root node script has a few properties of GPUParticle2D - namely, 'position',  'amount', 'emitting', and signal 'finished'
 var images : Array[Texture] = []
@@ -66,6 +58,7 @@ func find_resource(resource_type:String, resource_name:String) -> Variant:
 		"Attribute": search_array = attributes
 		"Character": search_array = characters
 		"Deck": search_array = decks
+		"Item": search_array = items
 		"String":
 			return resource_name
 		"Images": ## Just an extra way to search for images (redundancy! or bloat...)
@@ -73,8 +66,12 @@ func find_resource(resource_type:String, resource_name:String) -> Variant:
 		"Pscript", "PowerScript", "VFX":
 			return find_scene(resource_type, resource_name)
 		_: push_error("Resource array for resource type %s does not exist!" % resource_type); return
+	var split : PackedStringArray = resource_name.split(":",false,1)
+	if split.size() < 2:
+		push_error("Tried to search for resource (Type: %s, Name: %s) but no mod was specified! Specify a mod using ':'." % [resource_type, resource_name])
+		return null
 	for resource in search_array:
-		if resource.name == resource_name:
+		if resource.name == split[1] and resource.mod.name == split[0]:
 			return resource
 	push_warning("Could not find resource of type %s for name \"%s\"!" % [resource_type, resource_name])
 	return null
@@ -191,6 +188,7 @@ func load_mod(mod:Mod) -> void:
 	load_scene(mod.mod_path, mod, "PowerScript", mod.internal)
 	load_resource(mod.mod_path, mod, "Attribute", mod.internal)
 	load_resource(mod.mod_path, mod, "Character", mod.internal)
+	load_resource(mod.mod_path, mod, "Item", mod.internal)
 	load_resource(mod.mod_path, mod, "Deck", mod.internal)
 	mod.hash = mod.hashing_context.finish()
 
@@ -209,7 +207,7 @@ func load_images(mod_path:String, mod:Mod, internal:bool) -> void:
 		elif current_file.ends_with(".png") or current_file.ends_with(".jpg") or current_file.ends_with(".jpeg"):
 			if internal: ## We need special loading handling if we're loading in res://, as load_from_file will not work on export.
 				var new_text : Texture = load(dir_path + "/" + current_file)
-				new_text.resource_name = current_file.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg")
+				new_text.resource_name = mod.name + ":" + current_file.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg")
 				images.append(new_text)
 				current_file = dir.get_next()
 				continue
@@ -242,7 +240,7 @@ func load_scene(mod_path : String, mod:Mod, resource_type : String, internal:boo
 			next = dir.get_next()
 			continue
 		var new_scene = load(directory + "/" + next)
-		new_scene.resource_name = next.trim_suffix(".gd").trim_suffix(".tscn")
+		new_scene.resource_name = mod.name + ":" + next.trim_suffix(".gd").trim_suffix(".tscn")
 		match(resource_type):
 			"VFX": vfx.append(new_scene)
 			"PowerScript": 
@@ -291,11 +289,12 @@ func load_resource_from_file(file:FileAccess, resource_name:String, mod:Mod) -> 
 				
 				new_attr.mod = mod
 				new_attr.name = resource["Name"]
+				new_attr.desc = resource["Desc"]
 				
 				new_attr.icon = find_image(resource["Icon"])
 				new_attr.pscript = find_resource("Pscript", resource["Pscript"])
 				new_attr.type = resource["Type"]
-				new_attr.desc = resource["Desc"]
+				
 				
 				var targeting_data : TargetData = TargetData.new()
 				targeting_data.allow_burst = resource["AllowBurst"]
@@ -309,17 +308,14 @@ func load_resource_from_file(file:FileAccess, resource_name:String, mod:Mod) -> 
 				
 				var VFX_target = find_resource("VFX", resource["VFX_target"])
 				if VFX_target == null:
-					targeting_data.VFX_target = VFX_null
+					new_attr.VFX_target = VFX_null
 				var VFX_damage = find_resource("VFX", resource["VFX_damage"])
 				if VFX_damage == null:
-					targeting_data.VFX_target = VFX_null
+					new_attr.VFX_target = VFX_null
 				
 				new_attr.targeting = targeting_data
 				
 				attributes.append(new_attr)
-			"PowerScript":
-				## Power scripts must be uniquely loaded due to their nature as scripts
-				pass
 			"Character": ## Must be loaded: Attributes, Images
 				var new_char : Card = Card.new()
 				
@@ -347,9 +343,9 @@ func load_resource_from_file(file:FileAccess, resource_name:String, mod:Mod) -> 
 				characters.append(new_char)
 			"Deck": ## Must be loaded: Everything else
 				var new_deck : Deck = Deck.new()
-				new_deck.name = resource["name"]
+				new_deck.name = resource["Name"]
 				var deck_strings : Array[String] = []
-				deck_strings.assign(resource["deck"])
+				deck_strings.assign(resource["Deck"])
 				for component in deck_strings:
 					var split := component.split(":", true, 1)
 					match(split[0]):
@@ -357,6 +353,30 @@ func load_resource_from_file(file:FileAccess, resource_name:String, mod:Mod) -> 
 							var chara : Card = find_resource("Character", split[1])
 							if chara != null:
 								new_deck.characters.append(chara)
-						"Item", "Gadget", "Sword":
-							push_warning("loading deck that has ", split[0], ". Ignoring.")
+						"Item":
+							var itm : Item = find_resource("Item", split[1])
+							if itm != null:
+								new_deck.items.append(itm)
+						"Gadget":
+							var gdg : Item = find_resource("Item", split[1])
+							if gdg != null:
+								new_deck.gadgets.append(gdg)
+						"Sword":
+							var swrd : Item = find_resource("Item", split[1])
+							if swrd != null:
+								new_deck.sword = swrd
 				decks.append(new_deck)
+			"Item": ## Must be loaded: Attributes, Images
+				var new_item : Item = Item.new()
+				new_item.mod = mod
+				new_item.name = resource["Name"]
+				new_item.desc = resource["Desc"]
+				new_item.icon = find_image(resource["Icon"])
+				
+				new_item.type = resource["Type"]
+				new_item.effect = find_resource("Attribute", resource["Effect"])
+				
+				new_item.uses = resource["Uses"]
+				new_item.cost = resource["Cost"]
+				
+				items.append(new_item)
