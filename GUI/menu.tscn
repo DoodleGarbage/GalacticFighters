@@ -10,7 +10,6 @@
 [ext_resource type="PackedScene" uid="uid://b7u8fehe1jgc" path="res://GUI/deck_menu.tscn" id="5_o1bug"]
 [ext_resource type="PackedScene" uid="uid://dhrx3hltyg7fb" path="res://Gameplay/playfield.tscn" id="6_bi43m"]
 [ext_resource type="PackedScene" uid="uid://doaiy2ongcjk4" path="res://GUI/mini_deck.tscn" id="8_urio0"]
-[ext_resource type="Script" uid="uid://cxfuxt7ei4sgj" path="res://GUI/copy_button_text.gd" id="9_ygayt"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ygayt"]
 bg_color = Color(0.28485027, 0.2848503, 0.28485018, 1)
@@ -329,7 +328,6 @@ text = "IP (click to copy):"
 [node name="IP" type="Button" parent="MainMenu/Lobby/corner/IPS" unique_id=173823047]
 layout_mode = 2
 text = "IP ADDRESS"
-script = ExtResource("9_ygayt")
 
 [node name="ready" type="Button" parent="MainMenu/Lobby/corner" unique_id=1688138090]
 layout_mode = 2
@@ -427,6 +425,7 @@ visible = false
 
 [node name="Playfield" parent="Gameplay" unique_id=178232400 instance=ExtResource("6_bi43m")]
 
+[connection signal="upnp_thread_cleared" from="." to="." method="update_upnp_display"]
 [connection signal="reload_scene" from="ModList" to="." method="_on_reload_scene"]
 [connection signal="pressed" from="ModList/BG/List/AcceptCancel/Apply" to="ModList" method="_on_apply_pressed"]
 [connection signal="pressed" from="ModList/BG/List/AcceptCancel/Cancel" to="ModList" method="_on_cancel_pressed"]
@@ -438,7 +437,7 @@ visible = false
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Join/JoinButton" to="." method="_attempt_join"]
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Host/HostButton" to="." method="_attempt_host"]
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Exit" to="." method="return_to_menu"]
-[connection signal="pressed" from="MainMenu/Lobby/corner/IPS/IP" to="MainMenu/Lobby/corner/IPS/IP" method="_pressed"]
+[connection signal="pressed" from="MainMenu/Lobby/corner/IPS/IP" to="." method="_on_ip_copy_pressed"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/ready" to="." method="ready_button_pressed"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/gamestarter" to="." method="button_start_game"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/exit" to="." method="_quit_lobby"]

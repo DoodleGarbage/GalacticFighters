@@ -36,8 +36,12 @@ func _attempt_host() -> void:
 	our_name = $MainMenu/Waiting/VBoxContainer/Name/PlayerName.text
 	peer = ENetMultiplayerPeer.new()
 	var port : int = int($MainMenu/Waiting/VBoxContainer/Host/HostIP.text)
+	if port == 0:
+		print("Port defaulted")
+		port = 7777
 	if port < 1024 or port > 65535: # Checks the validity of the port. Below 1024 is privileged (not doable) stuff
-		port = 7777 ## TODO: Make this error instead of defaulting to this port
+		return
+		#port = 7777 ## TODO: Make this error instead of defaulting to this port
 	var err = peer.create_server(port,32)
 	if err != 0:
 		push_error("Failed to create an ENet host - canceling server hosting")
@@ -49,14 +53,41 @@ func _attempt_host() -> void:
 	hide_all()
 	$MainMenu/Lobby.show()
 	reset_lobby()
-	var upnp = UPNP.new()
-	var success : int = upnp.discover(1000) # 1000 is timeout in milliseconds
-	if success == 0:
-		upnp.add_port_mapping(port)
-		$MainMenu/Lobby/corner/IPS/IP.text = str(upnp.query_external_address()) + ":" + str(port)
-	else:
-		$MainMenu/Lobby/corner/IPS/IP.text = "Port (IP unknown/not online): " + str(port)
+	$MainMenu/Lobby/corner/IPS/IP.text = "Loading..."
 	host_id = peer.get_unique_id()
+	var new_thread := Thread.new()
+	mutex = Mutex.new()
+	new_thread.start(test_server_upnp.bind(port), Thread.PRIORITY_NORMAL)
+
+func update_upnp_display() -> void:
+	$MainMenu/Lobby/corner/IPS/IP.text = thread_locked_iptext
+
+
+var mutex : Mutex
+var thread_locked_iptext : String = ""
+
+@warning_ignore("unused_signal") # grrr godot
+signal upnp_thread_cleared
+
+func test_server_upnp(port:int) -> void:
+	mutex.lock()
+	print("Creating UPnP")
+	var upnp = UPNP.new()
+	var success : int = upnp.discover(1000) # 1000 is timeout - the duration is weird tho
+	print("UPnP Result: ", success)
+	if success == 0:
+		print("Printing Gateway:")
+		print(upnp.get_gateway())
+		print("Adding UPnP port mapping")
+		upnp.add_port_mapping(port)
+		thread_locked_iptext = str(upnp.query_external_address()) + ":" + str(port)
+		ip_copy_text = thread_locked_iptext
+	else:
+		push_warning("UPnP Error: ", success, ". Could not create a port forward.")
+		ip_copy_text = str(port)
+		thread_locked_iptext = "Unknown; Port: " + str(port)
+	mutex.unlock()
+	call_deferred("emit_signal","upnp_thread_cleared")
 
 ## TODO: Make this happen asynchronously so the whole game doesn't freeze - however you do that
 
@@ -341,5 +372,10 @@ func load_mod_list() -> void:
 	load_version_hash()
 
 
+
 func _on_hash_checksum_copy_pressed() -> void:
 	DisplayServer.clipboard_set(Resources.loaded_hash.hex_encode())
+
+var ip_copy_text : String = ""
+func _on_ip_copy_pressed() -> void:
+	DisplayServer.clipboard_set(ip_copy_text)
