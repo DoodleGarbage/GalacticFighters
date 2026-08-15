@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://npeseuu36kyp"]
+
+[ext_resource type="Script" path="res://HolePunchNetworking/simple_hole_punch_server.gd" id="1_aagsv"]
+
+[node name="SignalingServer" type="Node" unique_id=708851782]
+script = ExtResource("1_aagsv")
+serv_ip = "73.25.210.98"
+serv_port = "7777"

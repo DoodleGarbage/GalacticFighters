@@ -42,6 +42,7 @@ folder_colors={
 "res://Data/": "purple",
 "res://GUI/": "green",
 "res://Gameplay/": "red",
+"res://HolePunchNetworking/": "gray",
 "res://ParticleEffects/": "yellow",
 "res://Resources/": "purple",
 "res://Themes/": "yellow"

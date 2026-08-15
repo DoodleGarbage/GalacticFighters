@@ -15,10 +15,18 @@ var our_name : String = "PLAYERNAME"
 var current_lobby_players : Array = []
 
 var host_id : int
+#var holepunch_id : String = "" #str(randi()) #OS.get_unique_id() 
+## Switch holepunch_id to OS when not performing local testing
+@export var holepunch_rendevouz_address : String = "73.25.210.98"
+@export var holepunch_port : int = 7777
 
 const mod_display_scene := preload("res://GUI/mod_display.tscn")
 
+#var hole_puncher
+
 func _ready() -> void:
+	
+	#holepunch_id = str(randf())
 	
 	## Load Mod List Display
 	load_mod_list()
@@ -29,87 +37,160 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_server_disconnect)
 	multiplayer.peer_disconnected.connect(_disconnect)
 	
+	## Initalize HolePuncher
+	#hole_puncher = preload("res://addons/Holepunch/holepunch_node.gd").new()
+	#hole_puncher.rendevouz_address = holepunch_rendevouz_address
+	#hole_puncher.rendevouz_port = holepunch_port
+	#hole_puncher.hole_punched.connect(hole_punched)
+	#add_child(hole_puncher)
+	## ---
+	
+	#var result = await hole_puncher.hole_punched
+	#var my_pot = result [0]
+
+#func begin_holepunch(game_id, host_status:bool) -> void:
+	#var player_id = OS.get_unique_id()
+	#var is_host : bool = true
+	##var game_id : int = randi()
+	#hole_puncher.start_traversal(game_id, is_host, player_id)
+
+var hosting : bool = false
+
+## Using HolePunch Addon
+func nat_traversal(is_host:bool, game_code:String="") -> void:
+	var hole_puncher = HolePuncher.new()
+	hole_puncher.rendevouz_address = holepunch_rendevouz_address
+	hole_puncher.rendevouz_port = holepunch_port
+	add_child(hole_puncher)
+	hosting = is_host
+	hole_puncher.hole_punched.connect(hole_punched)
+	hole_puncher.session_registered.connect(nat_session_registered)
+	var player_host = "host" if is_host else "client"
+	print("Starting hole-punch as %s" % player_host)
+	var holepunch_id = "%s_%s" % [OS.get_unique_id(), player_host]
+	hole_puncher.our_id = holepunch_id
+	var game_id : String = game_code
+	if game_code == "":
+		game_id = generate_game_code()
+		print("Created game with code: ", game_id)
+		$MainMenu/Waiting/VBoxContainer/Join/GameID.text = game_id
+	hole_puncher.start_traversal(game_id, is_host, holepunch_id)
+
+func hole_punched(my_port, hosts_port, hosts_address) -> void:
+	print("Hole-punch successful!")
+	peer = ENetMultiplayerPeer.new()
+	if hosting:
+		peer.create_server(my_port, 1)
+		multiplayer.multiplayer_peer = peer
+		current_lobby_players.append([our_name, peer.get_unique_id(), Deck.to_str(prepared_deck), false])
+		hide_all()
+		$MainMenu/Lobby.show()
+		reset_lobby()
+		#get_tree().set_multiplayer(peer)
+		return
+	peer.create_client(hosts_address, hosts_port, 0, 0, 0, my_port)
+	multiplayer.multiplayer_peer = peer
+
+func nat_session_registered() -> void:
+	print("We've connected with the signaling server.")
+
+## Using SimpleHolePunch
+#func nat_traversal(is_host:bool, game_code:String="") -> void:
+	#var game_id : String = game_code
+	#if game_code == "":
+		#game_id = generate_game_code()
+		#print("Created game with code: ", game_id)
+		#$MainMenu/Waiting/VBoxContainer/Join/GameID.text = game_id
+	#var player_host = "host" if is_host else "client"
+	#var holepunch_id = "%s_%s" % [OS.get_unique_id(), player_host]
+	#
+	#print("Starting hole-punch as %s" % player_host)
+	#
+	#var hole_puncher = SimpleHolePunchClient.new()
+	#hole_puncher.start_session.connect(nat_session_registered)
+	#hole_puncher.bad_server.connect(_bad_server)
+	#
+	#if is_host:
+		#hole_puncher.start_server.connect(_start_peer_server)
+		#hole_puncher.new_name.connect(_new_peer_joined)
+		#hole_puncher.host_session(game_id, holepunch_id)
+	#else:
+		#hole_puncher.start_client.connect(_start_peer_client)
+		#hole_puncher.bad_session.connect(_session_error)
+		#hole_puncher.join_session(game_id, holepunch_id)
+
+#func nat_session_registered(session_id) -> void:
+	#print("We've registered with the server! Session ID: ", session_id)
+#
+#func _start_peer_server(port:int) -> void:
+	#print("Starting server on port: ", port)
+	#peer = ENetMultiplayerPeer.new()
+	#var err = peer.create_server(port)
+	#if err != 0:
+		#push_error("Error %s occured when creating peer server on port %s." % [err, port])
+		#return
+	#multiplayer.multiplayer_peer = peer
+	#host_id = peer.get_unique_id()
+	#current_lobby_players.append([our_name, host_id, Deck.to_str(prepared_deck), false])
+	#hide_all()
+	#$MainMenu/Lobby.show()
+	#reset_lobby()
+
+#func _start_peer_client(ip:String, port:int, local_port:int) -> void:
+	#print("Joining server at address: %s:%s with local port: %s" % [ip, port, local_port])
+	#peer = ENetMultiplayerPeer.new()
+	#var err = peer.create_client(ip,port,0,0,0,local_port)
+	#if err != 0:
+		#push_warning("Error %s occured when joining peer server above." % [err])
+		#return
+	#multiplayer.multiplayer_peer = peer
+#
+#func _new_peer_joined(peer_name:String) -> void:
+	#print("A new peer has joined the server. Their name: ", peer_name)
+#
+#func _session_error(key:String) -> void:
+	#push_error("Failed to join a session. Session does not exist. Key: %s" )
+#
+#func _bad_server(key:String) -> void:
+	#push_error("The signaling server is unresponsive. Key: %s" % key)
 
 ## Host a lobby
 func _attempt_host() -> void:
+	print("Beginning to attempt host")
 	current_lobby_players = []
 	our_name = $MainMenu/Waiting/VBoxContainer/Name/PlayerName.text
-	peer = ENetMultiplayerPeer.new()
-	var port : int = int($MainMenu/Waiting/VBoxContainer/Host/HostIP.text)
-	if port == 0:
-		print("Port defaulted")
-		port = 7777
-	if port < 1024 or port > 65535: # Checks the validity of the port. Below 1024 is privileged (not doable) stuff
-		return
-		#port = 7777 ## TODO: Make this error instead of defaulting to this port
-	var err = peer.create_server(port,32)
-	if err != 0:
-		push_error("Failed to create an ENet host - canceling server hosting")
-		return
-	multiplayer.multiplayer_peer = peer
-	
-	current_lobby_players.append([our_name, peer.get_unique_id(), Deck.to_str(prepared_deck), false])
-	
-	hide_all()
-	$MainMenu/Lobby.show()
-	reset_lobby()
-	$MainMenu/Lobby/corner/IPS/IP.text = "Loading..."
-	host_id = peer.get_unique_id()
-	var new_thread := Thread.new()
-	mutex = Mutex.new()
-	new_thread.start(test_server_upnp.bind(port), Thread.PRIORITY_NORMAL)
+	#hosting = true
+	## Begin Hole Punching
+	var game_id : String = $MainMenu/Waiting/VBoxContainer/Join/GameID.text
+	#$MainMenu/Waiting/VBoxContainer/Join/GameID.editable = false
+	nat_traversal(true, game_id)
 
-func update_upnp_display() -> void:
-	$MainMenu/Lobby/corner/IPS/IP.text = thread_locked_iptext
-
-
-var mutex : Mutex
-var thread_locked_iptext : String = ""
-
-@warning_ignore("unused_signal") # grrr godot
-signal upnp_thread_cleared
-
-func test_server_upnp(port:int) -> void:
-	mutex.lock()
-	print("Creating UPnP")
-	var upnp = UPNP.new()
-	var success : int = upnp.discover(1000) # 1000 is timeout - the duration is weird tho
-	print("UPnP Result: ", success)
-	if success == 0:
-		print("Printing Gateway:")
-		print(upnp.get_gateway())
-		print("Adding UPnP port mapping")
-		upnp.add_port_mapping(port)
-		thread_locked_iptext = str(upnp.query_external_address()) + ":" + str(port)
-		ip_copy_text = thread_locked_iptext
-	else:
-		push_warning("UPnP Error: ", success, ". Could not create a port forward.")
-		ip_copy_text = str(port)
-		thread_locked_iptext = "Unknown; Port: " + str(port)
-	mutex.unlock()
-	call_deferred("emit_signal","upnp_thread_cleared")
-
-## TODO: Make this happen asynchronously so the whole game doesn't freeze - however you do that
 
 ## Join a lobby
 func _attempt_join() -> void:
+	print("Attempting to join a game")
+	current_lobby_players = []
 	our_name = $MainMenu/Waiting/VBoxContainer/Name/PlayerName.text
-	var IP_address : String = $MainMenu/Waiting/VBoxContainer/Join/JoinInput.text
-	if IP_address == "":
-		IP_address = "127.0.0.1:7777"
-	peer = ENetMultiplayerPeer.new()
-	var seperate := IP_address.split(":")
-	if seperate.size() != 2:
-		push_error("Tried to join a game, but the IP address was formatted incorrectly!")
+	#hosting = false
+	
+	## Begin hole-punching
+	var game_code = $MainMenu/Waiting/VBoxContainer/Join/GameID.text
+	if game_code == "":
+		push_warning("Tried to join without entering a game code.")
 		return
-	var ip : String = seperate[0]
-	var port : int = int(seperate[1])
-	var error := peer.create_client(ip, port)
-	if error != OK:
-		push_error("There was an issue connecting! Error code: ", error)
-	$MainMenu/Lobby/corner/IPS/IP.text = ip + ":" + str(port)
-	multiplayer.multiplayer_peer = peer
-	print("Should be joining...")
+	nat_traversal(false, game_code)
+
+func generate_game_code() -> String:
+	var rng = RandomNumberGenerator.new()
+	rng.randomize()
+	var length = 4
+	var result = ''
+	for _char in length:
+		var ascii = rng.randi_range(0, 25) + 65
+		result += '%c' % ascii
+	return result
+
+
 
 const plgui := preload("res://GUI/playerlobby_deck.tscn")
 func load_lobby_gui() -> void:
@@ -312,6 +393,7 @@ func _start_pressed() -> void:
 	$MainMenu/Menu/VBoxContainer/AccessedMenu.show()
 
 func hide_all() -> void:
+	$MainMenu/Waiting/VBoxContainer/Join/GameID.editable = true
 	$ModList.hide()
 	$MainMenu/Menu.hide()
 	$DeckBuilder.hide()
