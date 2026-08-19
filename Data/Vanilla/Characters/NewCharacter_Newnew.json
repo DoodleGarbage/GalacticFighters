@@ -1,0 +1,4 @@
+[
+	{"Name":"Marksman","FullProfile":"vanilla:MarksmanFullprofile","MiniProfile":"vanilla:MarksmanMiniprofile", "Type":1, "Health":18, "Defense": -1, "Attack": 7, "Burst": 0, "Heal": 0, "ArmorPierce": 2, "Attributes":["vanilla:FIRE BLAST"], "VFX_death":""},
+	{"Name":"Trooper","FullProfile":"vanilla:TrooperFullProfile","MiniProfile":"vanilla:TrooperMiniProfile", "Type":1, "Health":22, "Defense": 0, "Attack": 2, "Burst": 3, "Heal": 0, "ArmorPierce": 0, "Attributes":["vanilla:FIRE BLAST"], "VFX_death":""},
+]

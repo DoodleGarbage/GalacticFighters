@@ -5,6 +5,10 @@ extends Node
 
 
 func _init() -> void:
+	var args = Array(OS.get_cmdline_args())
+	if args.has("-s"):
+		return
+	
 	for internal in [true,false]:
 		init_mods(internal)
 	reload_mods(true)

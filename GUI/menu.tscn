@@ -14,6 +14,20 @@
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ygayt"]
 bg_color = Color(0.28485027, 0.2848503, 0.28485018, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c13uq"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.1764706, 0.1764706, 0.1764706, 0.6392157)
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_urio0"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8s5l4"]
@@ -248,29 +262,38 @@ scroll_fit_content_height = true
 [node name="Join" type="HBoxContainer" parent="MainMenu/Waiting/VBoxContainer" unique_id=377116248]
 layout_mode = 2
 
-[node name="JoinInput" type="TextEdit" parent="MainMenu/Waiting/VBoxContainer/Join" unique_id=1508883584]
+[node name="GameID" type="TextEdit" parent="MainMenu/Waiting/VBoxContainer/Join" unique_id=1508883584]
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
-
-[node name="JoinButton" type="Button" parent="MainMenu/Waiting/VBoxContainer/Join" unique_id=2084692074]
-layout_mode = 2
-text = "JOIN"
+theme_override_colors/font_readonly_color = Color(0.74559146, 0.7455911, 0.74559116, 0.88235295)
+theme_override_styles/read_only = SubResource("StyleBoxFlat_c13uq")
+placeholder_text = "Game ID"
 
 [node name="Host" type="HBoxContainer" parent="MainMenu/Waiting/VBoxContainer" unique_id=1903240587]
 layout_mode = 2
 
 [node name="HostIP" type="TextEdit" parent="MainMenu/Waiting/VBoxContainer/Host" unique_id=81494801]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_readonly_color = Color(0, 0, 0, 1)
 theme_override_styles/read_only = SubResource("StyleBoxFlat_urio0")
-placeholder_text = "SERVER PORT (i.e. 4444)"
+placeholder_text = "Game ID"
 emoji_menu_enabled = false
 virtual_keyboard_enabled = false
 
 [node name="HostButton" type="Button" parent="MainMenu/Waiting/VBoxContainer/Host" unique_id=207641960]
+custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 text = "HOST"
+
+[node name="JoinButton" type="Button" parent="MainMenu/Waiting/VBoxContainer/Host" unique_id=2084692074]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "JOIN"
 
 [node name="Label" type="Label" parent="MainMenu/Waiting/VBoxContainer" unique_id=491302504]
 visible = false
@@ -425,7 +448,6 @@ visible = false
 
 [node name="Playfield" parent="Gameplay" unique_id=178232400 instance=ExtResource("6_bi43m")]
 
-[connection signal="upnp_thread_cleared" from="." to="." method="update_upnp_display"]
 [connection signal="reload_scene" from="ModList" to="." method="_on_reload_scene"]
 [connection signal="pressed" from="ModList/BG/List/AcceptCancel/Apply" to="ModList" method="_on_apply_pressed"]
 [connection signal="pressed" from="ModList/BG/List/AcceptCancel/Cancel" to="ModList" method="_on_cancel_pressed"]
@@ -434,8 +456,8 @@ visible = false
 [connection signal="pressed" from="MainMenu/Menu/VBoxContainer/AccessedMenu/Deck" to="." method="_on_deck_pressed"]
 [connection signal="battle_deck" from="MainMenu/BattleSelect" to="." method="ready_for_battle"]
 [connection signal="pressed" from="MainMenu/BattleSelect/List/Back" to="." method="return_to_menu"]
-[connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Join/JoinButton" to="." method="_attempt_join"]
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Host/HostButton" to="." method="_attempt_host"]
+[connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Host/JoinButton" to="." method="_attempt_join"]
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Exit" to="." method="return_to_menu"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/IPS/IP" to="." method="_on_ip_copy_pressed"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/ready" to="." method="ready_button_pressed"]
