@@ -20,10 +20,12 @@ signal session_registered
 var server_udp = PacketPeerUDP.new()
 var peer_udp = PacketPeerUDP.new()
 
-#Set the rendevouz address to the IP address of your third party server
-@export var rendevouz_address = "" 
-#Set the rendevouz port to the port of your third party server
-@export var rendevouz_port : int = 4000
+#Set the address to the IP address of your third party signaling server
+@export var signaling_address = "" 
+#Set the port of your third party signaling server
+@export var signaling_port : int = 0
+#Set the internal local port to connect to the signaling server with
+@export var local_port : int = 4000
 #This is the range of ports you will search if you hear no response from the first port tried
 @export var port_cascade_range = 1000
 #The amount of messages of the same type you will send before cascading or giving up
@@ -50,6 +52,8 @@ var ports_tried = 0
 var greets_sent = 0
 var gos_sent = 0
 
+var delay : float = 0.0
+
 const REGISTER_SESSION = "rs:"
 const REGISTER_CLIENT = "rc:"
 const EXCHANGE_PEERS = "ep:"
@@ -62,8 +66,12 @@ const SERVER_INFO = "peers"
 
 const MAX_PLAYER_COUNT = 2
 
+const DELAY_TIMER : float = 2
+
 # warning-ignore:unused_argument
 func _process(delta):
+	delay += delta
+	
 	if peer_udp.get_available_packet_count() > 0:
 		var array_bytes = peer_udp.get_packet()
 		var packet_string = array_bytes.get_string_from_ascii()
@@ -102,12 +110,13 @@ func _process(delta):
 				#packet_string = packet_string.right(6)
 				
 				if packet_string.length() > 2:
-					var m = packet_string.split(":")
-					print("Registering with port: ", m[3], " and address: ", m[2])
+					var m = packet_string.split(":",true,2)
+					var addr = m[2].rsplit(":",true,1)
+					print("Registering with port: ", addr[1], " and address: ", addr[0])
 					#peer[m[0]] = {"port":m[3], "address":m[2]}
 					var peer_name = m[1]
-					var peer_address = m[2]
-					var peer_port = m[3]
+					var peer_address = addr[0]
+					var peer_port = addr[1]
 					
 					peer[peer_name] = {"port":peer_port, "address":peer_address}
 					print(peer_name, " ", peer[peer_name])
@@ -161,6 +170,7 @@ func _ping_peer():
 		print("Pinging peers.")
 		for p in peer.keys():
 			peer_udp.set_dest_address(peer[p].address, int(peer[p].port))
+			print("Sending ping to address: ", peer[p].address, ":", int(peer[p].port))
 			var buffer = PackedByteArray()
 			buffer.append_array(("greet:"+client_name+":"+str(own_port)+":"+peer[p].port).to_utf8_buffer())
 			peer_udp.put_packet(buffer)
@@ -183,7 +193,8 @@ func _ping_peer():
 			buffer.append_array(("confirm:"+str(own_port)+":"+client_name+":"+str(is_host)+":"+peer[p].port).to_utf8_buffer())
 			peer_udp.put_packet(buffer)
 
-	if  recieved_peer_confirm:
+	if  recieved_peer_confirm and delay > DELAY_TIMER:
+		delay = 0
 		for p in peer.keys():
 			peer_udp.set_dest_address(peer[p].address, int(peer[p].port))
 			var buffer = PackedByteArray()
@@ -206,7 +217,7 @@ func start_peer_contact():
 	if peer_udp.is_bound():
 		peer_udp.close()
 	print("Opening peer UDP")
-	var err = peer_udp.bind(own_port, "*")
+	var err = peer_udp.bind(own_port, "::")
 	if err != OK:
 		print("Error listening on port: " + str(own_port) +" Error: " + str(err))
 	p_timer.start()
@@ -216,7 +227,7 @@ func start_peer_contact():
 func finalize_peers(id):
 	var buffer = PackedByteArray()
 	buffer.append_array((EXCHANGE_PEERS+str(id)).to_utf8_buffer())
-	server_udp.set_dest_address(rendevouz_address, rendevouz_port)
+	server_udp.set_dest_address(signaling_address, signaling_port)
 	server_udp.put_packet(buffer)
 
 
@@ -224,7 +235,7 @@ func finalize_peers(id):
 func checkout():
 	var buffer = PackedByteArray()
 	buffer.append_array((CHECKOUT_CLIENT+client_name).to_utf8_buffer())
-	server_udp.set_dest_address(rendevouz_address, rendevouz_port)
+	server_udp.set_dest_address(signaling_address, signaling_port)
 	server_udp.put_packet(buffer)
 
 
@@ -233,11 +244,18 @@ func start_traversal(id, is_player_host, player_name):
 	if server_udp.is_bound():
 		print("Closing already bouund server")
 		server_udp.close()
-
-	var err = server_udp.bind(rendevouz_port, "*")
+	
+	print("Local IP addresses:")
+	print(IP.get_local_addresses())
+	
+	#var ipv6 : Array[Sting] = []
+	#for addr in IP.get_local_addresses():
+		#if addr.contains(":") and not addr.contains(0):
+			#ipv6.append(addr)
+	
+	var err = server_udp.bind(local_port,"::")
 	if err != OK:
-		print("Error listening on port: " + str(rendevouz_port) + " to server: " + rendevouz_address, " Error Code: ", err)
-
+		print("Error listening on port: " + str(local_port) + " to server: " + signaling_address, " Error Code: ", err)
 	is_host = is_player_host
 	client_name = player_name
 	found_server = false
@@ -253,10 +271,11 @@ func start_traversal(id, is_player_host, player_name):
 	session_id = id
 	
 	if (is_host):
+		print("Sending game init message")
 		var buffer = PackedByteArray()
 		buffer.append_array((REGISTER_SESSION+session_id+":"+str(MAX_PLAYER_COUNT)).to_utf8_buffer())
 		server_udp.close()
-		server_udp.set_dest_address(rendevouz_address, rendevouz_port)
+		server_udp.set_dest_address(signaling_address, signaling_port)
 		server_udp.put_packet(buffer)
 	else:
 		_send_client_to_server()
@@ -268,7 +287,7 @@ func _send_client_to_server():
 	var buffer = PackedByteArray()
 	buffer.append_array((REGISTER_CLIENT+client_name+":"+session_id).to_utf8_buffer())
 	server_udp.close()
-	server_udp.set_dest_address(rendevouz_address, rendevouz_port)
+	server_udp.set_dest_address(signaling_address, signaling_port)
 	server_udp.put_packet(buffer)
 
 

@@ -50,6 +50,7 @@ Label/styles/normal = SubResource("StyleBoxFlat_c4qn5")
 [node name="Root" type="Node" unique_id=595754331]
 script = ExtResource("2_o1bug")
 base_hash = "98edae7b77cfc0529d6c074a23986d81"
+signaling_server_ipv6 = "2601:1c2:4480:73a0::3cee"
 
 [node name="ModList" type="CanvasLayer" parent="." unique_id=936775308]
 layer = 3
@@ -258,6 +259,17 @@ layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "PLAYERNAME"
 scroll_fit_content_height = true
+
+[node name="Port" type="HBoxContainer" parent="MainMenu/Waiting/VBoxContainer" unique_id=1411643252]
+layout_mode = 2
+
+[node name="LocalPort" type="TextEdit" parent="MainMenu/Waiting/VBoxContainer/Port" unique_id=1751337808]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_readonly_color = Color(0.74559146, 0.7455911, 0.74559116, 0.88235295)
+theme_override_styles/read_only = SubResource("StyleBoxFlat_c13uq")
+placeholder_text = "Internal Local Port"
 
 [node name="Join" type="HBoxContainer" parent="MainMenu/Waiting/VBoxContainer" unique_id=377116248]
 layout_mode = 2

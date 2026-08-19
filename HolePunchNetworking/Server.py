@@ -60,6 +60,7 @@ class ServerProtocol(DatagramProtocol):
 	def datagramReceived(self, datagram, address):
 		"""Handle incoming datagram messages."""
 		print(datagram)
+		print("Recieved address is: ", address)
 		data_string = datagram.decode("utf-8")
 		msg_type = data_string[:2]
 
@@ -74,10 +75,12 @@ class ServerProtocol(DatagramProtocol):
 
 		elif msg_type == "rc":
 			# register client
+			print("Registering client, data is: ", data_string)
 			split = data_string.split(":")
 			c_name = split[1]
 			c_session = split[2]
 			c_ip, c_port = address
+			print("Sent message " + 'ok:'+str(c_port) + " to address: " + str(c_ip) + ":" + str(c_port))
 			self.transport.write(bytes('ok:'+str(c_port),"utf-8"), address)
 			self.register_client(c_name, c_session, c_ip, c_port)
 
@@ -119,10 +122,11 @@ class Session:
 			for client in self.registered_clients:
 				if not client.name == addressed_client.name:
 					address_list.append(client.name + ":" + address_to_string((client.ip, client.port)))
-			address_string = ",".join(address_list)
-			print("We sent message: " + "peers:" + address_string)
-			message = bytes( "peers:" + address_string, "utf-8")
-			self.server.transport.write(message, (addressed_client.ip, addressed_client.port))
+			for i in range(2):
+				address_string = ",".join(address_list)
+				print("We sent message: " + "peers:" + address_string)
+				message = bytes( "peers:" + address_string, "utf-8")
+				self.server.transport.write(message, (addressed_client.ip, addressed_client.port))
 
 		print("Peer info has been sent. Terminating Session")
 		for client in self.registered_clients:
@@ -143,11 +147,12 @@ class Client:
 		self.received_peer_info = False
 
 if __name__ == '__main__':
-	if len(sys.argv) < 2:
-		print("Usage: ./server.py PORT")
+	if len(sys.argv) < 3:
+		print("Usage: ./server.py ADDR PORT")
 		sys.exit(1)
 
-	port = int(sys.argv[1])
-	reactor.listenUDP(port, ServerProtocol())
-	print('Listening on *:%d' % (port))
+	port = int(sys.argv[2])
+	addr = sys.argv[1]
+	reactor.listenUDP(port, ServerProtocol(), addr)
+	print('Listening on %s:%d' % (addr, port))
 	reactor.run()

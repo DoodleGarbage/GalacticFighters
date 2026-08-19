@@ -17,7 +17,8 @@ var current_lobby_players : Array = []
 var host_id : int
 #var holepunch_id : String = "" #str(randi()) #OS.get_unique_id() 
 ## Switch holepunch_id to OS when not performing local testing
-@export var holepunch_rendevouz_address : String = "73.25.210.98"
+@export var signaling_server_ipv4 : String = "73.25.210.98"
+@export var signaling_server_ipv6 : String = ""
 @export var holepunch_port : int = 7777
 
 const mod_display_scene := preload("res://GUI/mod_display.tscn")
@@ -58,9 +59,14 @@ var hosting : bool = false
 
 ## Using HolePunch Addon
 func nat_traversal(is_host:bool, game_code:String="") -> void:
+	#for addr in IP.get_local_addresses():
+		#pass
+	#print(IP.get_local_interfaces())
+	#IP.TYPE_IPV6
 	var hole_puncher = HolePuncher.new()
-	hole_puncher.rendevouz_address = holepunch_rendevouz_address
-	hole_puncher.rendevouz_port = holepunch_port
+	hole_puncher.signaling_address = signaling_server_ipv6
+	hole_puncher.signaling_port = holepunch_port
+	hole_puncher.local_port = int($MainMenu/Waiting/VBoxContainer/Port/LocalPort.text)
 	add_child(hole_puncher)
 	hosting = is_host
 	hole_puncher.hole_punched.connect(hole_punched)
@@ -93,66 +99,6 @@ func hole_punched(my_port, hosts_port, hosts_address) -> void:
 
 func nat_session_registered() -> void:
 	print("We've connected with the signaling server.")
-
-## Using SimpleHolePunch
-#func nat_traversal(is_host:bool, game_code:String="") -> void:
-	#var game_id : String = game_code
-	#if game_code == "":
-		#game_id = generate_game_code()
-		#print("Created game with code: ", game_id)
-		#$MainMenu/Waiting/VBoxContainer/Join/GameID.text = game_id
-	#var player_host = "host" if is_host else "client"
-	#var holepunch_id = "%s_%s" % [OS.get_unique_id(), player_host]
-	#
-	#print("Starting hole-punch as %s" % player_host)
-	#
-	#var hole_puncher = SimpleHolePunchClient.new()
-	#hole_puncher.start_session.connect(nat_session_registered)
-	#hole_puncher.bad_server.connect(_bad_server)
-	#
-	#if is_host:
-		#hole_puncher.start_server.connect(_start_peer_server)
-		#hole_puncher.new_name.connect(_new_peer_joined)
-		#hole_puncher.host_session(game_id, holepunch_id)
-	#else:
-		#hole_puncher.start_client.connect(_start_peer_client)
-		#hole_puncher.bad_session.connect(_session_error)
-		#hole_puncher.join_session(game_id, holepunch_id)
-
-#func nat_session_registered(session_id) -> void:
-	#print("We've registered with the server! Session ID: ", session_id)
-#
-#func _start_peer_server(port:int) -> void:
-	#print("Starting server on port: ", port)
-	#peer = ENetMultiplayerPeer.new()
-	#var err = peer.create_server(port)
-	#if err != 0:
-		#push_error("Error %s occured when creating peer server on port %s." % [err, port])
-		#return
-	#multiplayer.multiplayer_peer = peer
-	#host_id = peer.get_unique_id()
-	#current_lobby_players.append([our_name, host_id, Deck.to_str(prepared_deck), false])
-	#hide_all()
-	#$MainMenu/Lobby.show()
-	#reset_lobby()
-
-#func _start_peer_client(ip:String, port:int, local_port:int) -> void:
-	#print("Joining server at address: %s:%s with local port: %s" % [ip, port, local_port])
-	#peer = ENetMultiplayerPeer.new()
-	#var err = peer.create_client(ip,port,0,0,0,local_port)
-	#if err != 0:
-		#push_warning("Error %s occured when joining peer server above." % [err])
-		#return
-	#multiplayer.multiplayer_peer = peer
-#
-#func _new_peer_joined(peer_name:String) -> void:
-	#print("A new peer has joined the server. Their name: ", peer_name)
-#
-#func _session_error(key:String) -> void:
-	#push_error("Failed to join a session. Session does not exist. Key: %s" )
-#
-#func _bad_server(key:String) -> void:
-	#push_error("The signaling server is unresponsive. Key: %s" % key)
 
 ## Host a lobby
 func _attempt_host() -> void:

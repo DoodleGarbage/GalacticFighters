@@ -1062,7 +1062,7 @@ func trigger_ability_client(peer_id:int, ability_name:String, player:int, burst_
 	
 	if p_script == null:
 		# NOTE: Can only run scripts that don't rely on 'source'
-		p_script = ability.pscript.new([])
+		p_script = ability.pscript.new(null, ability.script_variables)
 	
 	for i in range(0, 1+burst_amnt):
 		p_script._interaction(target_guis)

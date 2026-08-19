@@ -391,6 +391,9 @@ func load_resource_data(resource:Dictionary, resource_name:String, mod:Mod=null)
 			
 			new_attr.icon = find_image(resource["Icon"])
 			new_attr.pscript = find_resource("Pscript", resource["Pscript"])
+			if resource.has("ScriptVariables"):
+				for varia in resource["ScriptVariables"]:
+					new_attr.script_variables = resource["ScriptVariables"]
 			new_attr.type = resource["Type"]
 			
 			
