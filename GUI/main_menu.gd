@@ -37,36 +37,22 @@ func _ready() -> void:
 	multiplayer.peer_connected.connect(peer_connected)
 	multiplayer.server_disconnected.connect(_server_disconnect)
 	multiplayer.peer_disconnected.connect(_disconnect)
-	
-	## Initalize HolePuncher
-	#hole_puncher = preload("res://addons/Holepunch/holepunch_node.gd").new()
-	#hole_puncher.rendevouz_address = holepunch_rendevouz_address
-	#hole_puncher.rendevouz_port = holepunch_port
-	#hole_puncher.hole_punched.connect(hole_punched)
-	#add_child(hole_puncher)
-	## ---
-	
-	#var result = await hole_puncher.hole_punched
-	#var my_pot = result [0]
-
-#func begin_holepunch(game_id, host_status:bool) -> void:
-	#var player_id = OS.get_unique_id()
-	#var is_host : bool = true
-	##var game_id : int = randi()
-	#hole_puncher.start_traversal(game_id, is_host, player_id)
 
 var hosting : bool = false
 
 ## Using HolePunch Addon
-func nat_traversal(is_host:bool, game_code:String="") -> void:
-	#for addr in IP.get_local_addresses():
-		#pass
-	#print(IP.get_local_interfaces())
-	#IP.TYPE_IPV6
+func nat_traversal(is_host:bool, game_code:String="", ipv4:bool=true) -> void:
 	var hole_puncher = HolePuncher.new()
-	hole_puncher.signaling_address = signaling_server_ipv6
+	
+	if ipv4:
+		hole_puncher.signaling_address = signaling_server_ipv4
+	else:
+		hole_puncher.signaling_address = signaling_server_ipv6
 	hole_puncher.signaling_port = holepunch_port
-	hole_puncher.local_port = int($MainMenu/Waiting/VBoxContainer/Port/LocalPort.text)
+	var lo_port : int = $MainMenu/Waiting/debugdisplay/list/Port/LocalPort.text.to_int()
+	if lo_port < 1024 or lo_port > 65535:
+		lo_port = 9999
+	hole_puncher.local_port = lo_port
 	add_child(hole_puncher)
 	hosting = is_host
 	hole_puncher.hole_punched.connect(hole_punched)
@@ -80,7 +66,9 @@ func nat_traversal(is_host:bool, game_code:String="") -> void:
 		game_id = generate_game_code()
 		print("Created game with code: ", game_id)
 		$MainMenu/Waiting/VBoxContainer/Join/GameID.text = game_id
-	hole_puncher.start_traversal(game_id, is_host, holepunch_id)
+	if not ipv4:
+		hole_puncher.ipv6_failed.connect(_ipv6_failed.bind(game_id))
+	hole_puncher.start_traversal(game_id, is_host, holepunch_id, ipv4)
 
 func hole_punched(my_port, hosts_port, hosts_address) -> void:
 	print("Hole-punch successful!")
@@ -97,8 +85,12 @@ func hole_punched(my_port, hosts_port, hosts_address) -> void:
 	peer.create_client(hosts_address, hosts_port, 0, 0, 0, my_port)
 	multiplayer.multiplayer_peer = peer
 
-func nat_session_registered() -> void:
+func nat_session_registered(is_ipv4:bool) -> void:
 	print("We've connected with the signaling server.")
+	if is_ipv4:
+		$MainMenu/Waiting/debugdisplay/list/ipv4/status.text = "Connected"
+	else:
+		$MainMenu/Waiting/debugdisplay/list/ipv6/status.text = "Connected"
 
 ## Host a lobby
 func _attempt_host() -> void:
@@ -109,7 +101,7 @@ func _attempt_host() -> void:
 	## Begin Hole Punching
 	var game_id : String = $MainMenu/Waiting/VBoxContainer/Join/GameID.text
 	#$MainMenu/Waiting/VBoxContainer/Join/GameID.editable = false
-	nat_traversal(true, game_id)
+	nat_traversal(true, game_id, false)
 
 
 ## Join a lobby
@@ -125,6 +117,10 @@ func _attempt_join() -> void:
 		push_warning("Tried to join without entering a game code.")
 		return
 	nat_traversal(false, game_code)
+
+func _ipv6_failed(game_id:String) -> void:
+	nat_traversal(hosting, game_id, true)
+
 
 func generate_game_code() -> String:
 	var rng = RandomNumberGenerator.new()
@@ -371,6 +367,8 @@ func ready_for_battle(deck:Deck) -> void:
 	prepared_deck = deck
 	$MainMenu/Waiting/VBoxContainer/MiniDeck.load_deck(deck)
 	$MainMenu/Waiting.show()
+	$MainMenu/Waiting/debugdisplay/list/ipv4/status.text = "Waiting"
+	$MainMenu/Waiting/debugdisplay/list/ipv6/status.text = "Waiting"
 
 var prepared_deck : Deck
 
@@ -407,3 +405,7 @@ func _on_hash_checksum_copy_pressed() -> void:
 var ip_copy_text : String = ""
 func _on_ip_copy_pressed() -> void:
 	DisplayServer.clipboard_set(ip_copy_text)
+
+
+func _on_m_pdebug_pressed() -> void:
+	$MainMenu/Waiting/debugdisplay.visible = not $MainMenu/Waiting/debugdisplay.visible

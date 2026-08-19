@@ -30,6 +30,20 @@ corner_detail = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_urio0"]
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7nq1i"]
+
+[sub_resource type="Theme" id="Theme_ew257"]
+Label/colors/font_color = Color(1, 1, 1, 1)
+Label/font_sizes/font_size = 28
+Label/styles/normal = SubResource("StyleBoxEmpty_7nq1i")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c17gv"]
+bg_color = Color(0.40527898, 0.4052789, 0.4052789, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8s5l4"]
 bg_color = Color(0.40784314, 0.003921569, 0.05490196, 1)
 
@@ -50,7 +64,8 @@ Label/styles/normal = SubResource("StyleBoxFlat_c4qn5")
 [node name="Root" type="Node" unique_id=595754331]
 script = ExtResource("2_o1bug")
 base_hash = "98edae7b77cfc0529d6c074a23986d81"
-signaling_server_ipv6 = "2601:1c2:4480:73a0::3cee"
+signaling_server_ipv6 = "2601:1c2:4402:3bf0:2463:3dfa:b2b7:6015"
+holepunch_port = 7778
 
 [node name="ModList" type="CanvasLayer" parent="." unique_id=936775308]
 layer = 3
@@ -233,9 +248,8 @@ text = "BACK"
 [node name="Waiting" type="Control" parent="MainMenu" unique_id=897254863]
 visible = false
 layout_mode = 3
-anchors_preset = 13
-anchor_left = 0.5
-anchor_right = 0.5
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -244,8 +258,9 @@ theme = ExtResource("1_12752")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MainMenu/Waiting" unique_id=709870732]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
+anchors_preset = -1
+anchor_left = 0.37
+anchor_right = 0.63
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -259,17 +274,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "PLAYERNAME"
 scroll_fit_content_height = true
-
-[node name="Port" type="HBoxContainer" parent="MainMenu/Waiting/VBoxContainer" unique_id=1411643252]
-layout_mode = 2
-
-[node name="LocalPort" type="TextEdit" parent="MainMenu/Waiting/VBoxContainer/Port" unique_id=1751337808]
-custom_minimum_size = Vector2(0, 38)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_readonly_color = Color(0.74559146, 0.7455911, 0.74559116, 0.88235295)
-theme_override_styles/read_only = SubResource("StyleBoxFlat_c13uq")
-placeholder_text = "Internal Local Port"
 
 [node name="Join" type="HBoxContainer" parent="MainMenu/Waiting/VBoxContainer" unique_id=377116248]
 layout_mode = 2
@@ -318,6 +322,67 @@ layout_mode = 2
 [node name="Exit" type="Button" parent="MainMenu/Waiting/VBoxContainer" unique_id=2086301073]
 layout_mode = 2
 text = "CANCEL"
+
+[node name="debugdisplay" type="PanelContainer" parent="MainMenu/Waiting" unique_id=1855835373]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.63
+anchor_top = 0.345
+anchor_right = 0.9
+anchor_bottom = 0.8
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_ew257")
+
+[node name="list" type="VBoxContainer" parent="MainMenu/Waiting/debugdisplay" unique_id=1058725842]
+layout_mode = 2
+
+[node name="Port" type="HBoxContainer" parent="MainMenu/Waiting/debugdisplay/list" unique_id=1411643252]
+layout_mode = 2
+
+[node name="LocalPort" type="TextEdit" parent="MainMenu/Waiting/debugdisplay/list/Port" unique_id=1751337808]
+custom_minimum_size = Vector2(260, 38)
+layout_mode = 2
+theme_override_colors/font_readonly_color = Color(0.74559146, 0.7455911, 0.74559116, 0.88235295)
+theme_override_styles/read_only = SubResource("StyleBoxFlat_c13uq")
+placeholder_text = "Internal Local Port"
+
+[node name="ipv6" type="HBoxContainer" parent="MainMenu/Waiting/debugdisplay/list" unique_id=862321520]
+layout_mode = 2
+
+[node name="ipv6" type="Label" parent="MainMenu/Waiting/debugdisplay/list/ipv6" unique_id=556192413]
+layout_mode = 2
+text = "IPV6 status: "
+
+[node name="status" type="Label" parent="MainMenu/Waiting/debugdisplay/list/ipv6" unique_id=307221325]
+layout_mode = 2
+text = "waiting"
+
+[node name="ipv4" type="HBoxContainer" parent="MainMenu/Waiting/debugdisplay/list" unique_id=1468990595]
+layout_mode = 2
+
+[node name="ipv4" type="Label" parent="MainMenu/Waiting/debugdisplay/list/ipv4" unique_id=560202138]
+layout_mode = 2
+text = "IPV4 status: "
+
+[node name="status" type="Label" parent="MainMenu/Waiting/debugdisplay/list/ipv4" unique_id=726107390]
+layout_mode = 2
+text = "waiting"
+
+[node name="MPdebug" type="Button" parent="MainMenu/Waiting" unique_id=1313817348]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.63
+anchor_top = 0.3
+anchor_right = 0.9
+anchor_bottom = 0.7
+offset_right = -401.40002
+offset_bottom = -384.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.875, 0.875, 0.875, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_c17gv")
+text = "Debug"
 
 [node name="Lobby" type="Control" parent="MainMenu" unique_id=1902916477]
 visible = false
@@ -471,6 +536,7 @@ visible = false
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Host/HostButton" to="." method="_attempt_host"]
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Host/JoinButton" to="." method="_attempt_join"]
 [connection signal="pressed" from="MainMenu/Waiting/VBoxContainer/Exit" to="." method="return_to_menu"]
+[connection signal="pressed" from="MainMenu/Waiting/MPdebug" to="." method="_on_m_pdebug_pressed"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/IPS/IP" to="." method="_on_ip_copy_pressed"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/ready" to="." method="ready_button_pressed"]
 [connection signal="pressed" from="MainMenu/Lobby/corner/gamestarter" to="." method="button_start_game"]

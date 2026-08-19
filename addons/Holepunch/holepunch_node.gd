@@ -17,6 +17,9 @@ signal hole_punched(my_port, hosts_port, hosts_address)
 #address and port of the other client have arrived.
 signal session_registered
 
+#Signal is emitted if the ipv6 timeout triggers before successfully connecting to the signaling server over ipv6
+signal ipv6_failed
+
 var server_udp = PacketPeerUDP.new()
 var peer_udp = PacketPeerUDP.new()
 
@@ -30,6 +33,8 @@ var peer_udp = PacketPeerUDP.new()
 @export var port_cascade_range = 1000
 #The amount of messages of the same type you will send before cascading or giving up
 @export var response_window = 20
+
+var is_ipv4 : bool = true
 
 
 var found_server = false
@@ -52,7 +57,10 @@ var ports_tried = 0
 var greets_sent = 0
 var gos_sent = 0
 
-var delay : float = 0.0
+var delay_timer : float = 0.0
+var keep_alive_timer : float = 0.0
+var ipv6_timer : float = 0.0
+var ipv6_tries : int = 0
 
 const REGISTER_SESSION = "rs:"
 const REGISTER_CLIENT = "rc:"
@@ -66,11 +74,40 @@ const SERVER_INFO = "peers"
 
 const MAX_PLAYER_COUNT = 2
 
-const DELAY_TIMER : float = 2
+# Time in seconds between each attempt to connect to peer.
+const PEER_CONNECTION_TIME : float = 0.3
+# Time in seconds to keep-alive the hole-punch with server.
+const KEEP_ALIVE_TIME : float = 15
+# Time in seconds before ipv6 timesout and gives up and switches to ipv4
+const IPV6_TIMEOUT : float = 5
+const IPV6_REATTEMPT : float = 0.3
 
 # warning-ignore:unused_argument
 func _process(delta):
-	delay += delta
+	delay_timer += delta
+	keep_alive_timer += delta
+	ipv6_timer += delta
+	
+	if server_udp.get_available_packet_count() <= 0 and not found_server and ipv6_timer > IPV6_TIMEOUT:
+		server_udp.close()
+		ipv6_failed.emit()
+		set_process(false)
+		return
+	
+	if server_udp.get_available_packet_count() <= 0 and not found_server and ipv6_timer > (IPV6_REATTEMPT * ipv6_tries):
+		ipv6_tries += 1
+		print("Re-trying connection to signaling server over ", "ipv4" if is_ipv4 else "ipv6")
+		if is_host:
+			_send_host_to_server()
+		else:
+			_send_client_to_server()
+	
+	if server_udp.get_available_packet_count() <= 0 and not recieved_peer_info and found_server and keep_alive_timer > KEEP_ALIVE_TIME:
+		print("Sending keep-alive packet.")
+		keep_alive_timer = 0
+		var buffer = PackedByteArray()
+		buffer.append_array(("alive:"+client_name+":"+str(own_port)).to_utf8_buffer())
+		server_udp.put_packet(buffer)
 	
 	if peer_udp.get_available_packet_count() > 0:
 		var array_bytes = peer_udp.get_packet()
@@ -80,7 +117,6 @@ func _process(delta):
 			if packet_string.begins_with(PEER_GREET):
 				var m = packet_string.split(":")
 				_handle_greet_message(m[1], int(m[2]), int(m[3]))
-
 		if not recieved_peer_confirm:
 			if packet_string.begins_with(PEER_CONFIRM):
 				var m = packet_string.split(":")
@@ -98,7 +134,7 @@ func _process(delta):
 		if packet_string.begins_with(SERVER_OK):
 			var m = packet_string.split(":")
 			own_port = int( m[1] )
-			emit_signal('session_registered')
+			session_registered.emit(is_ipv4)
 			if is_host:
 				if !found_server:
 					_send_client_to_server()
@@ -150,7 +186,6 @@ func _handle_go_message(peer_name):
 	peer_udp.close()
 	server_udp.close()
 	hole_punched.emit(int(own_port), int(host_port),host_address)
-	#emit_signal("hole_punched", int(own_port), int(host_port), host_address)
 	p_timer.stop()
 	set_process(false)
 
@@ -193,8 +228,8 @@ func _ping_peer():
 			buffer.append_array(("confirm:"+str(own_port)+":"+client_name+":"+str(is_host)+":"+peer[p].port).to_utf8_buffer())
 			peer_udp.put_packet(buffer)
 
-	if  recieved_peer_confirm and delay > DELAY_TIMER:
-		delay = 0
+	if  recieved_peer_confirm:#and delay_timer > PEER_CONNECTION_TIME:
+		#delay_timer = 0
 		for p in peer.keys():
 			peer_udp.set_dest_address(peer[p].address, int(peer[p].port))
 			var buffer = PackedByteArray()
@@ -217,7 +252,11 @@ func start_peer_contact():
 	if peer_udp.is_bound():
 		peer_udp.close()
 	print("Opening peer UDP")
-	var err = peer_udp.bind(own_port, "::")
+	var err 
+	if is_ipv4:
+		err = peer_udp.bind(own_port, "*")
+	else:
+		err = peer_udp.bind(own_port, "::")
 	if err != OK:
 		print("Error listening on port: " + str(own_port) +" Error: " + str(err))
 	p_timer.start()
@@ -240,20 +279,16 @@ func checkout():
 
 
 #Call this function when you want to start the holepunch process
-func start_traversal(id, is_player_host, player_name):
+func start_traversal(id, is_player_host, player_name, ipv4:bool=true):
 	if server_udp.is_bound():
-		print("Closing already bouund server")
+		print("Closing already bound server")
 		server_udp.close()
-	
-	print("Local IP addresses:")
-	print(IP.get_local_addresses())
-	
-	#var ipv6 : Array[Sting] = []
-	#for addr in IP.get_local_addresses():
-		#if addr.contains(":") and not addr.contains(0):
-			#ipv6.append(addr)
-	
-	var err = server_udp.bind(local_port,"::")
+	is_ipv4 = ipv4
+	var err : Error
+	if ipv4:
+		err = server_udp.bind(local_port,"*")
+	else:
+		err = server_udp.bind(local_port,"::")
 	if err != OK:
 		print("Error listening on port: " + str(local_port) + " to server: " + signaling_address, " Error Code: ", err)
 	is_host = is_player_host
@@ -272,20 +307,24 @@ func start_traversal(id, is_player_host, player_name):
 	
 	if (is_host):
 		print("Sending game init message")
-		var buffer = PackedByteArray()
-		buffer.append_array((REGISTER_SESSION+session_id+":"+str(MAX_PLAYER_COUNT)).to_utf8_buffer())
-		server_udp.close()
-		server_udp.set_dest_address(signaling_address, signaling_port)
-		server_udp.put_packet(buffer)
+		_send_host_to_server()
 	else:
 		_send_client_to_server()
 
 
 #Register a client with the server
 func _send_client_to_server():
+	print("Sending client to server")
 	await get_tree().create_timer(2.0).timeout
 	var buffer = PackedByteArray()
 	buffer.append_array((REGISTER_CLIENT+client_name+":"+session_id).to_utf8_buffer())
+	server_udp.close()
+	server_udp.set_dest_address(signaling_address, signaling_port)
+	server_udp.put_packet(buffer)
+
+func _send_host_to_server():
+	var buffer = PackedByteArray()
+	buffer.append_array((REGISTER_SESSION+session_id+":"+str(MAX_PLAYER_COUNT)).to_utf8_buffer())
 	server_udp.close()
 	server_udp.set_dest_address(signaling_address, signaling_port)
 	server_udp.put_packet(buffer)
