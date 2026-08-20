@@ -102,7 +102,7 @@ func update_scripts(data:Array) -> void:
 func init_script(attribute:Attribute) -> GDScript:
 	var new_script = null
 	if attribute.pscript != null:
-		new_script = attribute.pscript.new([self])
+		new_script = attribute.pscript.new(self, attribute.script_variables)
 	else:
 		new_script = empty_script.new([self])
 	new_script.ability = attribute
@@ -118,14 +118,15 @@ func init_script(attribute:Attribute) -> GDScript:
 const dmg_effect := preload("res://Data/Vanilla/VFX/damage_effect.tscn")
 signal dead()
 
-func damage(trigger : Attribute, amnt:int) -> void:
+func damage(trigger : Attribute, amnt:int, pierce:int=0) -> void:
 	if amnt < 0:
 		heal(trigger, amnt)
 	var dmg_vfx = dmg_effect
 	if trigger != null and trigger.VFX_damage != null and trigger.VFX_damage != Resources.VFX_null:
 		dmg_vfx = trigger.VFX_damage
+	var true_defense : int = max(0, defense-pierce) if defense >= 0 else defense
 	## Trigger any attached passives, play visual effects, etc.
-	var dmg : int = max(amnt - defense, 0)
+	var dmg : int = max(amnt - true_defense, 0)
 	print("suffering damage! amnt: ", dmg)
 	health -= dmg
 	if health <= 0:
@@ -185,12 +186,12 @@ func initilize_interactions() -> void:
 	
 	var move : Attribute = Resources.find_resource("Attribute", "vanilla:MOVE")
 	attributes.append(move)
-	var m_script = move.pscript.new([self])
+	var m_script = move.pscript.new(self, move.script_variables)
 	m_script.ability = move
 	attribute_scripts.append(m_script)
 	var aattack : Attribute = Resources.find_resource("Attribute", "vanilla:ATTACK")
 	attributes.append(aattack)
-	var a_script = aattack.pscript.new([self])
+	var a_script = aattack.pscript.new(self, move.script_variables)
 	attribute_scripts.append(a_script)
 	
 	var ability_index : int = -1

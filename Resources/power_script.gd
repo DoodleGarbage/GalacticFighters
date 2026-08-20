@@ -23,10 +23,10 @@ func set_data(data:Array) -> void:
 	for datum in data:
 		set(datum[0], datum[1])
 
-func _init(input:Array) -> void:
-	if input.size() < 1: # we don't always need to know our Source
-		return
-	source = input[0]
+func _init(src, input:Dictionary={}) -> void:
+	source = src
+	for key in input.keys():
+		set(key, input[key])
 
 # Virtual Functions - Override in extensions
 

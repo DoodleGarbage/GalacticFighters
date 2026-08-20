@@ -17,7 +17,8 @@ var current_lobby_players : Array = []
 var host_id : int
 #var holepunch_id : String = "" #str(randi()) #OS.get_unique_id() 
 ## Switch holepunch_id to OS when not performing local testing
-@export var holepunch_rendevouz_address : String = "73.25.210.98"
+@export var signaling_server_ipv4 : String = "73.25.210.98"
+@export var signaling_server_ipv6 : String = ""
 @export var holepunch_port : int = 7777
 
 const mod_display_scene := preload("res://GUI/mod_display.tscn")
@@ -36,31 +37,22 @@ func _ready() -> void:
 	multiplayer.peer_connected.connect(peer_connected)
 	multiplayer.server_disconnected.connect(_server_disconnect)
 	multiplayer.peer_disconnected.connect(_disconnect)
-	
-	## Initalize HolePuncher
-	#hole_puncher = preload("res://addons/Holepunch/holepunch_node.gd").new()
-	#hole_puncher.rendevouz_address = holepunch_rendevouz_address
-	#hole_puncher.rendevouz_port = holepunch_port
-	#hole_puncher.hole_punched.connect(hole_punched)
-	#add_child(hole_puncher)
-	## ---
-	
-	#var result = await hole_puncher.hole_punched
-	#var my_pot = result [0]
-
-#func begin_holepunch(game_id, host_status:bool) -> void:
-	#var player_id = OS.get_unique_id()
-	#var is_host : bool = true
-	##var game_id : int = randi()
-	#hole_puncher.start_traversal(game_id, is_host, player_id)
 
 var hosting : bool = false
 
 ## Using HolePunch Addon
-func nat_traversal(is_host:bool, game_code:String="") -> void:
+func nat_traversal(is_host:bool, game_code:String="", ipv4:bool=true) -> void:
 	var hole_puncher = HolePuncher.new()
-	hole_puncher.rendevouz_address = holepunch_rendevouz_address
-	hole_puncher.rendevouz_port = holepunch_port
+	
+	if ipv4:
+		hole_puncher.signaling_address = signaling_server_ipv4
+	else:
+		hole_puncher.signaling_address = signaling_server_ipv6
+	hole_puncher.signaling_port = holepunch_port
+	var lo_port : int = $MainMenu/Waiting/debugdisplay/list/Port/LocalPort.text.to_int()
+	if lo_port < 1024 or lo_port > 65535:
+		lo_port = 9999
+	hole_puncher.local_port = lo_port
 	add_child(hole_puncher)
 	hosting = is_host
 	hole_puncher.hole_punched.connect(hole_punched)
@@ -74,7 +66,9 @@ func nat_traversal(is_host:bool, game_code:String="") -> void:
 		game_id = generate_game_code()
 		print("Created game with code: ", game_id)
 		$MainMenu/Waiting/VBoxContainer/Join/GameID.text = game_id
-	hole_puncher.start_traversal(game_id, is_host, holepunch_id)
+	if not ipv4:
+		hole_puncher.ipv6_failed.connect(_ipv6_failed.bind(game_id))
+	hole_puncher.start_traversal(game_id, is_host, holepunch_id, ipv4)
 
 func hole_punched(my_port, hosts_port, hosts_address) -> void:
 	print("Hole-punch successful!")
@@ -91,68 +85,12 @@ func hole_punched(my_port, hosts_port, hosts_address) -> void:
 	peer.create_client(hosts_address, hosts_port, 0, 0, 0, my_port)
 	multiplayer.multiplayer_peer = peer
 
-func nat_session_registered() -> void:
+func nat_session_registered(is_ipv4:bool) -> void:
 	print("We've connected with the signaling server.")
-
-## Using SimpleHolePunch
-#func nat_traversal(is_host:bool, game_code:String="") -> void:
-	#var game_id : String = game_code
-	#if game_code == "":
-		#game_id = generate_game_code()
-		#print("Created game with code: ", game_id)
-		#$MainMenu/Waiting/VBoxContainer/Join/GameID.text = game_id
-	#var player_host = "host" if is_host else "client"
-	#var holepunch_id = "%s_%s" % [OS.get_unique_id(), player_host]
-	#
-	#print("Starting hole-punch as %s" % player_host)
-	#
-	#var hole_puncher = SimpleHolePunchClient.new()
-	#hole_puncher.start_session.connect(nat_session_registered)
-	#hole_puncher.bad_server.connect(_bad_server)
-	#
-	#if is_host:
-		#hole_puncher.start_server.connect(_start_peer_server)
-		#hole_puncher.new_name.connect(_new_peer_joined)
-		#hole_puncher.host_session(game_id, holepunch_id)
-	#else:
-		#hole_puncher.start_client.connect(_start_peer_client)
-		#hole_puncher.bad_session.connect(_session_error)
-		#hole_puncher.join_session(game_id, holepunch_id)
-
-#func nat_session_registered(session_id) -> void:
-	#print("We've registered with the server! Session ID: ", session_id)
-#
-#func _start_peer_server(port:int) -> void:
-	#print("Starting server on port: ", port)
-	#peer = ENetMultiplayerPeer.new()
-	#var err = peer.create_server(port)
-	#if err != 0:
-		#push_error("Error %s occured when creating peer server on port %s." % [err, port])
-		#return
-	#multiplayer.multiplayer_peer = peer
-	#host_id = peer.get_unique_id()
-	#current_lobby_players.append([our_name, host_id, Deck.to_str(prepared_deck), false])
-	#hide_all()
-	#$MainMenu/Lobby.show()
-	#reset_lobby()
-
-#func _start_peer_client(ip:String, port:int, local_port:int) -> void:
-	#print("Joining server at address: %s:%s with local port: %s" % [ip, port, local_port])
-	#peer = ENetMultiplayerPeer.new()
-	#var err = peer.create_client(ip,port,0,0,0,local_port)
-	#if err != 0:
-		#push_warning("Error %s occured when joining peer server above." % [err])
-		#return
-	#multiplayer.multiplayer_peer = peer
-#
-#func _new_peer_joined(peer_name:String) -> void:
-	#print("A new peer has joined the server. Their name: ", peer_name)
-#
-#func _session_error(key:String) -> void:
-	#push_error("Failed to join a session. Session does not exist. Key: %s" )
-#
-#func _bad_server(key:String) -> void:
-	#push_error("The signaling server is unresponsive. Key: %s" % key)
+	if is_ipv4:
+		$MainMenu/Waiting/debugdisplay/list/ipv4/status.text = "Connected"
+	else:
+		$MainMenu/Waiting/debugdisplay/list/ipv6/status.text = "Connected"
 
 ## Host a lobby
 func _attempt_host() -> void:
@@ -163,7 +101,7 @@ func _attempt_host() -> void:
 	## Begin Hole Punching
 	var game_id : String = $MainMenu/Waiting/VBoxContainer/Join/GameID.text
 	#$MainMenu/Waiting/VBoxContainer/Join/GameID.editable = false
-	nat_traversal(true, game_id)
+	nat_traversal(true, game_id, false)
 
 
 ## Join a lobby
@@ -178,7 +116,12 @@ func _attempt_join() -> void:
 	if game_code == "":
 		push_warning("Tried to join without entering a game code.")
 		return
-	nat_traversal(false, game_code)
+	nat_traversal(false, game_code, false)
+
+func _ipv6_failed(game_id:String) -> void:
+	return
+	#nat_traversal(hosting, game_id, true)
+
 
 func generate_game_code() -> String:
 	var rng = RandomNumberGenerator.new()
@@ -425,6 +368,8 @@ func ready_for_battle(deck:Deck) -> void:
 	prepared_deck = deck
 	$MainMenu/Waiting/VBoxContainer/MiniDeck.load_deck(deck)
 	$MainMenu/Waiting.show()
+	$MainMenu/Waiting/debugdisplay/list/ipv4/status.text = "Waiting"
+	$MainMenu/Waiting/debugdisplay/list/ipv6/status.text = "Waiting"
 
 var prepared_deck : Deck
 
@@ -461,3 +406,7 @@ func _on_hash_checksum_copy_pressed() -> void:
 var ip_copy_text : String = ""
 func _on_ip_copy_pressed() -> void:
 	DisplayServer.clipboard_set(ip_copy_text)
+
+
+func _on_m_pdebug_pressed() -> void:
+	$MainMenu/Waiting/debugdisplay.visible = not $MainMenu/Waiting/debugdisplay.visible

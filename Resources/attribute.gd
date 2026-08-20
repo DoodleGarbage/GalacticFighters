@@ -9,6 +9,9 @@ var mod : Mod
 
 @export var pscript : GDScript
 
+## Used to set the values of the pscript when initalized
+@export var script_variables : Dictionary = {}
+
 @export var pscript_sync_data : Array[StringName] = []
 
 @export_enum("Passive", "Ability", "Interaction", "Status")

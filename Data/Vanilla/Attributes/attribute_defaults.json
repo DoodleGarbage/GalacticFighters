@@ -11,11 +11,11 @@
 	
 	{"Name":"Fire","Icon":"vanilla:heart","Pscript":"vanilla:fire","Type":3,"Desc":"Deals 4 damage at the start of each turn", "AllowBurst":false, "Targets":-1, "TargetType":0, "AllowedMetadata":0, "SyncData":[], "Duration":3, "VFX_target":"", "VFX_damage":"vanilla:fire_dmg_effect"},
 	
-	{"Name":"apple","Icon":"vanilla:defense","Pscript":"vanilla:apple","Type":1,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":2, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"vanilla:fire_dmg_effect", "VFX_damage":""},
+	{"Name":"apple","Icon":"vanilla:defense","Pscript":"vanilla:apple", "ScriptVariables":{"heal_amnt":8},"Type":1,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":2, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"vanilla:fire_dmg_effect", "VFX_damage":""},
 	
 	{"Name":"strengthband","Icon":"vanilla:defense","Pscript":"vanilla:strengthband","Type":1,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":2, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"vanilla:fire_dmg_effect", "VFX_damage":""},
 	
-	{"Name":"basicsword","Icon":"vanilla:defense","Pscript":"vanilla:basicsword","Type":2,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":4, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"", "VFX_damage":"damage_effect"},
+	{"Name":"basicsword","Icon":"vanilla:defense","Pscript":"vanilla:basicsword", "ScriptVariables":{}, "Type":2,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":4, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"", "VFX_damage":"damage_effect"},
 	
-	{"Name":"Sandvich","Icon":"vanilla:ItemSandvich","Pscript":"vanilla:Sandvich","Type":1,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":2, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"vanilla:fire_dmg_effect", "VFX_damage":""},
+	{"Name":"Sandvich","Icon":"vanilla:ItemSandvich","Pscript":"vanilla:apple", "ScriptVariables":{"heal_amnt":8}, "Type":1,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":2, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"vanilla:fire_dmg_effect", "VFX_damage":""},
 ]
