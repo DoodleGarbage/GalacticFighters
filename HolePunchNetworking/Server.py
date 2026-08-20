@@ -45,7 +45,8 @@ class ClientTimeout():
 							del mod_rc[client]
 						except KeyError:
 							print("Tried to checkout unregistered client")
-				self.set_rc(mod_rc)
+				if tmp_rc != mod_rc:
+					self.set_rc(mod_rc)
 			except KeyboardInterrupt:
 				print("Exiting")
 				self.stop()
@@ -53,12 +54,17 @@ class ClientTimeout():
 	def set_rc(self, val):
 		pckl = pickle.dumps(val)
 		l = len(pckl)
-		self.buffer[0] = l
-		self.buffer[1:(l+1)] = pckl
+		mult = l // 255 # // is integer division and floors it
+		trail = l % 255
+		self.buffer[0] = mult
+		self.buffer[1] = trail
+		self.buffer[2:(l+2)] = pckl
 
 	def get_rc(self):
-		l = self.shm.buf[0]
-		return pickle.loads(bytes(self.buffer[1:(l+1)]))
+		mult = self.buffer[0]
+		trail = self.buffer[1]
+		end = (mult * 255) + trail + 2
+		return pickle.loads(bytes(self.buffer[2:end]))
 
 class ServerProtocol(DatagramProtocol):
 
@@ -88,12 +94,17 @@ class ServerProtocol(DatagramProtocol):
 	def set_registered_clients(self, val):
 		pckl = pickle.dumps(val)
 		l = len(pckl)
-		self.buffer[0] = l
-		self.buffer[1:(l+1)] = pckl
+		mult = l // 255 # // is integer division and floors it
+		trail = l % 255
+		self.buffer[0] = mult
+		self.buffer[1] = trail
+		self.buffer[2:(l+2)] = pckl
 
 	def get_registered_clients(self):
-		l = self.buffer[0]
-		return pickle.loads(bytes(self.buffer[1:(l+1)]))
+		mult = self.buffer[0]
+		trail = self.buffer[1]
+		end = (mult * 255) + trail + 2
+		return pickle.loads(bytes(self.buffer[2:end]))
 
 	def remove_session(self, s_id):
 		try:
@@ -128,7 +139,7 @@ class ServerProtocol(DatagramProtocol):
 			del tmp_dct[name]
 		except KeyError:
 			print("Tried to checkout unregistered client")
-		set_registered_clients(tmp_dct)
+		self.set_registered_clients(tmp_dct)
 
 	def datagramReceived(self, datagram, address):
 		"""Handle incoming datagram messages."""
@@ -195,7 +206,7 @@ class Session:
 		# print("Client %c registered for Session %s" % client.name, self.id)
 		self.registered_clients.append(client)
 		if len(self.registered_clients) == int(self.client_max):
-			sleep(5)
+			time.sleep(5)
 			print("waited for OK message to send, sending out info to peers")
 			self.exchange_peer_info()
 

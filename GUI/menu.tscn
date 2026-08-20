@@ -64,7 +64,7 @@ Label/styles/normal = SubResource("StyleBoxFlat_c4qn5")
 [node name="Root" type="Node" unique_id=595754331]
 script = ExtResource("2_o1bug")
 base_hash = "98edae7b77cfc0529d6c074a23986d81"
-signaling_server_ipv6 = "2601:1c2:4402:3bf0:2463:3dfa:b2b7:6015"
+signaling_server_ipv6 = "2601:1c2:4402:3bf0::eac9"
 holepunch_port = 7778
 
 [node name="ModList" type="CanvasLayer" parent="." unique_id=936775308]
