@@ -82,6 +82,3 @@ This began as a fork of: https://github.com/dalton5000/tyson/blob/master/LICENSE
 and converted to a plugin.
 
 This simple implementation is still a work in progress. All help and contributions are welcome!
-
-
-
