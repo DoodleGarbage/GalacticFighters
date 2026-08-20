@@ -340,7 +340,7 @@ func load_scene(mod_path : String, mod:Mod, resource_type : String, internal:boo
 		match(resource_type):
 			"VFX": vfx.append(new_scene)
 			"PowerScript": 
-				mod.hashing_context.update(FileAccess.get_file_as_bytes(directory + "/" + next))
+				#mod.hashing_context.update(FileAccess.get_file_as_bytes(directory + "/" + next))
 				pscripts.append(new_scene)
 		next = dir.get_next()
 	return
