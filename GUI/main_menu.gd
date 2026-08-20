@@ -77,10 +77,11 @@ func hole_punched(my_port, hosts_port, hosts_address) -> void:
 	$MainMenu/Lobby.show()
 	reset_lobby()
 	if hosting:
-		peer.create_server(my_port, 1)
+		peer.create_server(my_port, 32)
 		multiplayer.multiplayer_peer = peer
 		current_lobby_players.append([our_name, peer.get_unique_id(), Deck.to_str(prepared_deck), false])
 		return
+	print("Creating client at IP: ", hosts_address, " port: ", hosts_port, " On our port: ", my_port)
 	peer.create_client(hosts_address, hosts_port, 0, 0, 0, my_port)
 	multiplayer.multiplayer_peer = peer
 

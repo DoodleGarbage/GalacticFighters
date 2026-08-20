@@ -164,7 +164,10 @@ func _handle_greet_message(peer_name, peer_port, my_port):
 	if own_port != my_port:
 		own_port = my_port
 		peer_udp.close()
-		peer_udp.bind(own_port, "*")
+		var addr : String = "::"
+		if is_ipv4:
+			addr = "*"
+		peer_udp.bind(own_port, addr)
 	recieved_peer_greet = true
 
 
@@ -177,7 +180,10 @@ func _handle_confirm_message(peer_name, peer_port, my_port, is_host):
 		host_address = peer[peer_name].address
 		host_port = peer[peer_name].port
 	peer_udp.close()
-	peer_udp.bind(own_port, "*")
+	var addr : String = "::"
+	if is_ipv4:
+		addr = "*"
+	peer_udp.bind(own_port, addr)
 	recieved_peer_confirm = true
 
 
