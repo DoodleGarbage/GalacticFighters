@@ -79,8 +79,8 @@ const PEER_CONNECTION_TIME : float = 0.3
 # Time in seconds to keep-alive the hole-punch with server.
 const KEEP_ALIVE_TIME : float = 15
 # Time in seconds before ipv6 timesout and gives up and switches to ipv4
-const IPV6_TIMEOUT : float = 5
-const IPV6_REATTEMPT : float = 0.3
+const IPV6_TIMEOUT : float = 20
+const IPV6_REATTEMPT : float = 2
 
 # warning-ignore:unused_argument
 func _process(delta):
