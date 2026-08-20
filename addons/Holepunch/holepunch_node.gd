@@ -315,7 +315,7 @@ func start_traversal(id, is_player_host, player_name, ipv4:bool=true):
 #Register a client with the server
 func _send_client_to_server():
 	print("Sending client to server")
-	await get_tree().create_timer(2.0).timeout
+	#await get_tree().create_timer(2.0).timeout
 	var buffer = PackedByteArray()
 	buffer.append_array((REGISTER_CLIENT+client_name+":"+session_id).to_utf8_buffer())
 	server_udp.close()

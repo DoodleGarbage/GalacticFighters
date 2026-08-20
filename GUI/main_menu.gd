@@ -116,10 +116,11 @@ func _attempt_join() -> void:
 	if game_code == "":
 		push_warning("Tried to join without entering a game code.")
 		return
-	nat_traversal(false, game_code)
+	nat_traversal(false, game_code, false)
 
 func _ipv6_failed(game_id:String) -> void:
-	nat_traversal(hosting, game_id, true)
+	return
+	#nat_traversal(hosting, game_id, true)
 
 
 func generate_game_code() -> String:
