@@ -162,13 +162,13 @@ func _process(delta):
 
 
 func _handle_greet_message(peer_name, peer_port, my_port):
-	#if own_port != my_port:
-		#own_port = my_port
-		#peer_udp.close()
-		#var addr : String = "::"
-		#if is_ipv4:
-			#addr = "*"
-		#peer_udp.bind(own_port, addr)
+	if own_port != my_port:
+		own_port = my_port
+		peer_udp.close()
+		var addr : String = "::"
+		if is_ipv4:
+			addr = "*"
+		peer_udp.bind(own_port, addr)
 	recieved_peer_greet = true
 
 
@@ -184,7 +184,7 @@ func _handle_confirm_message(peer_name, peer_port, my_port, is_host):
 	var addr : String = "::"
 	if is_ipv4:
 		addr = "*"
-	peer_udp.bind(local_port, addr)
+	peer_udp.bind(own_port, addr)
 	recieved_peer_confirm = true
 
 
@@ -192,7 +192,7 @@ func _handle_go_message(peer_name):
 	recieved_peer_go = true
 	peer_udp.close()
 	server_udp.close()
-	hole_punched.emit(int(local_port), int(host_port),host_address)
+	hole_punched.emit(int(own_port), int(host_port),host_address)
 	p_timer.stop()
 	set_process(false)
 
@@ -261,11 +261,11 @@ func start_peer_contact():
 	print("Opening peer UDP")
 	var err 
 	if is_ipv4:
-		err = peer_udp.bind(local_port, "*")
+		err = peer_udp.bind(own_port, "*")
 	else:
-		err = peer_udp.bind(local_port, "::")
+		err = peer_udp.bind(own_port, "::")
 	if err != OK:
-		print("Error listening on port: " + str(local_port) +" Error: " + str(err))
+		print("Error listening on port: " + str(own_port) +" Error: " + str(err))
 	p_timer.start()
 
 
@@ -291,9 +291,6 @@ func start_traversal(id, is_player_host, player_name, ipv4:bool=true):
 		print("Closing already bound server")
 		server_udp.close()
 	is_ipv4 = ipv4
-	
-	#own_port = local_port
-	
 	var err : Error
 	if ipv4:
 		err = server_udp.bind(local_port,"*")
