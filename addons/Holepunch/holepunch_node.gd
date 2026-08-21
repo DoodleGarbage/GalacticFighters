@@ -137,7 +137,8 @@ func _process(delta):
 			session_registered.emit(is_ipv4)
 			if is_host:
 				if !found_server:
-					_send_client_to_server()
+					_send_client_to_server(true)
+			print("Found Server = true")
 			found_server=true
 
 		if not recieved_peer_info:
@@ -311,6 +312,10 @@ func start_traversal(id, is_player_host, player_name, ipv4:bool=true):
 	gos_sent = 0
 	session_id = id
 	
+	delay_timer = 0
+	ipv6_timer = 0
+	keep_alive_timer = 0
+	
 	if (is_host):
 		print("Sending game init message")
 		_send_host_to_server()
@@ -319,9 +324,10 @@ func start_traversal(id, is_player_host, player_name, ipv4:bool=true):
 
 
 #Register a client with the server
-func _send_client_to_server():
+func _send_client_to_server(wait:bool=false):
 	print("Sending client to server")
-	#await get_tree().create_timer(2.0).timeout
+	if wait:
+		await get_tree().create_timer(2.0).timeout
 	var buffer = PackedByteArray()
 	buffer.append_array((REGISTER_CLIENT+client_name+":"+session_id).to_utf8_buffer())
 	server_udp.close()

@@ -165,9 +165,10 @@ class ServerProtocol(DatagramProtocol):
 			c_name = split[1]
 			c_session = split[2]
 			c_ip, c_port = address
-			print("Sent message " + 'ok:'+str(c_port) + " to address: " + str(c_ip) + ":" + str(c_port))
-			self.transport.write(bytes('ok:'+str(c_port),"utf-8"), address)
-			self.register_client(c_name, c_session, c_ip, c_port)
+			for i in range(2):
+				print("Sent message " + 'ok:'+str(c_port) + " to address: " + str(c_ip) + ":" + str(c_port))
+				self.transport.write(bytes('ok:'+str(c_port),"utf-8"), address)
+				self.register_client(c_name, c_session, c_ip, c_port)
 
 		elif msg_type == "ep":
 			# exchange peers
