@@ -148,6 +148,7 @@ func _on_save_deck_pressed() -> void:
 
 func save_deck_to_file() -> void:
 	Resources.save_decks()
+	Resources.init_decks()
 
 func _on_load_deck_item_selected(index: int) -> void:
 	clear_current_deck()

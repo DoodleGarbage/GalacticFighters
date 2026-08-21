@@ -287,6 +287,7 @@ func save_decks() -> void:
 	var file : String = "SavedUserDecks\n" + JSON.stringify(deck_dicts)
 	var fl_ac := FileAccess.open("user://user_decks.json", FileAccess.WRITE)
 	fl_ac.store_string(file)
+	fl_ac.close()
 
 func load_images(mod_path:String, mod:Mod, internal:bool) -> void:
 	var dir_path : String = mod_path + "/Images"
