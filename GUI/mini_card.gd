@@ -1,5 +1,6 @@
 extends PanelContainer
 
+
 var loaded_card : Card
 
 var allow_drag : bool = true
@@ -38,3 +39,7 @@ func switch(mode:bool=false) -> void:
 #func _on_full_card_stopped_dragging() -> void:
 	#$FullCard.position = position
 	#$FullCard.target_position = position
+
+
+func _on_stopped_dragging() -> void:
+	pass # Replace with function body.

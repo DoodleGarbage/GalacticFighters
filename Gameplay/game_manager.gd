@@ -848,7 +848,7 @@ func _input(event: InputEvent) -> void:
 				continue
 			var rect : Rect2 = Rect2(card.global_position, card.size * card.scale)
 			if rect.has_point(get_global_mouse_position()):
-				print("Adding card as possible: ", card.name)
+				#print("Adding card as possible: ", card.name)
 				hovered_cards.append(card)
 		## Highest z_index card is [0] - may be non-deterministic for same z_indexes
 		var sorted_hovered_cards : Array[DockerChild] = sort_child_docker_array(hovered_cards, "priority", true)
@@ -873,7 +873,7 @@ func _input(event: InputEvent) -> void:
 			## Start with the highest z_index card, then work down list to find a valid selection target
 			for card in sorted_hovered_cards:
 				if valid_cards.has(card):
-					print("valid card found, name: ", card.name)
+					#print("valid card found, name: ", card.name)
 					var already_selected = selected_cards.find(card)
 					if already_selected > -1:
 						selected_cards[already_selected].set_selection(false)
@@ -990,11 +990,12 @@ func trigger_ability(ability:Attribute, player:int, card:Card_GUI=null, abil_id:
 		return false
 	close_interaction_menu() # Abilities are often triggered when this is open
 	#allow_drag = false # Prevent dragging during the ability trigger
+	
 	var targeting : Array[DockerChild]
 	if card == null or abil_id == -1:
 		targeting = await get_targets(player, ability.targeting)
 	else:
-		targeting = await get_targets(player, card.attributes[abil_id].targeting)
+		targeting = await get_targets(player, card.attributes[abil_id].targeting, card.burst)
 		
 	if targeting == []:
 		print("Targeting cancelled or failed")
@@ -1124,7 +1125,9 @@ func get_targets(user:int, target_data:TargetData, burst:int = 0) -> Array[Docke
 		valid_metadata.append("empty")
 	$TargetingGUI/Options/Burst/BurstSelect.value = 0
 	if target_data.allow_burst and burst > 0:
+		print("showing burst, supposedly")
 		$TargetingGUI/Options/Burst.show()
+		$TargetingGUI/Options/Burst/BurstSelect.value = burst
 		$TargetingGUI/Options/Burst/BurstSelect.max_value = burst
 		$TargetingGUI/Options/Burst/BurstAvailable.text = str(burst)
 	# Target Validation Logic
