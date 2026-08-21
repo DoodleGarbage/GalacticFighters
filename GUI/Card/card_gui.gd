@@ -104,7 +104,7 @@ func init_script(attribute:Attribute) -> GDScript:
 	if attribute.pscript != null:
 		new_script = attribute.pscript.new(self, attribute.script_variables)
 	else:
-		new_script = empty_script.new([self])
+		new_script = empty_script.new(self)
 	new_script.ability = attribute
 	new_script.source = self
 	new_script._initialized()

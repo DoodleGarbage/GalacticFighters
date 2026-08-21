@@ -14,7 +14,7 @@ var our_name : String = "PLAYERNAME"
 ## [name (string), ID (int), deck (array[string]), ready_status (bool)]
 var current_lobby_players : Array = []
 
-var host_id : int
+var host_id : int = 1
 #var holepunch_id : String = "" #str(randi()) #OS.get_unique_id() 
 ## Switch holepunch_id to OS when not performing local testing
 @export var signaling_server_ipv4 : String = "73.25.210.98"
@@ -261,7 +261,9 @@ func ready_button_pressed() -> void:
 @rpc("any_peer", "call_local", "reliable", 1)
 func ready_up(id:int) -> void:
 	print("I got a ready up!")
+	#print(current_lobby_players)
 	if current_lobby_players.size() < 2:
+		print("not enough")
 		return
 	var who : int = get_player(id)
 	if who == -1:
@@ -274,8 +276,10 @@ func ready_up(id:int) -> void:
 		#$MainMenu/Lobby/corner/ready.hide()
 	# check if this is host
 	if peer.get_unique_id() == host_id:
+		print("We the host")
 		var should_start : bool = true
 		for player in current_lobby_players:
+			print("Checking ready stats of player: ", player[0])
 			# the 'true' prevents two unreadied players from flipping should_start back to true
 			should_start = should_start && player[3] && true
 		if should_start:

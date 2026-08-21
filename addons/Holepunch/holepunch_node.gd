@@ -94,13 +94,13 @@ func _process(delta):
 		set_process(false)
 		return
 	
-	if server_udp.get_available_packet_count() <= 0 and not found_server and ipv6_timer > (IPV6_REATTEMPT * ipv6_tries):
-		ipv6_tries += 1
-		print("Re-trying connection to signaling server over ", "ipv4" if is_ipv4 else "ipv6")
-		if is_host:
-			_send_host_to_server()
-		else:
-			_send_client_to_server()
+	#if server_udp.get_available_packet_count() <= 0 and not found_server and ipv6_timer > (IPV6_REATTEMPT * ipv6_tries):
+		#ipv6_tries += 1
+		#print("Re-trying connection to signaling server over ", "ipv4" if is_ipv4 else "ipv6")
+		#if is_host:
+			#_send_host_to_server()
+		#else:
+			#_send_client_to_server()
 	
 	if server_udp.get_available_packet_count() <= 0 and not recieved_peer_info and found_server and keep_alive_timer > KEEP_ALIVE_TIME:
 		print("Sending keep-alive packet.")
