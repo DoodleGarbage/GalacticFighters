@@ -133,7 +133,7 @@ func _process(delta):
 		print("Server packet recieved: ", packet_string)
 		if packet_string.begins_with(SERVER_OK):
 			var m = packet_string.split(":")
-			own_port = int( m[1] )
+			#own_port = int( m[1] )
 			session_registered.emit(is_ipv4)
 			if is_host:
 				if !found_server:
@@ -162,13 +162,13 @@ func _process(delta):
 
 
 func _handle_greet_message(peer_name, peer_port, my_port):
-	if own_port != my_port:
-		own_port = my_port
-		peer_udp.close()
-		var addr : String = "::"
-		if is_ipv4:
-			addr = "*"
-		peer_udp.bind(own_port, addr)
+	#if own_port != my_port:
+		#own_port = my_port
+		#peer_udp.close()
+		#var addr : String = "::"
+		#if is_ipv4:
+			#addr = "*"
+		#peer_udp.bind(own_port, addr)
 	recieved_peer_greet = true
 
 
