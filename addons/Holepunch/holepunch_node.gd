@@ -291,6 +291,9 @@ func start_traversal(id, is_player_host, player_name, ipv4:bool=true):
 		print("Closing already bound server")
 		server_udp.close()
 	is_ipv4 = ipv4
+	
+	own_port = local_port
+	
 	var err : Error
 	if ipv4:
 		err = server_udp.bind(local_port,"*")
