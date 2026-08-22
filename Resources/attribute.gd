@@ -17,6 +17,7 @@ var mod : Mod
 @export_enum("Passive", "Ability", "Interaction", "Status")
 var type : int = 0
 
+var interaction_type : String = ""
 
 							# max health, attack, defense, burst, heal, armor pierce
 var modified_stats : Array[int] = []

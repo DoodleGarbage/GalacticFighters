@@ -37,6 +37,10 @@ window/size/initial_position=Vector2i(0, 30)
 window/stretch/mode="canvas_items"
 window/vsync/vsync_mode=0
 
+[editor]
+
+export/convert_text_resources_to_binary=false
+
 [file_customization]
 
 folder_colors={

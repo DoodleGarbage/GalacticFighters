@@ -18,8 +18,8 @@ var target_type : int = 0
 # (8)   0b01000: allies (saferoom)
 # (16)  0b10000: enemies (saferoom)
 
-@export_flags("Empty")
-var allowed_metadata : int = 0
+@export_flags("Character", "Empty Card")
+var allowed_metadata : int = 1
 # 0b01: characters
 # 0b10: empty cards
 ## Flags based, as opposed to an array of strings currently. TODO: The cards should be updated to use int metadata or use an array of strings

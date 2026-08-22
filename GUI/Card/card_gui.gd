@@ -199,41 +199,49 @@ const abi_gui = preload("res://GUI/Card/ability_display.tscn")
 
 # Initial loading of the card; adds the Move, Attack, etc. buttons.
 func initilize_interactions() -> void:
-	var abg : Control
+	var abg_point : Control = get_node_or_null("AttachPoint3/Interactions")
+	if abg_point == null:
+		return
+	for child in abg_point.get_children():
+		child.queue_free()
 	
-	var move : Attribute = Resources.find_resource("Attribute", "vanilla:MOVE")
-	attributes.append(move)
-	var m_script = move.pscript.new(self, move.script_variables)
-	m_script.ability = move
-	attribute_scripts.append(m_script)
-	var aattack : Attribute = Resources.find_resource("Attribute", "vanilla:ATTACK")
-	attributes.append(aattack)
-	var a_script = aattack.pscript.new(self, move.script_variables)
-	attribute_scripts.append(a_script)
+	var has_move : bool = false
+	var has_attack : bool = false
+	for attr in attributes:
+		if attr.type == 2:
+			match(attr.interaction_type):
+				"move": has_move = true
+				"attack": has_attack = true
 	
-	var ability_index : int = -1
+	if not has_move:
+		var move : Attribute = Resources.find_resource("Attribute", "vanilla:MOVE")
+		attributes.append(move)
+		var m_script = move.pscript.new(self, move.script_variables)
+		m_script.ability = move
+		attribute_scripts.append(m_script)
+	if not has_attack:
+		var aattack : Attribute = Resources.find_resource("Attribute", "vanilla:ATTACK")
+		attributes.append(aattack)
+		var a_script = aattack.pscript.new(self, aattack.script_variables)
+		attribute_scripts.append(a_script)
 	
-	abg = abi_gui.instantiate()
-	ability_index = attributes.find(move)
-	abg.load_ability(move)
-	abg.selected.connect(ability_trigger.bind(ability_index))
-	$AttachPoint3/Interactions.add_child(abg)
-	
-	abg = abi_gui.instantiate()
-	ability_index = attributes.find(aattack)
-	abg.load_ability(aattack)
-	abg.selected.connect(ability_trigger.bind(ability_index))
-	$AttachPoint3/Interactions.add_child(abg)
+	for ab in attributes.size():
+		if attributes[ab].type != 2:
+			continue
+		var new_gui = abi_gui.instantiate()
+		new_gui.load_ability(attributes[ab])
+		new_gui.selected.connect(ability_trigger.bind(ab))
+		abg_point.add_child(new_gui)
 
 
 func update_ability_buttons() -> void:
 	## Added because empty cards crash because of this
 	var abg_point : Control = get_node_or_null("AttachPoint1/Abilities")
-	if abg_point != null:
-		for child in abg_point.get_children():
-			child.queue_free()
-	else:
+	if abg_point == null:
 		return ## I think this will only be called on the empty cards
+	for child in abg_point.get_children():
+		child.queue_free()
+	initilize_interactions()
 	
 	## Load Passives (places them above abilities)
 	for ab in attributes.size():
@@ -242,7 +250,7 @@ func update_ability_buttons() -> void:
 			abg.load_ability(attributes[ab])
 			abg.selected.connect(ability_trigger.bind(ab))
 			abg_point.add_child(abg)
-			abg.duration = attribute_scripts[ab].duration_tracker
+			#abg.duration = attribute_scripts[ab].duration_tracker
 	## Load Abilities
 	for ab in attributes.size():
 		if attributes[ab].type == 1:
@@ -250,7 +258,7 @@ func update_ability_buttons() -> void:
 			abg.load_ability(attributes[ab])
 			abg.selected.connect(ability_trigger.bind(ab))
 			abg_point.add_child(abg)
-			abg.duration = attribute_scripts[ab].duration_tracker
+			#abg.duration = attribute_scripts[ab].duration_tracker
 	## Load Status Effects
 	for ab in attributes.size():
 		if attributes[ab].type == 3:
@@ -258,7 +266,7 @@ func update_ability_buttons() -> void:
 			abg.load_ability(attributes[ab])
 			abg.selected.connect(ability_trigger.bind(ab))
 			abg_point.add_child(abg)
-			abg.duration = attribute_scripts[ab].duration_tracker
+			#abg.duration = attribute_scripts[ab].duration_tracker
 	## Update card stat GUIS
 	$Card/BStats/Left/Health.stat = health
 	$Card/BStats/Left/Attack.stat = get_attack()

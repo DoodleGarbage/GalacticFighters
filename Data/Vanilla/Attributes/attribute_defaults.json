@@ -5,6 +5,7 @@
 		"Desc":"moves characters",
 		
 		"Type":2,
+		"InteractionType":"move",
 		"Pscript":"vanilla:move",
 		
 		"TargetType":10, 
@@ -21,6 +22,7 @@
 		"Desc":"allows attacking",
 		
 		"Type":2,
+		"InteractionType":"attack",
 		"Pscript":"vanilla:attack",
 		
 		"TargetType":4,
@@ -131,7 +133,7 @@
 		"Icon":"vanilla:defense",
 		"Desc":"", 
 		
-		"Type":2,
+		"Type":1,
 		"Pscript":"vanilla:basicsword",
 		
 		"TargetType":4,

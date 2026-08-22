@@ -28,6 +28,14 @@ func _init(src, input:Dictionary={}) -> void:
 	for key in input.keys():
 		set(key, input[key])
 
+func get_splash(manager:Docker, manager_position:int, radius:int) -> Array[DockerChild]:
+	var reslt : Array[DockerChild] = []
+	for card in manager.assigned_cards:
+		if card.manager_position <= manager_position+radius and card.manager_position >= manager_position-radius:
+			reslt.append(card)
+	return reslt
+
+
 # Virtual Functions - Override in extensions
 
 ## Called when the card this script/ability is attached to is first created.

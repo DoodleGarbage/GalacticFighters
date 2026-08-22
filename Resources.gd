@@ -174,10 +174,12 @@ func init_mods(internal:bool) -> void:
 			while mod_file != "":
 				## This block of code searches for a .ini file that has "modname = name_of_mod_here" then sets the 'mod' property for everything to this mod name
 				## NOTE: Add any mod config reads here
-				if not mod_file.ends_with(".ini") or mod_dir.current_is_dir():
+				var as_remap : String = get_remapped_path(mod_file)
+				#print("as remap mod: ", as_remap)
+				if not as_remap.ends_with(".ini") or mod_dir.current_is_dir():
 					mod_file = mod_dir.get_next()
 					continue
-				var mod_file_read := FileAccess.open(mod_path + current_mod + "/" + mod_file, FileAccess.READ)
+				var mod_file_read := FileAccess.open(mod_path + current_mod + "/" + as_remap, FileAccess.READ)
 				while mod_file_read.get_position() < mod_file_read.get_length():
 					var line : String = mod_file_read.get_line()
 					line = line.remove_char(32) # From ASCII table, decimal, 32 is the space character
@@ -259,7 +261,7 @@ func init_decks() -> void:
 				continue
 			var mod_file : String = access.get_as_text().trim_prefix(data_string)
 			load_resource_from_file(access, "Deck", null, mod_file)
-			current_file = dir.get_next()
+		current_file = dir.get_next()
 
 func load_mod(mod:Mod) -> void:
 	mod.hashing_context = HashingContext.new()
@@ -298,23 +300,25 @@ func load_images(mod_path:String, mod:Mod, internal:bool) -> void:
 	dir.list_dir_begin()
 	var current_file : String = dir.get_next()
 	while current_file != "":
+		print("File in Images: ", current_file)
 		if dir.current_is_dir():
 			current_file = dir.get_next()
 			continue
-		if current_file.ends_with(".png") or current_file.ends_with(".jpg") or current_file.ends_with(".jpeg"):
+		var as_remap : String = get_remapped_path_image(current_file)
+		if as_remap.ends_with(".png") or as_remap.ends_with(".jpg") or as_remap.ends_with(".jpeg") or as_remap.ends_with(".webp"):
 			if internal: ## We need special loading handling if we're loading in res://, as load_from_file will not work on export.
-				var new_text : Texture = load(dir_path + "/" + current_file)
-				new_text.resource_name = mod.name + ":" + current_file.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg")
+				var new_text : Texture = load(dir_path + "/" + as_remap)
+				new_text.resource_name = mod.name + ":" + as_remap.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg").trim_suffix(".webp")
 				images.append(new_text)
 				current_file = dir.get_next()
 				continue
-			var new_image : Image = Image.load_from_file(dir_path + current_file)
+			var new_image : Image = Image.load_from_file(dir_path + as_remap)
 			if new_image == null:
 				push_error("Found image, but couldn't load it as an image!")
 				current_file = dir.get_next()
 				continue
 			var as_texture = ImageTexture.create_from_image(new_image)
-			as_texture.resource_name = mod.name + ":" +  current_file.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg")
+			as_texture.resource_name = mod.name + ":" +  as_remap.trim_suffix(".png").trim_suffix(".jpg").trim_suffix(".jpeg")
 			images.append(as_texture)
 		current_file= dir.get_next()
 	return
@@ -332,12 +336,13 @@ func load_scene(mod_path : String, mod:Mod, resource_type : String, internal:boo
 			push_warning("Directory \"%s\" found inside %s folder. This directory is being ignored." % [next, directory])
 			next = dir.get_next()
 			continue
-		if (resource_type == "PowerScript" and not next.ends_with(".gd")) or (resource_type == "VFX" and not next.ends_with(".tscn")):
+		var as_remap : String = get_remapped_path(next)
+		if (resource_type == "PowerScript" and not as_remap.ends_with(".gd")) or (resource_type == "VFX" and not as_remap.ends_with(".tscn")):
 			#push_warning("There is an incorrect file type for %s in directory. File: %s" % [resource_type, directory + next])
 			next = dir.get_next()
 			continue
-		var new_scene = load(directory + "/" + next)
-		new_scene.resource_name = mod.name + ":" + next.trim_suffix(".gd").trim_suffix(".tscn")
+		var new_scene = load(directory + "/" + as_remap)
+		new_scene.resource_name = mod.name + ":" + as_remap.trim_suffix(".gd").trim_suffix(".tscn")
 		match(resource_type):
 			"VFX": vfx.append(new_scene)
 			"PowerScript": 
@@ -360,9 +365,10 @@ func load_resource(mod_path : String, mod:Mod, resource_name:String, internal:bo
 			push_warning("Directory \"%s\" found inside %s folder. This directory is being ignored." % [next, resource_name])
 			next = dir.get_next()
 			continue
-		if next.ends_with(".json"):
+		var as_remap : String = get_remapped_path(next)
+		if as_remap.ends_with(".json"):
 			mod.hashing_context.update(FileAccess.get_file_as_bytes(tar_dir + "/" + next))
-			var current_file : FileAccess = FileAccess.open(tar_dir + "/" + next, FileAccess.READ)
+			var current_file : FileAccess = FileAccess.open(tar_dir + "/" + as_remap, FileAccess.READ)
 			load_resource_from_file(current_file, resource_name, mod)
 		next = dir.get_next()
 
@@ -395,6 +401,7 @@ func load_resource_data(resource:Dictionary, resource_name:String, mod:Mod=null)
 			new_attr.script_variables = resource.get_or_add("ScriptVariables", {})
 			new_attr.type = resource.get_or_add("Type", 0)
 			
+			new_attr.interaction_type = resource.get_or_add("InteractionType", "")
 			
 			var targeting_data : TargetData = TargetData.new()
 			targeting_data.allow_burst = resource.get_or_add("AllowBurst", false)
@@ -493,3 +500,39 @@ func load_resource_data(resource:Dictionary, resource_name:String, mod:Mod=null)
 			new_item.cost = resource.get_or_add("Cost", 0)
 			
 			items.append(new_item)
+
+
+static func get_remapped_path(path : String) -> String:
+	if OS.has_feature("export"):
+		# Check if file is .remap
+		if not path.ends_with(".remap"):
+			#print("returned path, no .remap")q
+			return path
+		return path.trim_suffix(".remap")
+		# Open the file
+		#var __config_file = ConfigFile.new()
+		#__config_file.load(path)
+		## Load the remapped file
+		#var __remapped_file_path = __config_file.get_value("remap", "path")
+		#__config_file = null
+		#print("We found a .remap, result: ", __remapped_file_path)
+		#return __remapped_file_path
+	else:
+		return path
+
+static func get_remapped_path_image(path : String) -> String:
+	if OS.has_feature("export"):
+		# Check if file is .remap
+		if not path.ends_with(".remap"):
+			#print("returned path, no .remap")q
+			return path.trim_suffix(".import")
+		# Open the file
+		var __config_file = ConfigFile.new()
+		__config_file.load(path)
+		# Load the remapped file
+		var __remapped_file_path = __config_file.get_value("remap", "path")
+		__config_file = null
+		print("We found a .remap, result: ", __remapped_file_path)
+		return __remapped_file_path
+	else:
+		return path
