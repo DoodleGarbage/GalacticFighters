@@ -241,8 +241,25 @@ func initilize_interactions() -> void:
 		var a_script = aattack.pscript.new(self, aattack.script_variables)
 		attribute_scripts.append(a_script)
 	
+	## Put moves at the bottom
 	for ab in attributes.size():
-		if attributes[ab].type != 2:
+		if attributes[ab].type != 2 or attributes[ab].interaction_type != "move":
+			continue
+		var new_gui = abi_gui.instantiate()
+		new_gui.load_ability(attributes[ab])
+		new_gui.selected.connect(ability_trigger.bind(ab))
+		abg_point.add_child(new_gui)
+	## Put attacks above moves
+	for ab in attributes.size():
+		if attributes[ab].type != 2 or attributes[ab].interaction_type != "attack":
+			continue
+		var new_gui = abi_gui.instantiate()
+		new_gui.load_ability(attributes[ab])
+		new_gui.selected.connect(ability_trigger.bind(ab))
+		abg_point.add_child(new_gui)
+	## Add the rest
+	for ab in attributes.size():
+		if attributes[ab].type != 2 or attributes[ab].interaction_type == "attack" or attributes[ab].interaction_type == "move":
 			continue
 		var new_gui = abi_gui.instantiate()
 		new_gui.load_ability(attributes[ab])
