@@ -175,7 +175,7 @@
 		"Burst": 0, 
 		"Heal": 0, 
 		"ArmorPierce": 2, 
-		"Attributes":["vanilla:ABILITY DEMO"], 
+		"Attributes":["vanilla:ATTACK_SPLASH"], 
 		"VFX_death":""
 	},
 ]

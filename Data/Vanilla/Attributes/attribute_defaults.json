@@ -52,6 +52,24 @@
 	},
 	
 	{
+		"Name":"ATTACK_SPLASH",
+		"Icon":"vanilla:defense",
+		"Desc":"allows attacking",
+		
+		"Type":2,
+		"InteractionType":"attack",
+		"Pscript":"vanilla:attack_splash",
+		"AllowBurst":true,
+		"ScriptVariables":{"radius":1},
+		
+		"TargetType":4,
+		"Targets":1,  
+		
+		"VFX_target":"", 
+		"VFX_damage":"damage_effect"
+	},
+	
+	{
 		"Name":"ABILITY DEMO",
 		"Icon":"vanilla:defense",
 		"Desc":"DESCRIPTION OF ABILITY FILLS THIS SPACE",
