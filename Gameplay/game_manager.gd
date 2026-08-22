@@ -356,7 +356,7 @@ func start_mulligan() -> void:
 	#$Unscalables/MulliganBG.show()
 	$Mulligan.show()
 	for card in cards:
-		if card.input_metadata != "":
+		if not (card.input_metadata & 1):
 			continue
 		if card is Card_GUI and card.player_id == peer.get_unique_id() and card.stored_card.type == 1: # note: 0 is Special Character, 1 is units (per the rules, can only start with units)
 			valid_cards.append(card)
@@ -380,7 +380,7 @@ func submit_mulligan() -> void:
 	selecting_mulligan = false
 	$Mulligan/ConfirmMulligan.hide()
 	for card in cards:
-		if card.input_metadata != "" or card is Item_GUI:
+		if not (card.input_metadata & 1) or card is Item_GUI:
 			continue
 		card.assign_manager(get_docker("saferoom", peer.get_unique_id()))
 	for card in selected_cards:
@@ -413,7 +413,7 @@ func end_mulligan(player_mulligans:Array) -> void:
 	$Mulligan.hide()
 	for card in cards:
 		card.show()
-		if card.input_metadata != "" or card is Item_GUI:
+		if not (card.input_metadata & 1) or card is Item_GUI:
 			continue
 		card.set_selection(false)
 		card.assign_manager(get_docker("saferoom", get_player_array_by_id(card.player_id)[1]))
@@ -559,6 +559,7 @@ func add_card(card : Card, docker : Docker, player_id:int, unique_id : int = -1)
 	new_card.unique_id = get_unique_card_id() if unique_id == -1 else unique_id
 	new_card.controlled = player_id == peer.get_unique_id()
 	new_card.ability_triggered.connect(card_gui_trigger_ability)
+	new_card.create_card.connect(_create_card_notice)
 	add_child(new_card)
 	new_card.load_card(card)
 	new_card.dead.connect(dead_card.bind(new_card))
@@ -582,6 +583,7 @@ func add_shadow_card(docker : Docker, manager_pos : int, player_id:int, unique_i
 	new_shadow.manager = docker
 	new_shadow.manager_position = manager_pos
 	new_shadow.global_position = docker.get_one_placement(manager_pos)
+	new_shadow.create_card.connect(_create_card_notice)
 	if peer.get_unique_id() != host_id:
 		return
 	print("syncing shadow cards")
@@ -604,6 +606,23 @@ func get_unique_card_id() -> int:
 			if card.unique_id == new_id:
 				invalid_id = true
 	return new_id
+
+func _create_card_notice(card:String, manager:Docker, pl_id:int, manager_pos:int=-1) -> void:
+	if peer.get_unique_id() != host_id:
+		return
+	var card_resource : Card = Resources.find_resource("Character", card)
+	if card_resource == null:
+		push_warning("Tried to summon ", card, " but couldn't find resource.")
+		return
+	if manager == null:
+		return
+	var man_pos : int = manager_pos
+	if manager_pos < 0 or not manager.check_if_position_is_valid(manager_pos):
+		man_pos = manager.get_unused_position()
+	print("Summoning card: ", card, "!")
+	var new_card : Card_GUI = add_card(card_resource, manager, pl_id)
+	new_card.assign_manager(manager, man_pos)
+	sync_all_cards(true)
 
 func get_unique_docker_id() -> int:
 	var invalid_id : bool = true
@@ -864,7 +883,7 @@ func _input(event: InputEvent) -> void:
 			for card in sorted_hovered_cards:
 				print("I am a card, name: ", card.name, " metadata: ", card.input_metadata, " my unique ID is: ", card.unique_id)
 			for card in sorted_hovered_cards:
-				if card.input_metadata != "" or card is Item_GUI:
+				if not (card.input_metadata & 1) or card is Item_GUI:
 					continue
 				open_interaction_menu(card)
 				break
@@ -965,7 +984,7 @@ func update_target_display() -> void:
 func reset_card_indexes() -> void:
 	for card in cards:
 		card.z_index = 0 + card.manager.z_index if card.manager != null else 0
-		if card.input_metadata == "empty":
+		if card.input_metadata & 2:
 			card.z_index -= 3
 
 
@@ -981,7 +1000,7 @@ var queued_ability : Array = []
 
 ## The ability int refers to the position of the array in the Card_GUI's attributes. 
 func trigger_ability(ability:Attribute, player:int, card:Card_GUI=null, abil_id:int=-1) -> bool:
-	print("An ability was triggered!")
+	print("An ability: ", ability.mod_name(), " was triggered!")
 	if $Unscalables/TurnTools.moves < 1:
 		print("not enough moves! Cancelling!")
 		return false
@@ -1113,17 +1132,15 @@ var selecting_cards : bool = false
 var max_selections : int = 0
 var selected_cards : Array[DockerChild] = []
 var valid_cards : Array[DockerChild] = []
-## Currently just used for allowing targeting empty positions on the field
-var valid_metadata : Array[String] = []
+## determines what's a valid target, i.e. a character or empty card
+var valid_metadata : int = 0
 
 func get_targets(user:int, target_data:TargetData, burst:int = 0) -> Array[DockerChild]:
 	if target_data.targets <= 0 or target_data.target_type == 0b0:
 		return []
 	selected_cards = []
-	valid_metadata = [""]
+	valid_metadata = target_data.allowed_metadata
 	valid_cards = []
-	if target_data.allowed_metadata & 0b1:
-		valid_metadata.append("empty")
 	$TargetingGUI/Options/Burst/BurstSelect.value = 0
 	if target_data.allow_burst and burst > 0:
 		print("showing burst, supposedly")
@@ -1134,12 +1151,15 @@ func get_targets(user:int, target_data:TargetData, burst:int = 0) -> Array[Docke
 	# Target Validation Logic
 	for card in cards:
 		## For the sake of readability and debugging, these are nested if statements.
-		if card is Item_GUI or not valid_metadata.has(card.input_metadata) or card.flagged_for_death:
+		if card is Item_GUI or not valid_metadata & card.input_metadata or card.flagged_for_death:
 			continue
 		## So far, the "empty" metadata is only used for the Move targeting, and generally any other use cases I can think of will want to NOT target empty if there's something above it
-		if card.input_metadata == "empty" and not card.manager.check_if_position_is_valid(card.manager_position):
+		if card.input_metadata & 2 and not card.manager.check_if_position_is_valid(card.manager_position):
+			print("card ", card.name, " found invalid pos")
 			continue
-		if card.player_id == user:
+		var pl_ar = get_player_array_by_id(card.player_id)
+		var us_ar = get_player_array_by_id(user)
+		if pl_ar[3] == us_ar[3]: #if same team
 			if card.manager.identifier == "saferoom" and target_data.target_type & 0b01000:
 				valid_cards.append(card)
 			elif card.manager.identifier != "saferoom" and target_data.target_type & 0b00010:
@@ -1152,11 +1172,8 @@ func get_targets(user:int, target_data:TargetData, burst:int = 0) -> Array[Docke
 	if valid_cards == []:
 		print("no valid cards found")
 	
-	if not target_data.allowed_metadata & 0b1:
-		print("metadata (if empty not allowed): ", valid_metadata)
-	
 	## NOTE: Don't auto-trigger if the user has burst available to use
-	if (target_data.targets < 0 or valid_cards.size() <= target_data.targets) and burst < 1:
+	if (valid_cards.size() <= target_data.targets) and (burst < 1 or not target_data.allow_burst):
 		return valid_cards
 	$Dimmer.show()
 	selecting_cards = true

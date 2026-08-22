@@ -400,7 +400,7 @@ func load_resource_data(resource:Dictionary, resource_name:String, mod:Mod=null)
 			targeting_data.allow_burst = resource.get_or_add("AllowBurst", false)
 			targeting_data.targets = resource.get_or_add("Targets", -1)
 			targeting_data.target_type = resource.get_or_add("TargetType", 0)
-			targeting_data.allowed_metadata = resource.get_or_add("AllowedMetadata", 0)
+			targeting_data.allowed_metadata = resource.get_or_add("AllowedMetadata", 1)
 			
 			new_attr.pscript_sync_data.assign(resource.get_or_add("SyncData", []))
 			new_attr.pscript = find_resource("Pscript", resource.get_or_add("Pscript", ""))

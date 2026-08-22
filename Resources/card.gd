@@ -11,7 +11,7 @@ var mod : Mod
 # A 1:1 aspect (approx 64x64) mugshot of the character
 @export var mini_profile : Texture
 
-@export_enum("Special Character", "Character")
+@export_enum("Special Character", "Character", "Unit")
 var type : int = 0
 
 @export var max_health : int = 0

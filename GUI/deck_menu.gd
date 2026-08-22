@@ -26,6 +26,8 @@ func load_cards() -> void:
 				target_container = $"Div/Sep/TabContainer/Special Characters/Special Characters"
 			1:
 				target_container = $Div/Sep/TabContainer/Characters/Characters
+			_:
+				continue
 		var new_char : Card_GUI = card_gui_scene.instantiate()
 		
 		target_container.add_child(new_char)
@@ -43,6 +45,8 @@ func load_cards() -> void:
 			2:
 				target_container = $Div/Sep/TabContainer/Swords/Swords
 				new_inst = item_gui_scene.instantiate()
+			_:
+				continue
 		target_container.add_child(new_inst)
 		new_inst.load_item(itm)
 	load_deck_options()
@@ -114,6 +118,8 @@ func add_card_to_deck(card) -> void:
 			2:
 				type = 4
 	
+	if type == -1:
+		return
 	
 	var new_dk_comp := deck_comp_scene.instantiate()
 	$Div/Scroll/CurrentDeck.add_child(new_dk_comp)

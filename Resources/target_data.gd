@@ -20,6 +20,8 @@ var target_type : int = 0
 
 @export_flags("Empty")
 var allowed_metadata : int = 0
+# 0b01: characters
+# 0b10: empty cards
 ## Flags based, as opposed to an array of strings currently. TODO: The cards should be updated to use int metadata or use an array of strings
 
 

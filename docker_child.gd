@@ -9,7 +9,7 @@ var player_id : int = 0 # who is the 'owner' of this card
 @export var dont_sync : bool = false
 
 ## Used by the _input code to allow selecting empty positions (with the right targeting flags)
-@export var input_metadata : String = ""
+@export var input_metadata : int = 1
 
 ## Whether or not this card belongs to the current client/is controllable (aka, could be switched off under the "controlled" status effect)
 var controlled : bool = false

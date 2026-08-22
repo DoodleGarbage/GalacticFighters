@@ -353,6 +353,7 @@ func hide_all() -> void:
 func _on_deck_pressed() -> void:
 	hide_all()
 	$MainMenu.hide()
+	print("Loading deck")
 	$DeckBuilder/Deck.load_cards()
 	$DeckBuilder.show()
 

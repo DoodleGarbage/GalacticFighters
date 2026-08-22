@@ -177,10 +177,11 @@ func apply_status(status:String) -> void:
 	attribute_scripts.append(init_script(status_effect))
 	attribute_scripts[-1].duration_tracker = status_effect.duration
 	
-	
 	update_ability_buttons()
 
-
+signal create_card(card_mod_name:String, managr:Docker, managr_pos:int)
+func summon_card(card:String, managr:Docker, pl_id:int, man_pos:int=-1) -> void:
+	create_card.emit(card, managr, pl_id, man_pos)
 
 
 
@@ -306,6 +307,9 @@ func load_card(card:Card, deck_loaded:bool=false) -> void:
 		1:
 			$Card/Background.texture = character_background
 			txttype = "CHARACTER"
+		2:
+			$Card/Background.texture = character_background
+			txttype = "UNIT"
 	
 	$Card/CardIdent/Type.show()
 	$Card/CardIdent/Type.text = tr(txttype)

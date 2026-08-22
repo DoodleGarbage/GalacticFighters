@@ -56,7 +56,7 @@ scale = Vector2(0.4, 0.4)
 mouse_filter = 2
 script = ExtResource("1_6dmt0")
 dont_sync = true
-input_metadata = "empty"
+input_metadata = 2
 priority = -1
 
 [node name="Card" type="Control" parent="." unique_id=1328208938]

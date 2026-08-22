@@ -9,7 +9,7 @@
 		
 		"TargetType":10, 
 		"Targets":1, 
-		"AllowedMetadata":1,
+		"AllowedMetadata":3,
 		
 		"VFX_target":"", 
 		"VFX_damage":""
@@ -175,5 +175,22 @@
 		
 		"VFX_target":"", 
 		"VFX_damage":"vanilla:fire_dmg_effect"
+	},
+	
+	{
+		"Name":"SummonTurret",
+		"Icon":"vanilla:defense",
+		"Desc":"summon turret",
+		
+		"Type":1,
+		"Pscript":"vanilla:summon",
+		"ScriptVariables":{"summon":"vanilla:Turret"},
+		
+		"TargetType":2, 
+		"Targets":1, 
+		"AllowedMetadata":2,
+		
+		"VFX_target":"", 
+		"VFX_damage":""
 	},
 ]
