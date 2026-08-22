@@ -120,14 +120,17 @@ mouse_filter = 2
 
 [node name="Attack" parent="Card/BStats/Left" unique_id=589134654 instance=ExtResource("4_egv06")]
 layout_mode = 2
+hide_on_zero = null
 image = ExtResource("5_at4c8")
 
 [node name="Defense" parent="Card/BStats/Left" unique_id=612677313 instance=ExtResource("4_egv06")]
 layout_mode = 2
+hide_on_zero = null
 image = ExtResource("6_vxewq")
 
 [node name="Health" parent="Card/BStats/Left" unique_id=1970796054 instance=ExtResource("4_egv06")]
 layout_mode = 2
+hide_on_zero = null
 image = ExtResource("7_t7cws")
 
 [node name="Mid" type="VBoxContainer" parent="Card/BStats" unique_id=1316687617]
@@ -144,10 +147,12 @@ mouse_filter = 2
 
 [node name="ArmorPierce" parent="Card/BStats/Mid" unique_id=452036417 instance=ExtResource("4_egv06")]
 layout_mode = 2
+hide_on_zero = true
 image = ExtResource("8_at4c8")
 
 [node name="Burst" parent="Card/BStats/Mid" unique_id=1136173955 instance=ExtResource("4_egv06")]
 layout_mode = 2
+hide_on_zero = true
 image = ExtResource("10_pbya0")
 
 [node name="Center" type="VBoxContainer" parent="Card/BStats" unique_id=25748095]
@@ -165,6 +170,7 @@ mouse_filter = 2
 
 [node name="Heal" parent="Card/BStats/Center" unique_id=1461149952 instance=ExtResource("4_egv06")]
 layout_mode = 2
+hide_on_zero = true
 image = ExtResource("10_t7cws")
 
 [node name="Name" type="Label" parent="Card" unique_id=16235099]

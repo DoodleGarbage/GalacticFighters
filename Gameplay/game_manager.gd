@@ -995,7 +995,7 @@ func trigger_ability(ability:Attribute, player:int, card:Card_GUI=null, abil_id:
 	if card == null or abil_id == -1:
 		targeting = await get_targets(player, ability.targeting)
 	else:
-		targeting = await get_targets(player, card.attributes[abil_id].targeting, card.burst)
+		targeting = await get_targets(player, card.attributes[abil_id].targeting, card.get_burst())
 		
 	if targeting == []:
 		print("Targeting cancelled or failed")
@@ -1007,6 +1007,7 @@ func trigger_ability(ability:Attribute, player:int, card:Card_GUI=null, abil_id:
 	var burst_amnt : int = 0
 	if ability.targeting.allow_burst:
 		burst_amnt = $TargetingGUI/Options/Burst/BurstSelect.value
+		print("burst amount is: ", burst_amnt)
 	var targets_to_id : Array[int] = card_to_id_array(targeting)
 	print("Triggering an ability. Our ID: ", get_player_array_by_id(peer.get_unique_id())[1])
 	queued_ability = [peer.get_unique_id(),ability.mod_name(), player, burst_amnt, targets_to_id, card.unique_id if card != null else -1, abil_id]
@@ -1065,7 +1066,7 @@ func trigger_ability_client(peer_id:int, ability_name:String, player:int, burst_
 		# NOTE: Can only run scripts that don't rely on 'source'
 		p_script = ability.pscript.new(null, ability.script_variables)
 	
-	for i in range(0, 1+burst_amnt):
+	for i in range(0, max(1,burst_amnt)):
 		p_script._interaction(target_guis)
 	update_dockers()
 	

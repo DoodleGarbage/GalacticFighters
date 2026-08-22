@@ -7,7 +7,7 @@ func _interaction(_targets:Array[Card_GUI]) -> void:
 	for target in _targets:
 		if not is_instance_valid(target):
 			continue
-		target.damage(ability, source.attack, source.armor_pierce)
+		target.damage(ability, source.get_attack(), source.get_armor_pierce())
 
 ## Called at the start of the game turn
 func _turnstart() -> void:

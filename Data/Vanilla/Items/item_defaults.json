@@ -1,6 +1,41 @@
 [
-	{"Name":"Apple","Desc":"Heals 3 HP to 1 character","Icon":"vanilla:defense","Type":0,"Effect":"vanilla:apple","Uses":1,"Cost":0},
-	{"Name":"Sandvich","Desc":"Heals 8 HP and grants +1 Attack for 1 turn","Icon":"vanilla:ItemSandvich","Type":0,"Effect":"vanilla:Sandvich","Uses":1,"Cost":0},
-	{"Name":"Band_of_Strength","Desc":"Grants +1 Attack to a character","Icon":"vanilla:basicsword","Type":1,"Effect":"vanilla:strengthband","Uses":-1,"Cost":0},
-	{"Name":"basicsword","Desc":"Strike an enemy character for 8 damage","Icon":"vanilla:basicsword","Type":2,"Effect":"vanilla:basicsword","Uses":-1,"Cost":0},
+	{
+		"Name":"Apple",
+		"Desc":"Heals 3 HP to 1 character",
+		"Icon":"vanilla:defense",
+		"Type":0,
+		"Effect":"vanilla:apple",
+		"Uses":1,
+		"Cost":0
+	},
+	
+	{
+		"Name":"Sandvich",
+		"Desc":"Heals 8 HP and grants +1 Attack for 1 turn",
+		"Icon":"vanilla:ItemSandvich",
+		"Type":0,
+		"Effect":"vanilla:Sandvich",
+		"Uses":1,
+		"Cost":0
+	},
+	
+	{
+		"Name":"Band_of_Strength",
+		"Desc":"Grants +1 Attack to a character",
+		"Icon":"vanilla:basicsword",
+		"Type":1,
+		"Effect":"vanilla:strengthband",
+		"Uses":-1,
+		"Cost":0
+	},
+	
+	{
+		"Name":"basicsword",
+		"Desc":"Strike an enemy character for 8 damage",
+		"Icon":"vanilla:basicsword",
+		"Type":2,
+		"Effect":"vanilla:basicsword",
+		"Uses":-1,
+		"Cost":0
+	},
 ]

@@ -387,31 +387,31 @@ func load_resource_data(resource:Dictionary, resource_name:String, mod:Mod=null)
 		"Attribute": ## Must be loaded: Images, Pscripts
 			var new_attr : Attribute = Attribute.new()
 			new_attr.mod = mod
-			new_attr.name = resource["Name"]
-			new_attr.desc = resource["Desc"]
+			new_attr.name = resource.get_or_add("Name", "")
+			new_attr.desc = resource.get_or_add("Desc", "")
 			
-			new_attr.icon = find_image(resource["Icon"])
-			new_attr.pscript = find_resource("Pscript", resource["Pscript"])
-			if resource.has("ScriptVariables"):
-				for varia in resource["ScriptVariables"]:
-					new_attr.script_variables = resource["ScriptVariables"]
-			new_attr.type = resource["Type"]
+			new_attr.icon = find_image(resource.get_or_add("Icon", ""))
+			new_attr.pscript = find_resource("Pscript", resource.get_or_add("Pscript", ""))
+			new_attr.script_variables = resource.get_or_add("ScriptVariables", {})
+			new_attr.type = resource.get_or_add("Type", 0)
 			
 			
 			var targeting_data : TargetData = TargetData.new()
-			targeting_data.allow_burst = resource["AllowBurst"]
-			targeting_data.targets = resource["Targets"]
-			targeting_data.target_type = resource["TargetType"]
-			targeting_data.allowed_metadata = resource["AllowedMetadata"]
+			targeting_data.allow_burst = resource.get_or_add("AllowBurst", false)
+			targeting_data.targets = resource.get_or_add("Targets", -1)
+			targeting_data.target_type = resource.get_or_add("TargetType", 0)
+			targeting_data.allowed_metadata = resource.get_or_add("AllowedMetadata", 0)
 			
-			new_attr.pscript_sync_data.assign(resource["SyncData"])
-			new_attr.pscript = find_resource("Pscript", resource["Pscript"])
-			new_attr.duration = resource["Duration"]
+			new_attr.pscript_sync_data.assign(resource.get_or_add("SyncData", []))
+			new_attr.pscript = find_resource("Pscript", resource.get_or_add("Pscript", ""))
+			new_attr.duration = resource.get_or_add("Duration", -1)
 			
-			var VFX_target = find_resource("VFX", resource["VFX_target"])
+			new_attr.modified_stats.assign(resource.get_or_add("StatModifiers", [0,0,0,0,0,0]))
+			
+			var VFX_target = find_resource("VFX", resource.get_or_add("VFX_target", ""))
 			if VFX_target == null:
 				new_attr.VFX_target = VFX_null
-			var VFX_damage = find_resource("VFX", resource["VFX_damage"])
+			var VFX_damage = find_resource("VFX", resource.get_or_add("VFX_damage", ""))
 			if VFX_damage == null:
 				new_attr.VFX_target = VFX_null
 			
@@ -422,22 +422,22 @@ func load_resource_data(resource:Dictionary, resource_name:String, mod:Mod=null)
 			var new_char : Card = Card.new()
 			
 			new_char.mod = mod
-			new_char.type = resource["Type"]
-			new_char.name = resource["Name"]
-			new_char.full_profile = find_image(resource["FullProfile"])
-			new_char.mini_profile = find_image(resource["MiniProfile"])
-			new_char.max_health = resource["Health"]
-			new_char.defense = resource["Defense"]
-			new_char.attack = resource["Attack"]
-			new_char.burst = resource["Burst"]
-			new_char.heal = resource["Heal"]
-			new_char.armor_pierce = resource["ArmorPierce"]
-			for atrru in resource["Attributes"]:
+			new_char.type = resource.get_or_add("Type", 0)
+			new_char.name = resource.get_or_add("Name", "")
+			new_char.full_profile = find_image(resource.get_or_add("FullProfile",""))
+			new_char.mini_profile = find_image(resource.get_or_add("MiniProfile",""))
+			new_char.max_health = resource.get_or_add("Health", 1)
+			new_char.defense = resource.get_or_add("Defense", 0)
+			new_char.attack = resource.get_or_add("Attack", 0)
+			new_char.burst = resource.get_or_add("Burst", 0)
+			new_char.heal = resource.get_or_add("Heal", 0)
+			new_char.armor_pierce = resource.get_or_add("ArmorPierce", 0)
+			for atrru in resource.get_or_add("Attributes",[]):
 				var atri = find_resource("Attribute", atrru)
 				if atri != null:
 					new_char.attributes.append(atri)
 			
-			var new_vfx_death = find_resource("VFX", resource["VFX_death"])
+			var new_vfx_death = find_resource("VFX", resource.get_or_add("VFX_death", ""))
 			if new_vfx_death == null:
 				new_vfx_death = VFX_character_death
 			new_char.VFX_death = new_vfx_death
@@ -445,17 +445,17 @@ func load_resource_data(resource:Dictionary, resource_name:String, mod:Mod=null)
 			characters.append(new_char)
 		"Deck": ## Must be loaded: Everything else
 			for deck in decks:
-				if deck.name == resource["Name"]:
+				if deck.name == resource.get_or_add("Name", ""):
 					push_warning("Deck naming conflict, skipping. (Name: %s)" % deck.name)
 					return
 			var new_deck : Deck = Deck.new()
-			new_deck.name = resource["Name"]
+			new_deck.name = resource.get_or_add("Name", "")
 			var deck_strings : Array[String] = []
-			deck_strings.assign(resource["Deck"])
+			deck_strings.assign(resource.get_or_add("Deck", []))
 			var continue_loading : bool = can_deck_load(deck_strings)
 			if not continue_loading: # A mod that this deck depends on isn't loaded, so we can't load this deck
 				print("Deck failed the mod loading check")
-				disabled_decks.append([resource["Name"], deck_strings]) # We stow it away since we don't want to delete the deck when we save over the saved decks file.
+				disabled_decks.append([resource.get_or_add("Name", ""), deck_strings]) # We stow it away since we don't want to delete the deck when we save over the saved decks file.
 				return
 			for component in deck_strings:
 				var split := component.split(":", true, 1)
@@ -482,14 +482,14 @@ func load_resource_data(resource:Dictionary, resource_name:String, mod:Mod=null)
 		"Item": ## Must be loaded: Attributes, Images
 			var new_item : Item = Item.new()
 			new_item.mod = mod
-			new_item.name = resource["Name"]
-			new_item.desc = resource["Desc"]
-			new_item.icon = find_image(resource["Icon"])
+			new_item.name = resource.get_or_add("Name", "")
+			new_item.desc = resource.get_or_add("Desc", "")
+			new_item.icon = find_image(resource.get_or_add("Icon", ""))
 			
-			new_item.type = resource["Type"]
-			new_item.effect = find_resource("Attribute", resource["Effect"])
+			new_item.type = resource.get_or_add("Type", 0)
+			new_item.effect = find_resource("Attribute", resource.get_or_add("Effect", ""))
 			
-			new_item.uses = resource["Uses"]
-			new_item.cost = resource["Cost"]
+			new_item.uses = resource.get_or_add("Uses", -1)
+			new_item.cost = resource.get_or_add("Cost", 0)
 			
 			items.append(new_item)

@@ -1,5 +1,7 @@
 extends PowerScript
 
+@export var damage : int = 2
+
 ## Triggered when the associated ability or move triggers a targeting request.
 func _interaction(_targets:Array[Card_GUI]) -> void:
 	pass
@@ -10,4 +12,4 @@ func _turnstart() -> void:
 
 ## Called when the turn ends.
 func _turnend() -> void:
-	source.damage(ability, 4)
+	source.damage(ability, damage)

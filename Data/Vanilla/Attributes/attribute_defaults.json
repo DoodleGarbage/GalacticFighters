@@ -1,21 +1,179 @@
 [
-	{"Name":"MOVE","Icon":"vanilla:defense","Pscript":"vanilla:move","Type":2,"Desc":"moves characters", "AllowBurst":false, "Targets":1, "TargetType":10, "AllowedMetadata":1, "SyncData":[], "Duration":-1, "VFX_target":"", "VFX_damage":""},
+	{
+		"Name":"MOVE",
+		"Icon":"vanilla:defense",
+		"Desc":"moves characters",
+		
+		"Type":2,
+		"Pscript":"vanilla:move",
+		
+		"TargetType":10, 
+		"Targets":1, 
+		"AllowedMetadata":1,
+		
+		"VFX_target":"", 
+		"VFX_damage":""
+	},
 	
-	{"Name":"ATTACK","Icon":"vanilla:defense","Pscript":"vanilla:attack","Type":2,"Desc":"allows attacking", "AllowBurst":true, "Targets":1, "TargetType":4, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"", "VFX_damage":"damage_effect"},
+	{
+		"Name":"ATTACK",
+		"Icon":"vanilla:defense",
+		"Desc":"allows attacking",
+		
+		"Type":2,
+		"Pscript":"vanilla:attack",
+		
+		"TargetType":4,
+		"Targets":1,  
+		
+		"VFX_target":"", 
+		"VFX_damage":"damage_effect"
+	},
 	
-	{"Name":"ABILITY DEMO","Icon":"vanilla:defense","Pscript":"vanilla:attack","Type":1,"Desc":"DESCRIPTION OF ABILITY FILLS THIS SPACE", "AllowBurst":false, "Targets":1, "TargetType":1, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"", "VFX_damage":""},
+	{
+		"Name":"ABILITY DEMO",
+		"Icon":"vanilla:defense",
+		"Desc":"DESCRIPTION OF ABILITY FILLS THIS SPACE",
+		
+		"Type":1,
+		"Pscript":"vanilla:attack",
+		 
+		"TargetType":1,
+		"Targets":1,
+		 
+		"VFX_target":"", 
+		"VFX_damage":""
+	},
 	
-	{"Name":"PASSIVE DEMO","Icon":"vanilla:heart","Pscript":"","Type":0,"Desc":"DEMOS OF THE WHAT THE PASSIVE DOES IS DESCRIBED IN THIS LOCATION", "AllowBurst":false, "Targets":-1, "TargetType":0, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"", "VFX_damage":""},
+	{
+		"Name":"PASSIVE DEMO",
+		"Icon":"vanilla:heart",
+		"Desc":"DEMOS OF THE WHAT THE PASSIVE DOES IS DESCRIBED IN THIS LOCATION",
+		
+		"Type":0,
+		"Pscript":"",
+		"SyncData":[],
+		 
+		"TargetType":0,
+		"Targets":-1,
+		
+		"Duration":-1,
+		
+		"VFX_target":"", 
+		"VFX_damage":""
+	},
 	
-	{"Name":"FIRE BLAST","Icon":"vanilla:heart","Pscript":"vanilla:fireblast","Type":1,"Desc":"Applies the fire status", "AllowBurst":false, "Targets":1, "TargetType":4, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"vanilla:fire_apply_effect", "VFX_damage":""},
+	{
+		"Name":"FIRE BLAST",
+		"Icon":"vanilla:heart",
+		"Desc":"Applies the fire status",
+		
+		"Type":1,
+		"Pscript":"vanilla:fireblast",
+		
+		"TargetType":4,
+		"Targets":1,
+		
+		"VFX_target":"vanilla:fire_apply_effect", 
+		"VFX_damage":""
+	},
 	
-	{"Name":"Fire","Icon":"vanilla:heart","Pscript":"vanilla:fire","Type":3,"Desc":"Deals 4 damage at the start of each turn", "AllowBurst":false, "Targets":-1, "TargetType":0, "AllowedMetadata":0, "SyncData":[], "Duration":3, "VFX_target":"", "VFX_damage":"vanilla:fire_dmg_effect"},
+	{
+		"Name":"Fire",
+		"Icon":"vanilla:heart",
+		"Desc":"Deals 2 damage at the start of each turn",
+		
+		"Type":3,
+		"Pscript":"vanilla:fire",
+		"ScriptVariables":{"damage":2},
+		
+		"Duration":3,
+		
+		"VFX_target":"", 
+		"VFX_damage":"vanilla:fire_dmg_effect"
+	},
 	
-	{"Name":"apple","Icon":"vanilla:defense","Pscript":"vanilla:apple", "ScriptVariables":{"heal_amnt":8},"Type":1,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":2, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"vanilla:fire_dmg_effect", "VFX_damage":""},
+	{
+		"Name":"apple",
+		"Icon":"vanilla:defense",
+		"Desc":"",
+		
+		"Type":1,
+		"Pscript":"vanilla:apple",
+		"ScriptVariables":{"heal_amnt":8},
+		
+		"TargetType":2,
+		"Targets":1,
+		
+		"VFX_target":"vanilla:fire_dmg_effect", 
+		"VFX_damage":""
+	},
 	
-	{"Name":"strengthband","Icon":"vanilla:defense","Pscript":"vanilla:strengthband","Type":1,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":2, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"vanilla:fire_dmg_effect", "VFX_damage":""},
+	{
+		"Name":"strengthband",
+		"Icon":"vanilla:defense",
+		"Desc":"",
+		
+		"Type":1,
+		"Pscript":"vanilla:strengthband",
+		
+		"TargetType":2,
+		"Targets":1,
+		 
+		"Duration":-1,
+		
+		"VFX_target":"vanilla:fire_dmg_effect", 
+		"VFX_damage":""
+	},
 	
-	{"Name":"basicsword","Icon":"vanilla:defense","Pscript":"vanilla:basicsword", "ScriptVariables":{}, "Type":2,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":4, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"", "VFX_damage":"damage_effect"},
+	{
+		"Name":"basicsword",
+		"Icon":"vanilla:defense",
+		"Desc":"", 
+		
+		"Type":2,
+		"Pscript":"vanilla:basicsword",
+		
+		"TargetType":4,
+		"Targets":1,
+		 
+		"Duration":-1,
+		 
+		"VFX_target":"", 
+		"VFX_damage":"damage_effect"
+	},
 	
-	{"Name":"Sandvich","Icon":"vanilla:ItemSandvich","Pscript":"vanilla:apple", "ScriptVariables":{"heal_amnt":8}, "Type":1,"Desc":"", "AllowBurst":false, "Targets":1, "TargetType":2, "AllowedMetadata":0, "SyncData":[], "Duration":-1, "VFX_target":"vanilla:fire_dmg_effect", "VFX_damage":""},
+	{
+		"Name":"Sandvich",
+		"Icon":"vanilla:ItemSandvich",
+		"Desc":"",
+		
+		"Type":1,
+		"Pscript":"vanilla:Sandvich", 
+		"ScriptVariables":{"heal_amnt":8,"status":"vanilla:SandvichAttackBuff"}, 
+		 
+		
+		"TargetType":2,
+		"Targets":1, 
+		
+		"Duration":-1,
+		
+		"VFX_target":"vanilla:fire_dmg_effect", 
+		"VFX_damage":""
+	},
+	
+	{
+		"Name":"SandvichAttackBuff",
+		"Icon":"vanilla:heart",
+		"Desc":"Grants +1 Attack", 
+		
+		"Type":3,
+		"Pscript":"",
+		"StatModifiers":[0,1,0,0,0,0],
+		
+		"Duration":1, 
+		
+		"VFX_target":"", 
+		"VFX_damage":"vanilla:fire_dmg_effect"
+	},
 ]

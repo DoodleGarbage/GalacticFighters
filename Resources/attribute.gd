@@ -17,6 +17,14 @@ var mod : Mod
 @export_enum("Passive", "Ability", "Interaction", "Status")
 var type : int = 0
 
+
+							# max health, attack, defense, burst, heal, armor pierce
+var modified_stats : Array[int] = []
+
+var application_behavior : int = 0
+
+
+
 ## Do not put full descriptions here, prefer using a translated string.
 @export var desc : String = "DESCRIPTION_LANG"
 

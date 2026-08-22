@@ -15,36 +15,52 @@ var stored_card : Card
 # Note: to get the card's default values for health atk and defense, just check the Card resource
 
 var max_health : int = 0
+func get_max_health() -> int: return max_health + get_attr_stat_mod(0)
 var health : int = 0 :
 	set(value):
-		if value > max_health:
-			health = max_health
+		if value > get_max_health():
+			health = get_max_health()
 		else:
 			health = value
 		$Card/BStats/Left/Health.stat = health
 var defense : int = 0 :
 	set(value):
 		defense = value
-		$Card/BStats/Left/Defense.stat = value
+		$Card/BStats/Left/Defense.stat = get_defense()
+func get_defense() -> int: return defense + get_attr_stat_mod(2)
 var attack : int = 0 :
 	set(value):
 		attack = value
-		$Card/BStats/Left/Attack.stat = value
+		$Card/BStats/Left/Attack.stat = get_attack()
+func get_attack() -> int: return attack + get_attr_stat_mod(1)
 
 var burst : int = 0 :
 	set(value):
 		burst = value
-		$Card/BStats/Mid/Burst.stat = value
+		$Card/BStats/Mid/Burst.stat = get_burst()
+func get_burst() -> int: return burst + get_attr_stat_mod(3)
+
 var heal_stat : int = 0 :
 	set(value):
 		heal_stat = value
-		$Card/BStats/Center/Heal.stat = value
+		$Card/BStats/Center/Heal.stat = get_heal_stat()
+func get_heal_stat() -> int: return heal_stat + get_attr_stat_mod(4)
+
 var armor_pierce : int = 0 :
 	set(value):
 		armor_pierce = value
-		$Card/BStats/Mid/ArmorPierce.stat = value
+		$Card/BStats/Mid/ArmorPierce.stat = get_armor_pierce()
+func get_armor_pierce() -> int: return armor_pierce + get_attr_stat_mod(5)
+
 
 var attributes : Array[Attribute] = []
+
+# 0=max health, 1=attack, 2=defense, 3=burst, 4=heal, 5=armor pierce
+func get_attr_stat_mod(stat:int) -> int:
+	var total : int = 0
+	for attr in attributes:
+		total += attr.modified_stats[stat]
+	return total
 
 ## The scripts associated with each attribute - this is also how details such as duration/length/turns left/etc etc are tracked - plus any "script defined variables" (this will need to be implemented - thing get_var, set_var stuff)
 var attribute_scripts : Array = []
@@ -242,6 +258,13 @@ func update_ability_buttons() -> void:
 			abg.selected.connect(ability_trigger.bind(ab))
 			abg_point.add_child(abg)
 			abg.duration = attribute_scripts[ab].duration_tracker
+	## Update card stat GUIS
+	$Card/BStats/Left/Health.stat = health
+	$Card/BStats/Left/Attack.stat = get_attack()
+	$Card/BStats/Left/Defense.stat = get_defense()
+	$Card/BStats/Mid/ArmorPierce.stat = get_armor_pierce()
+	$Card/BStats/Mid/Burst.stat = get_burst()
+	$Card/BStats/Center/Heal.stat = get_heal_stat()
 
 
 signal ability_triggered(ability:int, us:Card_GUI)

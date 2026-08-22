@@ -15,4 +15,4 @@ script = ExtResource("1_me1js")
 margin = Vector2(50, 30)
 identifier = "field"
 ordering_matters = true
-max_cards = 3
+max_cards = 5
