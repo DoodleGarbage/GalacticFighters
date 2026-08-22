@@ -24,6 +24,25 @@
 		"Type":2,
 		"InteractionType":"attack",
 		"Pscript":"vanilla:attack",
+		"AllowBurst":true,
+		
+		"TargetType":4,
+		"Targets":1,  
+		
+		"VFX_target":"", 
+		"VFX_damage":"damage_effect"
+	},
+	
+	{
+		"Name":"ATTACK_FIRE",
+		"Icon":"vanilla:defense",
+		"Desc":"allows attacking",
+		
+		"Type":2,
+		"InteractionType":"attack",
+		"Pscript":"vanilla:statusattack",
+		"AllowBurst":true,
+		"ScriptVariables":{"status":"vanilla:Fire"},
 		
 		"TargetType":4,
 		"Targets":1,  
@@ -75,6 +94,7 @@
 		
 		"TargetType":4,
 		"Targets":1,
+		"ApplicationBehavior":1,
 		
 		"VFX_target":"vanilla:fire_apply_effect", 
 		"VFX_damage":""
@@ -88,6 +108,7 @@
 		"Type":3,
 		"Pscript":"vanilla:fire",
 		"ScriptVariables":{"damage":2},
+		"ApplicationBehavior":1,
 		
 		"Duration":3,
 		

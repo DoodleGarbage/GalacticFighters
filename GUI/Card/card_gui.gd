@@ -173,9 +173,24 @@ func apply_status(status:String) -> void:
 	if status_effect == null:
 		return
 	print("We're applying status: ", status)
-	attributes.append(status_effect)
-	attribute_scripts.append(init_script(status_effect))
-	attribute_scripts[-1].duration_tracker = status_effect.duration
+	var dupe_status = attributes.find(status_effect)
+	if dupe_status > -1 and status_effect.application_behavior != 0:
+		match(status_effect.application_behavior):
+			1: attribute_scripts[dupe_status].duration_tracker = status_effect.duration
+			2: attribute_scripts[dupe_status].duration_tracker += status_effect.duration
+			3: 
+				for va in status_effect.script_variables:
+					var val = attribute_scripts[dupe_status].get(va)
+					attribute_scripts[dupe_status].set(va, val + status_effect.script_variables[va])
+			4:
+				attribute_scripts[dupe_status].duration_tracker = status_effect.duration
+				for va in status_effect.script_variables:
+					var val = attribute_scripts[dupe_status].get(va)
+					attribute_scripts[dupe_status].set(va, val + status_effect.script_variables[va])
+	else:
+		attributes.append(status_effect)
+		attribute_scripts.append(init_script(status_effect))
+		attribute_scripts[-1].duration_tracker = status_effect.duration
 	
 	update_ability_buttons()
 
@@ -209,6 +224,7 @@ func initilize_interactions() -> void:
 	var has_attack : bool = false
 	for attr in attributes:
 		if attr.type == 2:
+			#print("has type 2 attr, intera type: ", attr.interaction_type)
 			match(attr.interaction_type):
 				"move": has_move = true
 				"attack": has_attack = true
@@ -250,7 +266,7 @@ func update_ability_buttons() -> void:
 			abg.load_ability(attributes[ab])
 			abg.selected.connect(ability_trigger.bind(ab))
 			abg_point.add_child(abg)
-			#abg.duration = attribute_scripts[ab].duration_tracker
+			abg.duration = attribute_scripts[ab].duration_tracker
 	## Load Abilities
 	for ab in attributes.size():
 		if attributes[ab].type == 1:
@@ -258,7 +274,7 @@ func update_ability_buttons() -> void:
 			abg.load_ability(attributes[ab])
 			abg.selected.connect(ability_trigger.bind(ab))
 			abg_point.add_child(abg)
-			#abg.duration = attribute_scripts[ab].duration_tracker
+			abg.duration = attribute_scripts[ab].duration_tracker
 	## Load Status Effects
 	for ab in attributes.size():
 		if attributes[ab].type == 3:
@@ -266,7 +282,7 @@ func update_ability_buttons() -> void:
 			abg.load_ability(attributes[ab])
 			abg.selected.connect(ability_trigger.bind(ab))
 			abg_point.add_child(abg)
-			#abg.duration = attribute_scripts[ab].duration_tracker
+			abg.duration = attribute_scripts[ab].duration_tracker
 	## Update card stat GUIS
 	$Card/BStats/Left/Health.stat = health
 	$Card/BStats/Left/Attack.stat = get_attack()
@@ -302,8 +318,6 @@ func load_card(card:Card, deck_loaded:bool=false) -> void:
 	$Card/Character.texture = card.full_profile
 	$Card/CardIdent/Special.hide()
 	
-	if not deck_loaded:
-		initilize_interactions()
 	
 	var txttype : String = ""
 	match(card.type):
@@ -336,6 +350,7 @@ func load_card(card:Card, deck_loaded:bool=false) -> void:
 		for attr in stored_card.attributes:
 			attributes.append(attr)
 			attribute_scripts.append(init_script(attr))
+	
 	
 	if armor_pierce <= 0:
 		$Card/BStats/Mid/ArmorPierce.hide()

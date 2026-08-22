@@ -39,7 +39,7 @@ class ClientTimeout():
 				#with lock:
 				# print("running locked, registered clients: ", tmp_rc)
 				for client in tmp_rc.keys():
-					print("Client time: ", tmp_rc[client].last_update, " our time: ", time.time())
+					#print("Client time: ", tmp_rc[client].last_update, " our time: ", time.time())
 					if time.time() - tmp_rc[client].last_update >= 60:
 						try:
 							del mod_rc[client]

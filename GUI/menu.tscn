@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://b7u8fehe1jgc" path="res://GUI/deck_menu.tscn" id="5_o1bug"]
 [ext_resource type="PackedScene" uid="uid://dhrx3hltyg7fb" path="res://Gameplay/playfield.tscn" id="6_bi43m"]
 [ext_resource type="PackedScene" uid="uid://doaiy2ongcjk4" path="res://GUI/mini_deck.tscn" id="8_urio0"]
+[ext_resource type="Theme" uid="uid://dexx3ln01i34r" path="res://Themes/debug_theme.tres" id="9_ygayt"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ygayt"]
 bg_color = Color(0.28485027, 0.2848503, 0.28485018, 1)
@@ -29,13 +30,6 @@ corner_radius_bottom_left = 3
 corner_detail = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_urio0"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7nq1i"]
-
-[sub_resource type="Theme" id="Theme_ew257"]
-Label/colors/font_color = Color(1, 1, 1, 1)
-Label/font_sizes/font_size = 28
-Label/styles/normal = SubResource("StyleBoxEmpty_7nq1i")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c17gv"]
 bg_color = Color(0.40527898, 0.4052789, 0.4052789, 1)
@@ -332,7 +326,7 @@ anchor_right = 0.9
 anchor_bottom = 0.8
 grow_horizontal = 2
 grow_vertical = 2
-theme = SubResource("Theme_ew257")
+theme = ExtResource("9_ygayt")
 
 [node name="list" type="VBoxContainer" parent="MainMenu/Waiting/debugdisplay" unique_id=1058725842]
 layout_mode = 2
@@ -369,11 +363,23 @@ text = "IPV4 status: "
 layout_mode = 2
 text = "waiting"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MainMenu/Waiting/debugdisplay/list" unique_id=647909838]
+[node name="Upnp" type="HBoxContainer" parent="MainMenu/Waiting/debugdisplay/list" unique_id=647909838]
 layout_mode = 2
 
-[node name="LineEdit" type="LineEdit" parent="MainMenu/Waiting/debugdisplay/list/HBoxContainer" unique_id=614496351]
+[node name="UseUpnp" type="CheckButton" parent="MainMenu/Waiting/debugdisplay/list/Upnp" unique_id=1322509406]
 layout_mode = 2
+button_pressed = true
+text = "Use u-pnp"
+
+[node name="Bypass" type="CheckBox" parent="MainMenu/Waiting/debugdisplay/list/Upnp" unique_id=1602478856]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Bypass Check"
+
+[node name="IPPort" type="LineEdit" parent="MainMenu/Waiting/debugdisplay/list/Upnp" unique_id=2046106059]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "IP Address : Port"
 
 [node name="MPdebug" type="Button" parent="MainMenu/Waiting" unique_id=1313817348]
 layout_mode = 1
@@ -550,4 +556,5 @@ visible = false
 [connection signal="pressed" from="MainMenu/CornerInfo/Mods" to="." method="_on_mods_pressed"]
 [connection signal="pressed" from="MainMenu/CornerInfo/VerCheck/Hash/Copy" to="." method="_on_hash_checksum_copy_pressed"]
 [connection signal="exit" from="DeckBuilder/Deck" to="." method="return_to_menu"]
+[connection signal="exit" from="DeckBuilder/Deck" to="MainMenu/BattleSelect" method="load_decks"]
 [connection signal="return_to_lobby" from="Gameplay/Playfield" to="." method="return_to_menu"]

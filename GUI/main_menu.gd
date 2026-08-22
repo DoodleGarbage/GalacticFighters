@@ -40,10 +40,45 @@ func _ready() -> void:
 
 var hosting : bool = false
 
+var traversal_data : Array = []
 ## Using HolePunch Addon
 func nat_traversal(is_host:bool, game_code:String="", ipv4:bool=true) -> void:
+	$MainMenu/Waiting/VBoxContainer/Host.hide()
+	if $MainMenu/Waiting/debugdisplay/list/Upnp/UseUpnp.button_pressed:
+		if is_host:
+			traversal_data = [is_host, game_code, ipv4]
+			var port : int = int($MainMenu/Waiting/debugdisplay/list/Port/LocalPort.text)
+			if port < 1024 or port > 65535:
+				port = 7777
+			var new_thread := Thread.new()
+			mutex = Mutex.new()
+			new_thread.start(test_server_upnp.bind(port), Thread.PRIORITY_NORMAL)
+		else:
+			var addr : PackedStringArray = $MainMenu/Waiting/debugdisplay/list/Upnp/IPPort.text.rsplit(":",1)
+			if addr.size() < 2:
+				push_warning("Formatted IP address for upnp join wrong! Defaulting to hole-punching now.")
+				nat_hole_punch(is_host, game_code, ipv4)
+				return
+			var h_port : int = int(addr[1])
+			var lo_port : int = $MainMenu/Waiting/debugdisplay/list/Port/LocalPort.text.to_int()
+			if lo_port < 1024 or lo_port > 65535:
+				lo_port = 9999
+			hole_punched(lo_port, h_port, addr[0])
+	else:
+		nat_hole_punch(is_host, game_code, ipv4)
+
+func check_upnp_status() -> void:
+	if upnp_status == 0 or $MainMenu/Waiting/debugdisplay/list/Upnp/Bypass.button_pressed:
+		var lo_port : int = $MainMenu/Waiting/debugdisplay/list/Port/LocalPort.text.to_int()
+		if lo_port < 1024 or lo_port > 65535:
+			lo_port = 7777
+		$MainMenu/Lobby/corner/IPS/IP.text = thread_locked_iptext
+		hole_punched(lo_port, 0, "")
+		return
+	callv("nat_hole_punch", traversal_data)
+
+func nat_hole_punch(is_host:bool, game_code:String="", ipv4:bool=true) -> void:
 	var hole_puncher = HolePuncher.new()
-	
 	if ipv4:
 		hole_puncher.signaling_address = signaling_server_ipv4
 	else:
@@ -54,9 +89,8 @@ func nat_traversal(is_host:bool, game_code:String="", ipv4:bool=true) -> void:
 		lo_port = 9999
 	hole_puncher.local_port = lo_port
 	add_child(hole_puncher)
-	hosting = is_host
+	#hosting = is_host
 	hole_puncher.hole_punched.connect(hole_punched)
-	hole_puncher.session_registered.connect(nat_session_registered)
 	var player_host = "host" if is_host else "client"
 	print("Starting hole-punch as %s" % player_host)
 	var holepunch_id = "%s_%s" % [OS.get_unique_id(), player_host]
@@ -65,7 +99,8 @@ func nat_traversal(is_host:bool, game_code:String="", ipv4:bool=true) -> void:
 	if game_code == "":
 		game_id = generate_game_code()
 		print("Created game with code: ", game_id)
-		$MainMenu/Waiting/VBoxContainer/Join/GameID.text = game_id
+		#$MainMenu/Waiting/VBoxContainer/Join/GameID.text = game_id
+	hole_puncher.session_registered.connect(nat_session_registered.bind(game_id))
 	if not ipv4:
 		hole_puncher.ipv6_failed.connect(_ipv6_failed.bind(game_id))
 	hole_puncher.start_traversal(game_id, is_host, holepunch_id, ipv4)
@@ -73,35 +108,71 @@ func nat_traversal(is_host:bool, game_code:String="", ipv4:bool=true) -> void:
 func hole_punched(my_port, hosts_port, hosts_address) -> void:
 	print("Hole-punch successful!")
 	peer = ENetMultiplayerPeer.new()
-	hide_all()
-	$MainMenu/Lobby.show()
-	reset_lobby()
 	if hosting:
 		peer.create_server(my_port, 32)
 		multiplayer.multiplayer_peer = peer
 		current_lobby_players.append([our_name, peer.get_unique_id(), Deck.to_str(prepared_deck), false])
+		hide_all()
+		$MainMenu/Lobby.show()
+		reset_lobby()
 		return
 	print("Creating client at IP: ", hosts_address, " port: ", hosts_port, " On our port: ", my_port)
 	peer.create_client(hosts_address, hosts_port, 0, 0, 0, my_port)
 	multiplayer.multiplayer_peer = peer
 
-func nat_session_registered(is_ipv4:bool) -> void:
+func nat_session_registered(is_ipv4:bool, game_id:String) -> void:
 	print("We've connected with the signaling server.")
+	$MainMenu/Waiting/VBoxContainer/Join/GameID.text = game_id
 	if is_ipv4:
 		$MainMenu/Waiting/debugdisplay/list/ipv4/status.text = "Connected"
 	else:
 		$MainMenu/Waiting/debugdisplay/list/ipv6/status.text = "Connected"
+
+## UPnP CODE
+
+var mutex : Mutex
+var thread_locked_iptext : String = ""
+var upnp_status : int = -1
+
+#@warning_ignore("unused_signal") # grrr godot
+#signal upnp_thread_cleared
+
+func test_server_upnp(port:int) -> void:
+	mutex.lock()
+	print("Creating UPnP")
+	var upnp = UPNP.new()
+	upnp_status = upnp.discover(1000) # 1000 is timeout in milliseconds
+	print("UPnP Result: ", upnp_status)
+	if upnp_status == 0:
+		print("Printing Gateway:")
+		print(upnp.get_gateway())
+		print("Adding UPnP port mapping")
+		upnp.add_port_mapping(port)
+		thread_locked_iptext = str(upnp.query_external_address()) + ":" + str(port)
+		ip_copy_text = thread_locked_iptext
+	else:
+		push_warning("UPnP Error: ", upnp_status, ". Could not create a port forward.")
+		ip_copy_text = str(port)
+		thread_locked_iptext = "IP Unknown; Port: " + str(port)
+	mutex.unlock()
+	call_deferred("check_upnp_status")
+
+func update_upnp_display() -> void:
+	$MainMenu/Waiting/debugdisplay/list/Upnp/IPPort.text = thread_locked_iptext
+
+
 
 ## Host a lobby
 func _attempt_host() -> void:
 	print("Beginning to attempt host")
 	current_lobby_players = []
 	our_name = $MainMenu/Waiting/VBoxContainer/Name/PlayerName.text
-	#hosting = true
+	$MainMenu/Waiting/VBoxContainer/Join/GameID.editable = false
+	hosting = true
 	## Begin Hole Punching
-	var game_id : String = $MainMenu/Waiting/VBoxContainer/Join/GameID.text
+	#var game_id : String = $MainMenu/Waiting/VBoxContainer/Join/GameID.text
 	#$MainMenu/Waiting/VBoxContainer/Join/GameID.editable = false
-	nat_traversal(true, game_id, false)
+	nat_traversal(true, "", false)
 
 
 ## Join a lobby
@@ -109,11 +180,11 @@ func _attempt_join() -> void:
 	print("Attempting to join a game")
 	current_lobby_players = []
 	our_name = $MainMenu/Waiting/VBoxContainer/Name/PlayerName.text
-	#hosting = false
+	hosting = false
 	
 	## Begin hole-punching
 	var game_code = $MainMenu/Waiting/VBoxContainer/Join/GameID.text
-	if game_code == "":
+	if game_code == "" and not $MainMenu/Waiting/debugdisplay/list/Upnp/UseUpnp.button_pressed:
 		push_warning("Tried to join without entering a game code.")
 		return
 	nat_traversal(false, game_code, false)
@@ -373,8 +444,9 @@ func ready_for_battle(deck:Deck) -> void:
 	prepared_deck = deck
 	$MainMenu/Waiting/VBoxContainer/MiniDeck.load_deck(deck)
 	$MainMenu/Waiting.show()
-	$MainMenu/Waiting/debugdisplay/list/ipv4/status.text = "Waiting"
-	$MainMenu/Waiting/debugdisplay/list/ipv6/status.text = "Waiting"
+	$MainMenu/Waiting/VBoxContainer/Host.show()
+	$MainMenu/Waiting/debugdisplay/list/ipv4/status.text = "..."
+	$MainMenu/Waiting/debugdisplay/list/ipv6/status.text = "..."
 
 var prepared_deck : Deck
 

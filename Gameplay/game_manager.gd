@@ -880,8 +880,8 @@ func _input(event: InputEvent) -> void:
 				break
 			return
 		if not menu_open and event.is_action_pressed("card_interact"):
-			for card in sorted_hovered_cards:
-				print("I am a card, name: ", card.name, " metadata: ", card.input_metadata, " my unique ID is: ", card.unique_id)
+			#for card in sorted_hovered_cards:
+				#print("I am a card, name: ", card.name, " metadata: ", card.input_metadata, " my unique ID is: ", card.unique_id)
 			for card in sorted_hovered_cards:
 				if not (card.input_metadata & 1) or card is Item_GUI:
 					continue

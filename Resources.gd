@@ -412,6 +412,7 @@ func load_resource_data(resource:Dictionary, resource_name:String, mod:Mod=null)
 			new_attr.pscript_sync_data.assign(resource.get_or_add("SyncData", []))
 			new_attr.pscript = find_resource("Pscript", resource.get_or_add("Pscript", ""))
 			new_attr.duration = resource.get_or_add("Duration", -1)
+			new_attr.application_behavior = resource.get_or_add("ApplicationBehavior", 0)
 			
 			new_attr.modified_stats.assign(resource.get_or_add("StatModifiers", [0,0,0,0,0,0]))
 			

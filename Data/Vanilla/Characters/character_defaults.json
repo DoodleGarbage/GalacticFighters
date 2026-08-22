@@ -115,7 +115,7 @@
 		"Burst": 4, 
 		"Heal": 0, 
 		"ArmorPierce": 1, 
-		"Attributes":["vanilla:FIRE BLAST"], 
+		"Attributes":["vanilla:ATTACK_FIRE"], 
 		"VFX_death":""
 	},
 	
