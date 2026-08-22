@@ -70,39 +70,6 @@
 	},
 	
 	{
-		"Name":"ABILITY DEMO",
-		"Icon":"vanilla:defense",
-		"Desc":"DESCRIPTION OF ABILITY FILLS THIS SPACE",
-		
-		"Type":1,
-		"Pscript":"vanilla:attack",
-		 
-		"TargetType":1,
-		"Targets":1,
-		 
-		"VFX_target":"", 
-		"VFX_damage":""
-	},
-	
-	{
-		"Name":"PASSIVE DEMO",
-		"Icon":"vanilla:heart",
-		"Desc":"DEMOS OF THE WHAT THE PASSIVE DOES IS DESCRIBED IN THIS LOCATION",
-		
-		"Type":0,
-		"Pscript":"",
-		"SyncData":[],
-		 
-		"TargetType":0,
-		"Targets":-1,
-		
-		"Duration":-1,
-		
-		"VFX_target":"", 
-		"VFX_damage":""
-	},
-	
-	{
 		"Name":"FIRE BLAST",
 		"Icon":"vanilla:heart",
 		"Desc":"Applies the fire status",

@@ -10,7 +10,7 @@
 		"Burst": 0, 
 		"Heal": 0, 
 		"ArmorPierce": 0, 
-		"Attributes":["vanilla:ABILITY DEMO", "vanilla:PASSIVE DEMO"], 
+		"Attributes":[], 
 		"VFX_death":"death_vfx"
 	},
 	
@@ -25,7 +25,7 @@
 		"Burst": 0, 
 		"Heal": 0, 
 		"ArmorPierce": 0, 
-		"Attributes":["vanilla:ABILITY DEMO", "vanilla:PASSIVE DEMO"], 
+		"Attributes":[], 
 		"VFX_death":"death_vfx"
 	},
 	
@@ -40,7 +40,7 @@
 		"Burst": 0, 
 		"Heal": 0, 
 		"ArmorPierce": 0, 
-		"Attributes":["vanilla:ABILITY DEMO", "vanilla:PASSIVE DEMO"], 
+		"Attributes":[], 
 		"VFX_death":"death_vfx"
 	},
 	
@@ -160,7 +160,7 @@
 		"Burst": 5, 
 		"Heal": 0, 
 		"ArmorPierce": 0, 
-		"Attributes":["vanilla:ABILITY DEMO"], 
+		"Attributes":[], 
 		"VFX_death":""
 	},
 	
