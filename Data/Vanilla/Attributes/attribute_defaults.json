@@ -60,7 +60,7 @@
 		"InteractionType":"attack",
 		"Pscript":"vanilla:attack_splash",
 		"AllowBurst":true,
-		"ScriptVariables":{"radius":1},
+		"ScriptVariables":{"radius":1,"splash_damage":4},
 		
 		"TargetType":4,
 		"Targets":1,  
