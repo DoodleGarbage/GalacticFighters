@@ -166,7 +166,7 @@
 	
 	{
 		"Name":"Tuber",
-		"FullProfile":"vanilla:TuberPlaceholder",
+		"FullProfile":"vanilla:TuberFullProfile",
 		"MiniProfile":"vanilla:TrooperMiniProfile", 
 		"Type":1, 
 		"Health":20, 
