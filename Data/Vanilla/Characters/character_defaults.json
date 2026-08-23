@@ -135,16 +135,16 @@
 	},
 	
 	{
-		"Name":"Turret",
+		"Name":"Sentry",
 		"FullProfile":"vanilla:SentryFullprofile",
 		"MiniProfile":"vanilla:ScrapperMiniprofile", 
 		"Type":2, 
-		"Health":20, 
+		"Health":15, 
 		"Defense": 1, 
-		"Attack": 4, 
-		"Burst": 0, 
+		"Attack": 1, 
+		"Burst": 4, 
 		"Heal": 0, 
-		"ArmorPierce": 1, 
+		"ArmorPierce": 2, 
 		"Attributes":["vanilla:SummonTurret"], 
 		"VFX_death":""
 	},
