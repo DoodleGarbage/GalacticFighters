@@ -458,7 +458,6 @@ func signal_turn_end() -> void:
 func send_end_turn_notice(player_id:int) -> void:
 	if peer.get_unique_id() != host_id:
 		return
-	# TODO: Apply a status to all characters w/ duration 1 turn that adds 1 defense for each unused move
 	var next_player : int = get_player_by_id(current_turn_id) + 1
 	if next_player >= current_players.size():
 		next_player -= current_players.size()
@@ -466,9 +465,21 @@ func send_end_turn_notice(player_id:int) -> void:
 
 @rpc("authority", "call_local", "reliable", 0)
 func update_turn(player_id:int) -> void:
+	var excess_moves : int = 0
+	if peer.get_unique_id() == host_id:
+		var pl_arr : Array = get_player_array_by_id(current_turn_id)
+		if pl_arr != []:
+			excess_moves = pl_arr[4]
+	var prev_tur_id = current_turn_id
 	_end_turn() # Note: only ends for the player we're switching away from
 	current_turn_id = player_id
 	_start_turn() # Note: only triggers for the player we're switching to
+	
+	if excess_moves > 0:
+		for card in cards:
+			if card.player_id == prev_tur_id and card is Card_GUI:
+				for i in range(0, excess_moves):
+					card.apply_status("vanilla:MoveDefenseBuff")
 	
 	## Display some visual thing to notify of a turn change
 	$Unscalables/TurnTools.moves = 0

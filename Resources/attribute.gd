@@ -22,9 +22,10 @@ var interaction_type : String = ""
 							# max health, attack, defense, burst, heal, armor pierce
 var modified_stats : Array[int] = []
 
-@export_enum("Apply Duplicate", "Reset Duration", "Increase Duration", "Increase Variables", "Reset and Increase")
-var application_behavior : int = 0
-
+@export_enum("Apply Duplicate", "Reset Duration", "Increase Duration")
+var application_behavior_duration : int = 0
+@export_enum("Do Nothing", "Stack Variables")
+var application_behavior_variables : int = 0
 
 
 ## Do not put full descriptions here, prefer using a translated string.

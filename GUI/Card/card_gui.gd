@@ -58,8 +58,8 @@ var attributes : Array[Attribute] = []
 # 0=max health, 1=attack, 2=defense, 3=burst, 4=heal, 5=armor pierce
 func get_attr_stat_mod(stat:int) -> int:
 	var total : int = 0
-	for attr in attributes:
-		total += attr.modified_stats[stat]
+	for attr in attributes.size():
+		total += attributes[attr].modified_stats[stat] * attribute_scripts[attr].stacks
 	return total
 
 ## The scripts associated with each attribute - this is also how details such as duration/length/turns left/etc etc are tracked - plus any "script defined variables" (this will need to be implemented - thing get_var, set_var stuff)
@@ -140,7 +140,7 @@ func damage(trigger : Attribute, amnt:int, pierce:int=0) -> void:
 	var dmg_vfx = dmg_effect
 	if trigger != null and trigger.VFX_damage != null and trigger.VFX_damage != Resources.VFX_null:
 		dmg_vfx = trigger.VFX_damage
-	var true_defense : int = max(0, defense-pierce) if defense >= 0 else defense
+	var true_defense : int = max(0, get_defense()-pierce) if get_defense() >= 0 else get_defense()
 	## Trigger any attached passives, play visual effects, etc.
 	var dmg : int = max(amnt - true_defense, 0)
 	print("suffering damage! amnt: ", dmg)
@@ -174,19 +174,18 @@ func apply_status(status:String) -> void:
 		return
 	print("We're applying status: ", status)
 	var dupe_status = attributes.find(status_effect)
-	if dupe_status > -1 and status_effect.application_behavior != 0:
-		match(status_effect.application_behavior):
+	if dupe_status > -1 and (status_effect.application_behavior_duration != 0 or status_effect.application_behavior_variables != 0):
+		print("found status")
+		match(status_effect.application_behavior_duration):
 			1: attribute_scripts[dupe_status].duration_tracker = status_effect.duration
 			2: attribute_scripts[dupe_status].duration_tracker += status_effect.duration
-			3: 
+		match(status_effect.application_behavior_variables):
+			1: 
+				attribute_scripts[dupe_status].stacks += 1
 				for va in status_effect.script_variables:
 					var val = attribute_scripts[dupe_status].get(va)
 					attribute_scripts[dupe_status].set(va, val + status_effect.script_variables[va])
-			4:
-				attribute_scripts[dupe_status].duration_tracker = status_effect.duration
-				for va in status_effect.script_variables:
-					var val = attribute_scripts[dupe_status].get(va)
-					attribute_scripts[dupe_status].set(va, val + status_effect.script_variables[va])
+			
 	else:
 		attributes.append(status_effect)
 		attribute_scripts.append(init_script(status_effect))

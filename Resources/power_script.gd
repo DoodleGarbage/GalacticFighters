@@ -9,7 +9,9 @@ var ability : Attribute
 ## This is initalized when the attribute scripts are initalized, and is the active tracker for the duration of this attribute's turns
 var duration_tracker : int = -1
 
-const built_in_data : Array[StringName] = ["duration_tracker"]
+var stacks : int = 1
+
+const built_in_data : Array[StringName] = ["duration_tracker", "stacks"]
 ## TODO: Assign this during Resource loading
 var sync_data : Array[StringName] = []
 

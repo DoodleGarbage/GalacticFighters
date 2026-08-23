@@ -79,7 +79,6 @@
 		
 		"TargetType":4,
 		"Targets":1,
-		"ApplicationBehavior":1,
 		
 		"VFX_target":"vanilla:fire_apply_effect", 
 		"VFX_damage":""
@@ -93,7 +92,7 @@
 		"Type":3,
 		"Pscript":"vanilla:fire",
 		"ScriptVariables":{"damage":2},
-		"ApplicationBehavior":1,
+		"ApplicationBehaviorDuration":1,
 		
 		"Duration":3,
 		
@@ -200,5 +199,21 @@
 		
 		"VFX_target":"", 
 		"VFX_damage":""
+	},
+	
+	{
+		"Name":"MoveDefenseBuff",
+		"Icon":"vanilla:defense",
+		"Desc":"Adds 1 defense for a turn",
+		
+		"Type":3,
+		"Pscript":"",
+		"StatModifiers":[0,0,1,0,0,0],
+		"ApplicationBehaviorVariables":1,
+		
+		"Duration":1,
+		
+		"VFX_target":"", 
+		"VFX_damage":"vanilla:fire_dmg_effect"
 	},
 ]
