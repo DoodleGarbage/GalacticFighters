@@ -1,5 +1,9 @@
 extends Control
 
+func _ready() -> void:
+	Resources.GameManager = self
+
+
 ## This information is transferred from the Main Menu script on game initialization
 var peer : ENetMultiplayerPeer
 

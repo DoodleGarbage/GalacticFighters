@@ -231,14 +231,14 @@ func initilize_interactions() -> void:
 	if not has_move:
 		var move : Attribute = Resources.find_resource("Attribute", "vanilla:MOVE")
 		attributes.append(move)
-		var m_script = move.pscript.new(self, move.script_variables)
-		m_script.ability = move
-		attribute_scripts.append(m_script)
+		#var m_script = move.pscript.new(self, move.script_variables)
+		#m_script.ability = move
+		attribute_scripts.append(init_script(move))
 	if not has_attack:
 		var aattack : Attribute = Resources.find_resource("Attribute", "vanilla:ATTACK")
 		attributes.append(aattack)
-		var a_script = aattack.pscript.new(self, aattack.script_variables)
-		attribute_scripts.append(a_script)
+		#var a_script = aattack.pscript.new(self, aattack.script_variables)
+		attribute_scripts.append(init_script(aattack))
 	
 	## Put moves at the bottom
 	for ab in attributes.size():

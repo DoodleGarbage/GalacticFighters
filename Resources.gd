@@ -1,8 +1,8 @@
 extends Node
 
-## TODO: Move decks to be saved to a user-side .json file (coincides with making the Deck Builder)
 ## TODO: Save the loaded mods on/off state to a .ini config file on user-side (instead of auto-enabling everything on load)
 
+var GameManager : Control
 
 func _init() -> void:
 	var args = Array(OS.get_cmdline_args())

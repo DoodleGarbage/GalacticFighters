@@ -216,4 +216,51 @@
 		"VFX_target":"", 
 		"VFX_damage":"vanilla:fire_dmg_effect"
 	},
+	
+	{
+		"Name":"BloshPassive",
+		"Icon":"vanilla:heart",
+		"Desc":"heal 2 hp per enemy on field", 
+		
+		"Type":0,
+		"Pscript":"bloshpassive",
+		"ScriptVariables":{"heal":2},
+		
+		"VFX_target":"", 
+		"VFX_damage":""
+	},
+	
+	{
+		"Name":"TylerAbility",
+		"Icon":"vanilla:ItemSandvich",
+		"Desc":"Ignore all defense and gain +1 attak for 1 turn.",
+		
+		"Type":1,
+		"Pscript":"vanilla:tylerability",
+		"Cooldown":2,
+		 
+		
+		"TargetType":1,
+		"Targets":1,
+		
+		"Duration":2,
+		
+		"VFX_target":"vanilla:fire_dmg_effect", 
+		"VFX_damage":""
+	},
+	
+	{
+		"Name":"TylerDefensePierce",
+		"Icon":"vanilla:heart",
+		"Desc":"Pierce All damage and +1 attack", 
+		
+		"Type":3,
+		"Pscript":"",
+		"StatModifiers":[0,1,0,0,0,99],
+		
+		"Duration":2, 
+		
+		"VFX_target":"", 
+		"VFX_damage":""
+	},
 ]

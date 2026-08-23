@@ -10,7 +10,7 @@
 		"Burst": 0, 
 		"Heal": 0, 
 		"ArmorPierce": 0, 
-		"Attributes":[], 
+		"Attributes":["vanilla:BloshPassive"], 
 		"VFX_death":"death_vfx"
 	},
 	
