@@ -151,8 +151,8 @@
 
 	{
 		"Name":"Agent",
-		"FullProfile":"vanilla:AgentPlaceholder",
-		"MiniProfile":"vanilla:TrooperMiniProfile", 
+		"FullProfile":"vanilla:AgentFullProfile",
+		"MiniProfile":"vanilla:AgentMiniProfile", 
 		"Type":1, 
 		"Health":19, 
 		"Defense": 1, 
@@ -169,13 +169,27 @@
 		"FullProfile":"vanilla:TuberPlaceholder",
 		"MiniProfile":"vanilla:TrooperMiniProfile", 
 		"Type":1, 
-		"Health":22, 
-		"Defense": 2, 
-		"Attack": 2, 
+		"Health":20, 
+		"Defense": 1, 
+		"Attack": 5, 
 		"Burst": 0, 
 		"Heal": 0, 
-		"ArmorPierce": 2, 
+		"ArmorPierce": 0, 
 		"Attributes":["vanilla:ATTACK_SPLASH"], 
+		"VFX_death":""
+	},
+	{
+		"Name":"Gattling Gunner",
+		"FullProfile":"vanilla:GattlinggunnerFullProfile",
+		"MiniProfile":"vanilla:GattlinggunnerMiniProfile", 
+		"Type":1, 
+		"Health":18, 
+		"Defense": 2, 
+		"Attack": 2, 
+		"Burst": 5, 
+		"Heal": 0, 
+		"ArmorPierce": 0, 
+		"Attributes":[], 
 		"VFX_death":""
 	},
 ]
